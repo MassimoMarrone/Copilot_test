@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrazione</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Registrazione</h1>
+        
+        <div class="card">
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userType">Tipo di Account:</label>
+                    <select id="userType" name="userType" required>
+                        <option value="">Seleziona...</option>
+                        <option value="client">Cliente (Prenota servizi)</option>
+                        <option value="provider">Fornitore (Offri servizi)</option>
+                    </select>
+                </div>
+                
+                <div class="terms-section">
+                    <h3>Termini e Condizioni</h3>
+                    <div class="terms-box">
+                        <p><strong>TERMINI E CONDIZIONI D'USO</strong></p>
+                        <p>1. <strong>Accettazione dei Termini</strong>: Utilizzando questo servizio, accetti di essere vincolato da questi termini e condizioni.</p>
+                        <p>2. <strong>Sistema di Pagamento Escrow</strong>: Tutti i pagamenti per i servizi di pulizia vengono trattenuti in escrow fino al completamento del servizio.</p>
+                        <p>3. <strong>Responsabilità del Fornitore</strong>: I fornitori devono completare i servizi come concordato e fornire una prova fotografica del lavoro svolto.</p>
+                        <p>4. <strong>Rilascio del Pagamento</strong>: Il pagamento viene rilasciato al fornitore solo dopo aver caricato la prova fotografica del servizio completato.</p>
+                        <p>5. <strong>Cancellazione</strong>: Le cancellazioni devono essere effettuate almeno 24 ore prima del servizio programmato.</p>
+                        <p>6. <strong>Privacy</strong>: Ci impegniamo a proteggere i tuoi dati personali secondo le normative sulla privacy.</p>
+                        <p>7. <strong>Risoluzione delle Controversie</strong>: Eventuali controversie saranno risolte tramite mediazione.</p>
+                    </div>
+                    
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="acceptedTerms" name="acceptedTerms" required>
+                            <span>Accetto i Termini e Condizioni (obbligatorio)</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="error-message" id="errorMessage"></div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">Registrati</button>
+                    <a href="/login" class="btn btn-secondary">Hai già un account? Accedi</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/register.js"></script>
+</body>
+</html>
