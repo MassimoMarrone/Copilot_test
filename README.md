@@ -109,6 +109,27 @@ http://localhost:3000
 - Implementare rate limiting e altre misure di sicurezza
 - Aggiungere validazione email
 - Implementare sistema di notifiche (email, push)
+- Aggiungere protezione CSRF per le richieste POST
+- Implementare gestione errori più robusta
+- Aggiungere logging e monitoring
+
+## Considerazioni sulla Sicurezza
+
+Questa applicazione è un prototipo e presenta alcune limitazioni di sicurezza che dovrebbero essere affrontate prima di un deployment in produzione:
+
+1. **Rate Limiting**: Non è implementato il rate limiting sulle route API. In produzione, utilizzare pacchetti come `express-rate-limit` per prevenire attacchi di tipo brute-force.
+
+2. **CSRF Protection**: Non è implementata la protezione CSRF. In produzione, utilizzare pacchetti come `csurf` per proteggere contro attacchi CSRF.
+
+3. **JWT Secret**: La chiave segreta JWT è hardcoded. In produzione, utilizzare variabili d'ambiente sicure.
+
+4. **Validazione Input**: La validazione degli input è minima. In produzione, implementare validazione robusta con pacchetti come `joi` o `express-validator`.
+
+5. **File Upload**: I controlli sui file upload sono limitati. In produzione, implementare validazione del tipo di file, dimensione massima, e scansione antivirus.
+
+6. **Database**: I dati sono salvati in file JSON. In produzione, utilizzare un database sicuro con backup regolari.
+
+7. **HTTPS**: L'applicazione non forza HTTPS. In produzione, utilizzare sempre connessioni sicure.
 
 ## Licenza
 
