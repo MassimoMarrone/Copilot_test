@@ -32,6 +32,14 @@ app.use(helmet({
   },
 }));
 
+/**
+ * CSRF Protection Strategy:
+ * - Using httpOnly cookies with SameSite='strict' provides defense against CSRF
+ * - SameSite='strict' prevents cookies from being sent in cross-site requests
+ * - For production, consider implementing CSRF tokens with libraries like 'csurf'
+ *   for additional protection on state-changing operations
+ */
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 minutes
@@ -447,24 +455,33 @@ app.post('/api/bookings/:id/complete',
   }
 );
 
+// Rate limiter for page routes
+const pageLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60, // limit each IP to 60 requests per minute for pages
+  message: 'Too many page requests, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Serve HTML pages
-app.get('/', (_req: Request, res: Response): void => {
+app.get('/', pageLimiter, (_req: Request, res: Response): void => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-app.get('/register', (_req: Request, res: Response): void => {
+app.get('/register', pageLimiter, (_req: Request, res: Response): void => {
   res.sendFile(path.join(__dirname, '..', 'public', 'register.html'));
 });
 
-app.get('/login', (_req: Request, res: Response): void => {
+app.get('/login', pageLimiter, (_req: Request, res: Response): void => {
   res.sendFile(path.join(__dirname, '..', 'public', 'login.html'));
 });
 
-app.get('/client-dashboard', (_req: Request, res: Response): void => {
+app.get('/client-dashboard', pageLimiter, (_req: Request, res: Response): void => {
   res.sendFile(path.join(__dirname, '..', 'public', 'client-dashboard.html'));
 });
 
-app.get('/provider-dashboard', (_req: Request, res: Response): void => {
+app.get('/provider-dashboard', pageLimiter, (_req: Request, res: Response): void => {
   res.sendFile(path.join(__dirname, '..', 'public', 'provider-dashboard.html'));
 });
 
