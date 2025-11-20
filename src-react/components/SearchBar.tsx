@@ -1,95 +1,108 @@
-import React, { useEffect, useRef, useState } from 'react';
-import '../styles/SearchBar.css';
+import React, { useState, useEffect, useRef } from "react";
+import "../styles/SearchBar.css";
 
 interface SearchBarProps {
-  onSearch: (query: string, location?: { lat: number; lng: number; address: string }) => void;
-  googleMapsApiKey: string;
+  onSearch: (
+    query: string,
+    location?: { lat: number; lng: number; address: string }
+  ) => void;
+  // googleMapsApiKey removed as we use OpenStreetMap
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ onSearch, googleMapsApiKey }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+interface NominatimResult {
+  place_id: number;
+  lat: string;
+  lon: string;
+  display_name: string;
+}
+
+const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [locationQuery, setLocationQuery] = useState("");
+  const [locationResults, setLocationResults] = useState<NominatimResult[]>([]);
+  const [showResults, setShowResults] = useState(false);
   const [locationEnabled, setLocationEnabled] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
-  const autocompleteInputRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<{
+    lat: number;
+    lng: number;
+    address: string;
+  } | null>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load Google Maps Script
-  useEffect(() => {
-    if (!googleMapsApiKey) return;
+  // Handle location input change with debounce
+  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocationQuery(value);
 
-    const loadGoogleMapsScript = () => {
-      if (window.google?.maps?.places) {
-        initAutocomplete();
-        return;
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (value.length < 3) {
+      setLocationResults([]);
+      setShowResults(false);
+      return;
+    }
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            value
+          )}&countrycodes=it&limit=5`
+        );
+        const data = await response.json();
+        setLocationResults(data);
+        setShowResults(true);
+      } catch (error) {
+        console.error("Error fetching location:", error);
       }
+    }, 500); // 500ms debounce
+  };
 
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => initAutocomplete();
-      document.head.appendChild(script);
+  const selectLocation = (result: NominatimResult) => {
+    const location = {
+      lat: parseFloat(result.lat),
+      lng: parseFloat(result.lon),
+      address: result.display_name,
     };
-
-    loadGoogleMapsScript();
-  }, [googleMapsApiKey]);
-
-  const initAutocomplete = () => {
-    if (!autocompleteInputRef.current || !window.google?.maps?.places) return;
-
-    autocompleteRef.current = new google.maps.places.Autocomplete(
-      autocompleteInputRef.current,
-      {
-        types: ['address'],
-        componentRestrictions: { country: 'it' }, // Restrict to Italy
-      }
-    );
-
-    autocompleteRef.current.addListener('place_changed', () => {
-      const place = autocompleteRef.current?.getPlace();
-      if (place && place.geometry && place.geometry.location) {
-        const location = {
-          lat: place.geometry.location.lat(),
-          lng: place.geometry.location.lng(),
-          address: place.formatted_address || '',
-        };
-        setCurrentLocation(location);
-        setLocationEnabled(true);
-      }
-    });
+    setCurrentLocation(location);
+    setLocationEnabled(true);
+    setLocationQuery(result.display_name);
+    setShowResults(false);
   };
 
   const handleGetCurrentLocation = () => {
     if (!navigator.geolocation) {
-      alert('La geolocalizzazione non è supportata dal tuo browser');
+      alert("La geolocalizzazione non è supportata dal tuo browser");
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-        
-        // Reverse geocode to get address
-        if (window.google?.maps) {
-          const geocoder = new google.maps.Geocoder();
-          geocoder.geocode(
-            { location: { lat: latitude, lng: longitude } },
-            (results, status) => {
-              if (status === 'OK' && results && results[0]) {
-                const location = {
-                  lat: latitude,
-                  lng: longitude,
-                  address: results[0].formatted_address,
-                };
-                setCurrentLocation(location);
-                setLocationEnabled(true);
-                if (autocompleteInputRef.current) {
-                  autocompleteInputRef.current.value = location.address;
-                }
-              }
-            }
+
+        try {
+          // Reverse geocode using Nominatim
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
           );
-        } else {
+          const data = await response.json();
+
+          const location = {
+            lat: latitude,
+            lng: longitude,
+            address:
+              data.display_name ||
+              `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+          };
+
+          setCurrentLocation(location);
+          setLocationEnabled(true);
+          setLocationQuery(location.address);
+        } catch (error) {
+          console.error("Error getting address:", error);
+          // Fallback if reverse geocoding fails
           const location = {
             lat: latitude,
             lng: longitude,
@@ -97,11 +110,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, googleMapsApiKey }) => 
           };
           setCurrentLocation(location);
           setLocationEnabled(true);
+          setLocationQuery(location.address);
         }
       },
       (error) => {
-        console.error('Error getting location:', error);
-        alert('Impossibile ottenere la posizione corrente');
+        console.error("Error getting location:", error);
+        alert("Impossibile ottenere la posizione corrente");
       }
     );
   };
@@ -118,9 +132,8 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, googleMapsApiKey }) => 
   const handleClearLocation = () => {
     setLocationEnabled(false);
     setCurrentLocation(null);
-    if (autocompleteInputRef.current) {
-      autocompleteInputRef.current.value = '';
-    }
+    setLocationQuery("");
+    setShowResults(false);
   };
 
   return (
@@ -138,16 +151,36 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, googleMapsApiKey }) => 
             🔍 Cerca
           </button>
         </div>
-        
+
         <div className="location-controls">
-          <div className="location-input-wrapper">
+          <div
+            className="location-input-wrapper"
+            style={{ position: "relative" }}
+          >
             <input
-              ref={autocompleteInputRef}
               type="text"
               className="location-input"
               placeholder="Inserisci indirizzo o città..."
-              disabled={!googleMapsApiKey}
+              value={locationQuery}
+              onChange={handleLocationChange}
+              onFocus={() => locationResults.length > 0 && setShowResults(true)}
             />
+
+            {/* Dropdown results */}
+            {showResults && locationResults.length > 0 && (
+              <ul className="location-results-dropdown">
+                {locationResults.map((result) => (
+                  <li
+                    key={result.place_id}
+                    onClick={() => selectLocation(result)}
+                    className="location-result-item"
+                  >
+                    📍 {result.display_name}
+                  </li>
+                ))}
+              </ul>
+            )}
+
             <button
               type="button"
               className="location-button"
@@ -157,16 +190,14 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, googleMapsApiKey }) => 
               📍 Posizione attuale
             </button>
           </div>
-          
+
           {locationEnabled && currentLocation && (
             <div className="location-active">
-              <span className="location-text">
-                📍 {currentLocation.address}
-              </span>
               <button
                 type="button"
                 className="clear-location-button"
                 onClick={handleClearLocation}
+                title="Rimuovi posizione"
               >
                 ✕
               </button>

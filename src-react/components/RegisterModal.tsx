@@ -1,5 +1,6 @@
-import React, { useState, FormEvent } from 'react';
-import '../styles/Modal.css';
+import React, { useState, FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import "../styles/Modal.css";
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -7,32 +8,37 @@ interface RegisterModalProps {
   onSwitchToLogin: () => void;
 }
 
-const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitchToLogin }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [userType, setUserType] = useState('');
+const RegisterModal: React.FC<RegisterModalProps> = ({
+  isOpen,
+  onClose,
+  onSwitchToLogin,
+}) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [userType, setUserType] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setErrorMessage('');
+    setErrorMessage("");
 
     if (!acceptedTerms) {
-      setErrorMessage('Devi accettare i Termini e Condizioni per continuare.');
+      setErrorMessage("Devi accettare i Termini e Condizioni per continuare.");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/register', {
-        method: 'POST',
+      const response = await fetch("/api/register", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password, userType, acceptedTerms }),
       });
@@ -40,17 +46,22 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
       const data = await response.json();
 
       if (response.ok) {
+        onClose(); // Chiudi il modale
         // Redirect based on user type
-        if (data.userType === 'client') {
-          window.location.href = '/client-dashboard';
+        if (data.userType === "client") {
+          navigate("/client-dashboard");
         } else {
-          window.location.href = '/provider-dashboard';
+          navigate("/provider-dashboard");
         }
       } else {
-        setErrorMessage(data.error || 'Registrazione fallita');
+        // Handle express-validator errors array or single error message
+        const msg = data.errors
+          ? data.errors.map((err: any) => err.msg).join(", ")
+          : data.error || "Registrazione fallita";
+        setErrorMessage(msg);
       }
     } catch (error) {
-      setErrorMessage('Errore di connessione');
+      setErrorMessage("Errore di connessione");
     } finally {
       setIsLoading(false);
     }
@@ -65,9 +76,11 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
   return (
     <div className="modal-backdrop" onClick={handleBackdropClick}>
       <div className="modal-content modal-large">
-        <button className="modal-close" onClick={onClose}>×</button>
+        <button className="modal-close" onClick={onClose}>
+          ×
+        </button>
         <h2 className="modal-title">Registrati</h2>
-        
+
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
             <label htmlFor="register-email">Email:</label>
@@ -112,16 +125,43 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
           <div className="terms-section">
             <h3>Termini e Condizioni</h3>
             <div className="terms-box">
-              <p><strong>TERMINI E CONDIZIONI D'USO</strong></p>
-              <p>1. <strong>Accettazione dei Termini</strong>: Utilizzando questo servizio, accetti di essere vincolato da questi termini e condizioni.</p>
-              <p>2. <strong>Sistema di Pagamento Escrow</strong>: Tutti i pagamenti per i servizi di pulizia vengono trattenuti in escrow fino al completamento del servizio.</p>
-              <p>3. <strong>Responsabilità del Fornitore</strong>: I fornitori devono completare i servizi come concordato e fornire una prova fotografica del lavoro svolto.</p>
-              <p>4. <strong>Rilascio del Pagamento</strong>: Il pagamento viene rilasciato al fornitore solo dopo aver caricato la prova fotografica del servizio completato.</p>
-              <p>5. <strong>Cancellazione</strong>: Le cancellazioni devono essere effettuate almeno 24 ore prima del servizio programmato.</p>
-              <p>6. <strong>Privacy</strong>: Ci impegniamo a proteggere i tuoi dati personali secondo le normative sulla privacy.</p>
-              <p>7. <strong>Risoluzione delle Controversie</strong>: Eventuali controversie saranno risolte tramite mediazione.</p>
+              <p>
+                <strong>TERMINI E CONDIZIONI D'USO</strong>
+              </p>
+              <p>
+                1. <strong>Accettazione dei Termini</strong>: Utilizzando questo
+                servizio, accetti di essere vincolato da questi termini e
+                condizioni.
+              </p>
+              <p>
+                2. <strong>Sistema di Pagamento Escrow</strong>: Tutti i
+                pagamenti per i servizi di pulizia vengono trattenuti in escrow
+                fino al completamento del servizio.
+              </p>
+              <p>
+                3. <strong>Responsabilità del Fornitore</strong>: I fornitori
+                devono completare i servizi come concordato e fornire una prova
+                fotografica del lavoro svolto.
+              </p>
+              <p>
+                4. <strong>Rilascio del Pagamento</strong>: Il pagamento viene
+                rilasciato al fornitore solo dopo aver caricato la prova
+                fotografica del servizio completato.
+              </p>
+              <p>
+                5. <strong>Cancellazione</strong>: Le cancellazioni devono
+                essere effettuate almeno 24 ore prima del servizio programmato.
+              </p>
+              <p>
+                6. <strong>Privacy</strong>: Ci impegniamo a proteggere i tuoi
+                dati personali secondo le normative sulla privacy.
+              </p>
+              <p>
+                7. <strong>Risoluzione delle Controversie</strong>: Eventuali
+                controversie saranno risolte tramite mediazione.
+              </p>
             </div>
-            
+
             <div className="form-group checkbox-group">
               <label className="checkbox-label">
                 <input
@@ -142,21 +182,21 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
           )}
 
           <div className="button-group">
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="btn btn-primary"
               disabled={isLoading}
             >
-              {isLoading ? 'Registrazione...' : 'Registrati'}
+              {isLoading ? "Registrazione..." : "Registrati"}
             </button>
           </div>
-          
+
           <div className="modal-switch">
             <p>
-              Hai già un account?{' '}
-              <button 
-                type="button" 
-                className="link-button" 
+              Hai già un account?{" "}
+              <button
+                type="button"
+                className="link-button"
                 onClick={onSwitchToLogin}
                 disabled={isLoading}
               >

@@ -1,5 +1,6 @@
-import React, { useState, FormEvent } from 'react';
-import '../styles/Modal.css';
+import React, { useState, FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import "../styles/Modal.css";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -7,24 +8,29 @@ interface LoginModalProps {
   onSwitchToRegister: () => void;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegister }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+const LoginModal: React.FC<LoginModalProps> = ({
+  isOpen,
+  onClose,
+  onSwitchToRegister,
+}) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setErrorMessage('');
+    setErrorMessage("");
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
+      const response = await fetch("/api/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password }),
       });
@@ -32,17 +38,18 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
       const data = await response.json();
 
       if (response.ok) {
+        onClose(); // Chiudi il modale
         // Redirect based on user type
-        if (data.userType === 'client') {
-          window.location.href = '/client-dashboard';
+        if (data.userType === "client") {
+          navigate("/client-dashboard");
         } else {
-          window.location.href = '/provider-dashboard';
+          navigate("/provider-dashboard");
         }
       } else {
-        setErrorMessage(data.error || 'Login fallito');
+        setErrorMessage(data.error || "Login fallito");
       }
     } catch (error) {
-      setErrorMessage('Errore di connessione');
+      setErrorMessage("Errore di connessione");
     } finally {
       setIsLoading(false);
     }
@@ -57,9 +64,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
   return (
     <div className="modal-backdrop" onClick={handleBackdropClick}>
       <div className="modal-content">
-        <button className="modal-close" onClick={onClose}>×</button>
+        <button className="modal-close" onClick={onClose}>
+          ×
+        </button>
         <h2 className="modal-title">Accedi</h2>
-        
+
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
             <label htmlFor="login-email">Email:</label>
@@ -90,21 +99,21 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
           )}
 
           <div className="button-group">
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="btn btn-primary"
               disabled={isLoading}
             >
-              {isLoading ? 'Accesso...' : 'Accedi'}
+              {isLoading ? "Accesso..." : "Accedi"}
             </button>
           </div>
-          
+
           <div className="modal-switch">
             <p>
-              Non hai un account?{' '}
-              <button 
-                type="button" 
-                className="link-button" 
+              Non hai un account?{" "}
+              <button
+                type="button"
+                className="link-button"
                 onClick={onSwitchToRegister}
                 disabled={isLoading}
               >
