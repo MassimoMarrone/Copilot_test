@@ -92,6 +92,9 @@ const upload = multer({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+// Serve React build assets
+app.use('/assets', express.static(path.join(__dirname, '..', 'public', 'react', 'assets')));
+// Serve other public files (uploads, etc.)
 app.use(express.static('public'));
 
 // In-memory database (replace with a real database in production)
@@ -466,15 +469,15 @@ const pageLimiter = rateLimit({
 
 // Serve HTML pages
 app.get('/', pageLimiter, (_req: Request, res: Response): void => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, '..', 'public', 'react', 'index.html'));
 });
 
 app.get('/register', pageLimiter, (_req: Request, res: Response): void => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'register.html'));
+  res.sendFile(path.join(__dirname, '..', 'public', 'react', 'index.html'));
 });
 
 app.get('/login', pageLimiter, (_req: Request, res: Response): void => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'login.html'));
+  res.sendFile(path.join(__dirname, '..', 'public', 'react', 'index.html'));
 });
 
 app.get('/client-dashboard', pageLimiter, (_req: Request, res: Response): void => {

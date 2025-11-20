@@ -1,5 +1,6 @@
 node_modules/
 dist/
+public/react/
 data/*.json
 public/uploads/*.jpg
 public/uploads/*.jpeg
