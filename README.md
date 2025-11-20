@@ -50,15 +50,33 @@ cd Copilot_test
 npm install
 ```
 
-3. Avvia il server:
+3. (Opzionale) Configura le variabili d'ambiente:
+```bash
+cp .env.example .env
+# Modifica .env con le tue configurazioni
+```
+
+4. Compila il codice TypeScript:
+```bash
+npm run build
+```
+
+5. Avvia il server:
 ```bash
 npm start
 ```
 
-4. Apri il browser e vai a:
+6. Apri il browser e vai a:
 ```
 http://localhost:3000
 ```
+
+### Script Disponibili
+
+- `npm run build` - Compila il codice TypeScript in JavaScript
+- `npm start` - Avvia il server (richiede build precedente)
+- `npm run dev` - Compila e avvia in un solo comando
+- `npm run clean` - Pulisce la cartella dist
 
 ## Utilizzo
 
@@ -86,32 +104,61 @@ http://localhost:3000
 
 ## Sicurezza
 
-- Password hashate con bcrypt
-- Autenticazione tramite JWT
-- Cookie HTTP-only per i token
-- Validazione obbligatoria dei termini e condizioni
-- Upload foto obbligatorio prima del rilascio pagamento
+### Implementazioni di Sicurezza Applicate
+
+- ✅ **Password hashate con bcrypt** (12 rounds)
+- ✅ **Autenticazione tramite JWT** con scadenza token (24h)
+- ✅ **Cookie HTTP-only, Secure e SameSite** per prevenire XSS e CSRF
+- ✅ **Helmet.js** per header di sicurezza HTTP
+- ✅ **Rate Limiting** su tutte le route API (100 richieste/15min)
+- ✅ **Rate Limiting Aggressivo** per autenticazione (5 tentativi/15min)
+- ✅ **Validazione Input** con express-validator su tutti i campi
+- ✅ **Upload File Sicuri** con validazione MIME type e limite dimensione (5MB)
+- ✅ **TypeScript** per type safety e riduzione errori runtime
+- ✅ **Validazione obbligatoria** dei termini e condizioni
+- ✅ **Upload foto obbligatorio** prima del rilascio pagamento
+- ✅ **Content Security Policy** (CSP) configurata
+- ✅ **Sanitizzazione Email** con normalizzazione
+
+### Buone Pratiche di Sicurezza
+
+- Password minima 8 caratteri
+- Token JWT con scadenza
+- ID univoci generati in modo sicuro
+- Gestione errori centralizzata
+- Logging degli errori
 
 ## Tecnologie Utilizzate
 
-- **Backend**: Node.js, Express.js
+- **Backend**: Node.js, Express.js con TypeScript
 - **Autenticazione**: JWT, bcryptjs
-- **Upload File**: Multer
+- **Upload File**: Multer con validazione
+- **Sicurezza**: Helmet.js, express-rate-limit, express-validator
+- **Configurazione**: dotenv
 - **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
 - **Storage**: File system (JSON files) - da sostituire con database in produzione
 
 ## Note
 
-- Questa è una versione demo/prototipo
+### Versione TypeScript con Sicurezza Migliorata
+
+Questa versione include:
+- ✅ Backend scritto in TypeScript per maggiore sicurezza e manutenibilità
+- ✅ Rate limiting implementato
+- ✅ Validazione input su tutti i campi
+- ✅ Header di sicurezza HTTP (Helmet)
+- ✅ Gestione errori robusta
+
+### Ulteriori Miglioramenti per Produzione
+
 - In produzione, sostituire il sistema di storage basato su file con un database (MongoDB, PostgreSQL, etc.)
 - Implementare un sistema di pagamento reale (Stripe, PayPal, etc.)
-- Aggiungere SSL/HTTPS
-- Implementare rate limiting e altre misure di sicurezza
-- Aggiungere validazione email
+- Aggiungere SSL/HTTPS obbligatorio
+- Aggiungere validazione email con conferma via email
 - Implementare sistema di notifiche (email, push)
-- Aggiungere protezione CSRF per le richieste POST
-- Implementare gestione errori più robusta
-- Aggiungere logging e monitoring
+- Aggiungere protezione CSRF più robusta
+- Aggiungere logging strutturato e monitoring
+- Implementare backup automatici dei dati
 
 ## Considerazioni sulla Sicurezza
 

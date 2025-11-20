@@ -1,4 +1,5 @@
 node_modules/
+dist/
 data/*.json
 public/uploads/*.jpg
 public/uploads/*.jpeg
