@@ -9,7 +9,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { body, validationResult } from 'express-validator';
 import dotenv from 'dotenv';
-import { User, Service, Booking, JWTPayload } from './types';
+import { User, Service, Booking, JWTPayload, ChatMessage } from './types';
 
 // Load environment variables
 dotenv.config();
@@ -103,6 +103,7 @@ app.use(express.static('public'));
 let users: User[] = [];
 let services: Service[] = [];
 let bookings: Booking[] = [];
+let chatMessages: ChatMessage[] = [];
 
 // Ensure data directory exists
 const ensureDataDir = (): void => {
@@ -127,6 +128,10 @@ const loadData = (): void => {
       const data = fs.readFileSync('data/bookings.json', 'utf8');
       bookings = JSON.parse(data);
     }
+    if (fs.existsSync('data/chatMessages.json')) {
+      const data = fs.readFileSync('data/chatMessages.json', 'utf8');
+      chatMessages = JSON.parse(data);
+    }
   } catch (error) {
     console.error('Error loading data:', error);
   }
@@ -139,6 +144,7 @@ const saveData = (): void => {
     fs.writeFileSync('data/users.json', JSON.stringify(users, null, 2));
     fs.writeFileSync('data/services.json', JSON.stringify(services, null, 2));
     fs.writeFileSync('data/bookings.json', JSON.stringify(bookings, null, 2));
+    fs.writeFileSync('data/chatMessages.json', JSON.stringify(chatMessages, null, 2));
   } catch (error) {
     console.error('Error saving data:', error);
   }
@@ -463,6 +469,78 @@ app.post('/api/bookings/:id/complete',
 
     saveData();
     res.json(booking);
+  }
+);
+
+// Chat routes
+
+// Send a message in a booking chat
+app.post('/api/bookings/:bookingId/messages',
+  authenticate,
+  [
+    body('message').trim().isLength({ min: 1, max: 1000 }).withMessage('Message must be between 1 and 1000 characters'),
+  ],
+  validate,
+  (req: Request, res: Response): void => {
+    const { bookingId } = req.params;
+    const { message } = req.body;
+    
+    // Verify the booking exists and user is part of it
+    const booking = bookings.find(b => b.id === bookingId);
+    
+    if (!booking) {
+      res.status(404).json({ error: 'Booking not found' });
+      return;
+    }
+    
+    // Check if user is either the client or provider for this booking
+    if (booking.clientId !== req.user!.id && booking.providerId !== req.user!.id) {
+      res.status(403).json({ error: 'You do not have access to this chat' });
+      return;
+    }
+    
+    const chatMessage: ChatMessage = {
+      id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
+      bookingId,
+      senderId: req.user!.id,
+      senderEmail: req.user!.email,
+      senderType: req.user!.userType,
+      message,
+      createdAt: new Date().toISOString()
+    };
+    
+    chatMessages.push(chatMessage);
+    saveData();
+    res.json(chatMessage);
+  }
+);
+
+// Get all messages for a booking
+app.get('/api/bookings/:bookingId/messages',
+  authenticate,
+  (req: Request, res: Response): void => {
+    const { bookingId } = req.params;
+    
+    // Verify the booking exists and user is part of it
+    const booking = bookings.find(b => b.id === bookingId);
+    
+    if (!booking) {
+      res.status(404).json({ error: 'Booking not found' });
+      return;
+    }
+    
+    // Check if user is either the client or provider for this booking
+    if (booking.clientId !== req.user!.id && booking.providerId !== req.user!.id) {
+      res.status(403).json({ error: 'You do not have access to this chat' });
+      return;
+    }
+    
+    // Get all messages for this booking, sorted by creation time
+    const messages = chatMessages
+      .filter(m => m.bookingId === bookingId)
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    
+    res.json(messages);
   }
 );
 
