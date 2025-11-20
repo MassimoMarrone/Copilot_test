@@ -162,21 +162,27 @@ Questa versione include:
 
 ## Considerazioni sulla Sicurezza
 
-Questa applicazione è un prototipo e presenta alcune limitazioni di sicurezza che dovrebbero essere affrontate prima di un deployment in produzione:
+**📖 Per la documentazione completa sulla sicurezza, vedere [SECURITY.md](SECURITY.md)**
 
-1. **Rate Limiting**: Non è implementato il rate limiting sulle route API. In produzione, utilizzare pacchetti come `express-rate-limit` per prevenire attacchi di tipo brute-force.
+### Sicurezza Implementata ✅
 
-2. **CSRF Protection**: Non è implementata la protezione CSRF. In produzione, utilizzare pacchetti come `csurf` per proteggere contro attacchi CSRF.
+1. ✅ **Rate Limiting**: Implementato su tutte le route (API, auth, pages)
+2. ✅ **CSRF Protection**: SameSite='strict' cookies + httpOnly
+3. ✅ **JWT Secret**: Configurabile via variabili d'ambiente
+4. ✅ **Validazione Input**: express-validator su tutti i campi
+5. ✅ **File Upload**: Validazione MIME type e limite dimensione (5MB)
+6. ✅ **TypeScript**: Type safety per prevenire errori runtime
+7. ✅ **Helmet.js**: Security headers (CSP, XSS, etc.)
 
-3. **JWT Secret**: La chiave segreta JWT è hardcoded. In produzione, utilizzare variabili d'ambiente sicure.
+### Raccomandazioni per Produzione ⚠️
 
-4. **Validazione Input**: La validazione degli input è minima. In produzione, implementare validazione robusta con pacchetti come `joi` o `express-validator`.
+1. **Database**: Migrare da file JSON a database production-grade
+2. **HTTPS**: Configurare SSL/TLS con certificati validi
+3. **Secrets Management**: Usare servizi dedicati (AWS Secrets Manager, etc.)
+4. **Email Verification**: Implementare verifica email utenti
+5. **Audit Logging**: Logging strutturato e audit trail completo
 
-5. **File Upload**: I controlli sui file upload sono limitati. In produzione, implementare validazione del tipo di file, dimensione massima, e scansione antivirus.
-
-6. **Database**: I dati sono salvati in file JSON. In produzione, utilizzare un database sicuro con backup regolari.
-
-7. **HTTPS**: L'applicazione non forza HTTPS. In produzione, utilizzare sempre connessioni sicure.
+Vedi [SECURITY.md](SECURITY.md) per l'analisi completa e le raccomandazioni.
 
 ## Licenza
 
