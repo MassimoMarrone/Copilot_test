@@ -206,7 +206,7 @@ app.post('/api/register',
 
       const hashedPassword = await bcrypt.hash(password, 12);
       const user: User = {
-        id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
+        id: Date.now().toString() + '-' + Math.random().toString(36).substring(2, 11),
         email,
         password: hashedPassword,
         userType,
@@ -326,7 +326,7 @@ app.post('/api/services',
 
     const { title, description, price, address, latitude, longitude } = req.body;
     const service: Service = {
-      id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
+      id: Date.now().toString() + '-' + Math.random().toString(36).substring(2, 11),
       providerId: req.user!.id,
       providerEmail: req.user!.email,
       title,
@@ -379,7 +379,7 @@ app.post('/api/bookings',
     }
 
     const booking: Booking = {
-      id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
+      id: Date.now().toString() + '-' + Math.random().toString(36).substring(2, 11),
       serviceId,
       clientId: req.user!.id,
       clientEmail: req.user!.email,
@@ -500,7 +500,7 @@ app.post('/api/bookings/:bookingId/messages',
     }
     
     const chatMessage: ChatMessage = {
-      id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
+      id: Date.now().toString() + '-' + Math.random().toString(36).substring(2, 11),
       bookingId,
       senderId: req.user!.id,
       senderEmail: req.user!.email,
