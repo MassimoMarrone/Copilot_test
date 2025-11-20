@@ -8,6 +8,12 @@ export default defineConfig({
   build: {
     outDir: '../public/react',
     emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'src-react/index.html'),
+        clientDashboard: path.resolve(__dirname, 'src-react/client-dashboard.html'),
+      },
+    },
   },
   server: {
     port: 5173,

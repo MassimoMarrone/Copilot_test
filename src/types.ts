@@ -18,6 +18,9 @@ export interface Service {
   title: string;
   description: string;
   price: number;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
   createdAt: string;
 }
 
