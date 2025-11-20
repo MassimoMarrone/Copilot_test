@@ -1,0 +1,9 @@
+node_modules/
+data/*.json
+public/uploads/*.jpg
+public/uploads/*.jpeg
+public/uploads/*.png
+public/uploads/*.gif
+!public/uploads/.gitkeep
+*.log
+.env
