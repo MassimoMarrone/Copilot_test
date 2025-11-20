@@ -46,14 +46,21 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
     searchTimeoutRef.current = setTimeout(async () => {
       try {
+        const apiKey = import.meta.env.VITE_LOCATIONIQ_API_KEY;
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          `https://us1.locationiq.com/v1/search.php?key=${apiKey}&q=${encodeURIComponent(
             value
-          )}&countrycodes=it&limit=5`
+          )}&format=json&countrycodes=it&limit=5`
         );
         const data = await response.json();
-        setLocationResults(data);
-        setShowResults(true);
+        // LocationIQ returns array on success, object with error on failure
+        if (Array.isArray(data)) {
+          setLocationResults(data);
+          setShowResults(true);
+        } else {
+          console.error("LocationIQ Error:", data);
+          setLocationResults([]);
+        }
       } catch (error) {
         console.error("Error fetching location:", error);
       }
@@ -83,9 +90,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
         const { latitude, longitude } = position.coords;
 
         try {
-          // Reverse geocode using Nominatim
+          // Reverse geocode using LocationIQ
+          const apiKey = import.meta.env.VITE_LOCATIONIQ_API_KEY;
           const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+            `https://us1.locationiq.com/v1/reverse.php?key=${apiKey}&lat=${latitude}&lon=${longitude}&format=json`
           );
           const data = await response.json();
 
