@@ -88,6 +88,26 @@
         </div>
     </div>
 
+    <!-- Chat Modal -->
+    <div id="chatModal" class="chat-modal">
+        <div class="chat-modal-content">
+            <div class="chat-header">
+                <div>
+                    <h3>💬 Chat</h3>
+                    <p class="chat-with">Con: <strong id="chatWithEmail"></strong></p>
+                </div>
+                <span class="chat-close">&times;</span>
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <form id="chatForm" class="chat-input-form">
+                <input type="hidden" id="chatBookingId">
+                <input type="text" id="chatMessageInput" placeholder="Scrivi un messaggio..." maxlength="1000" required>
+                <button type="submit" class="btn-send">&#10148;</button>
+            </form>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="/css/chat.css">
     <script src="/js/provider-dashboard.js"></script>
 </body>
 </html>

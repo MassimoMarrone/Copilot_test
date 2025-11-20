@@ -41,6 +41,16 @@ export interface Booking {
   completedAt?: string;
 }
 
+export interface ChatMessage {
+  id: string;
+  bookingId: string;
+  senderId: string;
+  senderEmail: string;
+  senderType: 'client' | 'provider';
+  message: string;
+  createdAt: string;
+}
+
 export interface JWTPayload {
   id: string;
   email: string;

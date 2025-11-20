@@ -84,6 +84,9 @@ async function loadBookings() {
                         <img src="${booking.photoProof}" alt="Prova del servizio completato">
                     </div>
                 ` : ''}
+                <button onclick="openChatModal('${booking.id}', '${booking.clientEmail}')" class="btn btn-chat">
+                    💬 Apri Chat
+                </button>
             </div>
         `).join('');
     } catch (error) {
@@ -244,19 +247,149 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     }
 });
 
+// Chat functions
+let chatBookingId = null;
+let chatInterval = null;
+
+function openChatModal(bookingId, clientEmail) {
+    chatBookingId = bookingId;
+    document.getElementById('chatBookingId').value = bookingId;
+    document.getElementById('chatWithEmail').textContent = clientEmail;
+    document.getElementById('chatModal').style.display = 'flex';
+    loadChatMessages();
+    // Poll for new messages every 3 seconds
+    chatInterval = setInterval(loadChatMessages, 3000);
+}
+
+function closeChatModal() {
+    document.getElementById('chatModal').style.display = 'none';
+    document.getElementById('chatMessageInput').value = '';
+    chatBookingId = null;
+    if (chatInterval) {
+        clearInterval(chatInterval);
+        chatInterval = null;
+    }
+}
+
+async function loadChatMessages() {
+    if (!chatBookingId) return;
+    
+    try {
+        const response = await fetch(`/api/bookings/${chatBookingId}/messages`);
+        if (response.ok) {
+            const messages = await response.json();
+            displayChatMessages(messages);
+        }
+    } catch (error) {
+        console.error('Error loading chat messages:', error);
+    }
+}
+
+function displayChatMessages(messages) {
+    const container = document.getElementById('chatMessages');
+    
+    if (messages.length === 0) {
+        container.innerHTML = '<div class="chat-empty">Nessun messaggio ancora. Inizia la conversazione!</div>';
+        return;
+    }
+    
+    container.innerHTML = messages.map(msg => {
+        const isOwnMessage = msg.senderType === 'provider';
+        const time = formatChatTime(msg.createdAt);
+        
+        return `
+            <div class="chat-message ${isOwnMessage ? 'own-message' : 'other-message'}">
+                <div class="message-bubble">
+                    <div class="message-text">${escapeHtml(msg.message)}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // Scroll to bottom
+    container.scrollTop = container.scrollHeight;
+}
+
+function formatChatTime(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInMinutes = Math.floor(diffInMs / 60000);
+    const diffInHours = Math.floor(diffInMs / 3600000);
+    const diffInDays = Math.floor(diffInMs / 86400000);
+
+    if (diffInMinutes < 1) {
+        return 'Ora';
+    } else if (diffInMinutes < 60) {
+        return `${diffInMinutes} min fa`;
+    } else if (diffInHours < 24) {
+        return `${diffInHours} ora fa`;
+    } else if (diffInDays === 1) {
+        return 'Ieri';
+    } else if (diffInDays < 7) {
+        return `${diffInDays} giorni fa`;
+    } else {
+        return date.toLocaleDateString('it-IT', {
+            day: '2-digit',
+            month: 'short',
+            year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+        });
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Chat form submission
+document.getElementById('chatForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const message = document.getElementById('chatMessageInput').value.trim();
+    if (!message) return;
+    
+    try {
+        const response = await fetch(`/api/bookings/${chatBookingId}/messages`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message })
+        });
+        
+        if (response.ok) {
+            document.getElementById('chatMessageInput').value = '';
+            loadChatMessages();
+        } else {
+            const data = await response.json();
+            alert(data.error || 'Errore nell\'invio del messaggio');
+        }
+    } catch (error) {
+        alert('Errore di connessione');
+    }
+});
+
 // Modal close buttons
 document.querySelector('.close').addEventListener('click', closeServiceModal);
 document.querySelector('.close-complete').addEventListener('click', closeCompleteModal);
+document.querySelector('.chat-close').addEventListener('click', closeChatModal);
 
 window.addEventListener('click', (event) => {
     const serviceModal = document.getElementById('serviceModal');
     const completeModal = document.getElementById('completeModal');
+    const chatModal = document.getElementById('chatModal');
     
     if (event.target === serviceModal) {
         closeServiceModal();
     }
     if (event.target === completeModal) {
         closeCompleteModal();
+    }
+    if (event.target === chatModal) {
+        closeChatModal();
     }
 });
 

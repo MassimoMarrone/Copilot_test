@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
+import ChatModal from "./ChatModal";
 import "../styles/ClientDashboard.css";
 
 interface Service {
@@ -36,6 +37,8 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [bookingDate, setBookingDate] = useState("");
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -279,6 +282,15 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                     />
                   </div>
                 )}
+                <button
+                  onClick={() => {
+                    setSelectedBooking(booking);
+                    setShowChatModal(true);
+                  }}
+                  className="btn btn-chat"
+                >
+                  💬 Apri Chat
+                </button>
               </div>
             ))
           )}
@@ -326,6 +338,20 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Chat Modal */}
+      {showChatModal && selectedBooking && (
+        <ChatModal
+          bookingId={selectedBooking.id}
+          isOpen={showChatModal}
+          onClose={() => {
+            setShowChatModal(false);
+            setSelectedBooking(null);
+          }}
+          currentUserType="client"
+          otherPartyEmail={selectedBooking.providerEmail}
+        />
       )}
     </div>
   );
