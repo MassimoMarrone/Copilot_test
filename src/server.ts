@@ -26,8 +26,10 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "blob:"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://maps.googleapis.com"],
+      imgSrc: ["'self'", "data:", "blob:", "https://maps.googleapis.com", "https://maps.gstatic.com"],
+      connectSrc: ["'self'", "https://maps.googleapis.com"],
+      frameSrc: ["https://maps.googleapis.com"],
     },
   },
 }));
@@ -305,6 +307,9 @@ app.post('/api/services',
     body('title').trim().isLength({ min: 3, max: 200 }).withMessage('Title must be between 3 and 200 characters'),
     body('description').trim().isLength({ min: 10, max: 2000 }).withMessage('Description must be between 10 and 2000 characters'),
     body('price').isFloat({ min: 0.01 }).withMessage('Price must be a positive number'),
+    body('address').optional().trim().isLength({ max: 500 }).withMessage('Address must be less than 500 characters'),
+    body('latitude').optional().isFloat({ min: -90, max: 90 }).withMessage('Latitude must be between -90 and 90'),
+    body('longitude').optional().isFloat({ min: -180, max: 180 }).withMessage('Longitude must be between -180 and 180'),
   ],
   validate,
   (req: Request, res: Response): void => {
@@ -313,7 +318,7 @@ app.post('/api/services',
       return;
     }
 
-    const { title, description, price } = req.body;
+    const { title, description, price, address, latitude, longitude } = req.body;
     const service: Service = {
       id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
       providerId: req.user!.id,
@@ -321,6 +326,9 @@ app.post('/api/services',
       title,
       description,
       price: parseFloat(price),
+      address: address || undefined,
+      latitude: latitude ? parseFloat(latitude) : undefined,
+      longitude: longitude ? parseFloat(longitude) : undefined,
       createdAt: new Date().toISOString()
     };
 
@@ -481,11 +489,26 @@ app.get('/login', pageLimiter, (_req: Request, res: Response): void => {
 });
 
 app.get('/client-dashboard', pageLimiter, (_req: Request, res: Response): void => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'client-dashboard.html'));
+  const htmlPath = path.join(__dirname, '..', 'public', 'react', 'client-dashboard.html');
+  if (fs.existsSync(htmlPath)) {
+    // Read HTML and inject Google Maps API key
+    let html = fs.readFileSync(htmlPath, 'utf8');
+    const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY || '';
+    html = html.replace('</head>', `<meta name="google-maps-api-key" content="${googleMapsApiKey}"></head>`);
+    res.send(html);
+  } else {
+    // Fallback to old HTML if React build doesn't exist
+    res.sendFile(path.join(__dirname, '..', 'public', 'client-dashboard.html'));
+  }
 });
 
 app.get('/provider-dashboard', pageLimiter, (_req: Request, res: Response): void => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'provider-dashboard.html'));
+  const htmlPath = path.join(__dirname, '..', 'public', 'provider-dashboard.html');
+  // Read HTML and inject Google Maps API key
+  let html = fs.readFileSync(htmlPath, 'utf8');
+  const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY || '';
+  html = html.replace('</head>', `<meta name="google-maps-api-key" content="${googleMapsApiKey}"></head>`);
+  res.send(html);
 });
 
 // Error handling middleware
