@@ -47,6 +47,15 @@
                     <label for="servicePrice">Prezzo (€):</label>
                     <input type="number" id="servicePrice" name="price" step="0.01" min="0" required>
                 </div>
+                <div class="form-group">
+                    <label for="serviceAddress">Indirizzo (Opzionale):</label>
+                    <input type="text" id="serviceAddress" name="address" placeholder="Via, Città, CAP">
+                    <small>📍 Aggiungi un indirizzo per rendere il servizio più facile da trovare</small>
+                </div>
+                <div class="form-group" style="display: none;">
+                    <input type="hidden" id="serviceLatitude" name="latitude">
+                    <input type="hidden" id="serviceLongitude" name="longitude">
+                </div>
                 <div class="button-group">
                     <button type="submit" class="btn btn-primary">Salva Servizio</button>
                     <button type="button" class="btn btn-secondary" onclick="closeServiceModal()">Annulla</button>

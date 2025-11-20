@@ -34,6 +34,7 @@ async function loadServices() {
             <div class="service-item">
                 <h3>${service.title}</h3>
                 <p>${service.description}</p>
+                ${service.address ? `<p class="service-location">📍 ${service.address}</p>` : ''}
                 <p class="price">€${service.price.toFixed(2)}</p>
                 <p><small>Creato il: ${new Date(service.createdAt).toLocaleDateString('it-IT')}</small></p>
             </div>
@@ -113,6 +114,45 @@ function closeCompleteModal() {
     currentBookingId = null;
 }
 
+// Initialize Google Maps Autocomplete
+function initAutocomplete() {
+    const addressInput = document.getElementById('serviceAddress');
+    if (!addressInput || !window.google || !window.google.maps) return;
+    
+    const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+        types: ['address'],
+        componentRestrictions: { country: 'it' }
+    });
+    
+    autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (place.geometry && place.geometry.location) {
+            document.getElementById('serviceLatitude').value = place.geometry.location.lat();
+            document.getElementById('serviceLongitude').value = place.geometry.location.lng();
+        }
+    });
+}
+
+// Load Google Maps script
+function loadGoogleMapsScript() {
+    const apiKeyMeta = document.querySelector('meta[name="google-maps-api-key"]');
+    const apiKey = apiKeyMeta ? apiKeyMeta.getAttribute('content') : '';
+    
+    if (!apiKey) return; // Skip if no API key
+    
+    if (window.google && window.google.maps) {
+        initAutocomplete();
+        return;
+    }
+    
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => initAutocomplete();
+    document.head.appendChild(script);
+}
+
 // Handle service form submission
 document.getElementById('serviceForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -120,6 +160,20 @@ document.getElementById('serviceForm').addEventListener('submit', async (e) => {
     const title = document.getElementById('serviceTitle').value;
     const description = document.getElementById('serviceDescription').value;
     const price = document.getElementById('servicePrice').value;
+    const address = document.getElementById('serviceAddress').value;
+    const latitude = document.getElementById('serviceLatitude').value;
+    const longitude = document.getElementById('serviceLongitude').value;
+    
+    const serviceData = { title, description, price };
+    
+    // Add location data if provided
+    if (address) {
+        serviceData.address = address;
+        if (latitude && longitude) {
+            serviceData.latitude = parseFloat(latitude);
+            serviceData.longitude = parseFloat(longitude);
+        }
+    }
     
     try {
         const response = await fetch('/api/services', {
@@ -127,7 +181,7 @@ document.getElementById('serviceForm').addEventListener('submit', async (e) => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ title, description, price })
+            body: JSON.stringify(serviceData)
         });
         
         if (response.ok) {
@@ -210,3 +264,4 @@ window.addEventListener('click', (event) => {
 checkAuth();
 loadServices();
 loadBookings();
+loadGoogleMapsScript();

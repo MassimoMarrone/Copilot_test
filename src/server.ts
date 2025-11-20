@@ -503,7 +503,12 @@ app.get('/client-dashboard', pageLimiter, (_req: Request, res: Response): void =
 });
 
 app.get('/provider-dashboard', pageLimiter, (_req: Request, res: Response): void => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'provider-dashboard.html'));
+  const htmlPath = path.join(__dirname, '..', 'public', 'provider-dashboard.html');
+  // Read HTML and inject Google Maps API key
+  let html = fs.readFileSync(htmlPath, 'utf8');
+  const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY || '';
+  html = html.replace('</head>', `<meta name="google-maps-api-key" content="${googleMapsApiKey}"></head>`);
+  res.send(html);
 });
 
 // Error handling middleware
