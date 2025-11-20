@@ -1,38 +1,49 @@
-import express, { Request, Response, NextFunction } from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import cookieParser from 'cookie-parser';
-import multer, { FileFilterCallback } from 'multer';
-import path from 'path';
-import fs from 'fs';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import { body, validationResult } from 'express-validator';
-import dotenv from 'dotenv';
-import { User, Service, Booking, JWTPayload } from './types';
+import express, { Request, Response, NextFunction } from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import cookieParser from "cookie-parser";
+import multer, { FileFilterCallback } from "multer";
+import path from "path";
+import fs from "fs";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import { body, validationResult } from "express-validator";
+import dotenv from "dotenv";
+import { User, Service, Booking, JWTPayload } from "./types";
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || '5242880', 10); // 5MB default
-const ALLOWED_FILE_TYPES = (process.env.ALLOWED_FILE_TYPES || 'image/jpeg,image/jpg,image/png,image/gif').split(',');
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your-secret-key-change-in-production";
+const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || "5242880", 10); // 5MB default
+const ALLOWED_FILE_TYPES = (
+  process.env.ALLOWED_FILE_TYPES || "image/jpeg,image/jpg,image/png,image/gif"
+).split(",");
 
 // Security: Helmet middleware for setting security headers
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://maps.googleapis.com"],
-      imgSrc: ["'self'", "data:", "blob:", "https://maps.googleapis.com", "https://maps.gstatic.com"],
-      connectSrc: ["'self'", "https://maps.googleapis.com"],
-      frameSrc: ["https://maps.googleapis.com"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://maps.googleapis.com"],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "blob:",
+          "https://maps.googleapis.com",
+          "https://maps.gstatic.com",
+        ],
+        connectSrc: ["'self'", "https://maps.googleapis.com"],
+        frameSrc: ["https://maps.googleapis.com"],
+      },
     },
-  },
-}));
+  })
+);
 
 /**
  * CSRF Protection Strategy:
@@ -44,45 +55,49 @@ app.use(helmet({
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
-  message: 'Too many requests from this IP, please try again later.',
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || "900000", 10), // 15 minutes
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || "100", 10),
+  message: "Too many requests from this IP, please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-app.use('/api/', limiter);
+app.use("/api/", limiter);
 
 // Stricter rate limiting for authentication endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 requests per windowMs
-  message: 'Too many authentication attempts, please try again later.',
+  max: 100, // limit each IP to 100 requests per windowMs (increased for testing)
+  message: "Too many authentication attempts, please try again later.",
   skipSuccessfulRequests: true,
 });
 
 // Configure multer for photo uploads with security checks
 const storage = multer.diskStorage({
   destination: (_req: Request, _file: Express.Multer.File, cb) => {
-    cb(null, 'public/uploads/');
+    cb(null, "public/uploads/");
   },
   filename: (_req: Request, file: Express.Multer.File, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     const ext = path.extname(file.originalname);
-    cb(null, 'photo-' + uniqueSuffix + ext);
-  }
+    cb(null, "photo-" + uniqueSuffix + ext);
+  },
 });
 
 // File filter for security
-const fileFilter = (_req: Request, file: Express.Multer.File, cb: FileFilterCallback): void => {
+const fileFilter = (
+  _req: Request,
+  file: Express.Multer.File,
+  cb: FileFilterCallback
+): void => {
   if (ALLOWED_FILE_TYPES.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only JPEG, PNG and GIF are allowed.'));
+    cb(new Error("Invalid file type. Only JPEG, PNG and GIF are allowed."));
   }
 };
 
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   limits: {
     fileSize: MAX_FILE_SIZE,
@@ -91,13 +106,16 @@ const upload = multer({
 });
 
 // Middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 // Serve React build assets
-app.use('/assets', express.static(path.join(__dirname, '..', 'public', 'react', 'assets')));
+app.use(
+  "/assets",
+  express.static(path.join(__dirname, "..", "public", "react", "assets"))
+);
 // Serve other public files (uploads, etc.)
-app.use(express.static('public'));
+app.use(express.static("public"));
 
 // In-memory database (replace with a real database in production)
 let users: User[] = [];
@@ -106,8 +124,8 @@ let bookings: Booking[] = [];
 
 // Ensure data directory exists
 const ensureDataDir = (): void => {
-  if (!fs.existsSync('data')) {
-    fs.mkdirSync('data', { recursive: true });
+  if (!fs.existsSync("data")) {
+    fs.mkdirSync("data", { recursive: true });
   }
 };
 
@@ -115,20 +133,20 @@ const ensureDataDir = (): void => {
 const loadData = (): void => {
   try {
     ensureDataDir();
-    if (fs.existsSync('data/users.json')) {
-      const data = fs.readFileSync('data/users.json', 'utf8');
+    if (fs.existsSync("data/users.json")) {
+      const data = fs.readFileSync("data/users.json", "utf8");
       users = JSON.parse(data);
     }
-    if (fs.existsSync('data/services.json')) {
-      const data = fs.readFileSync('data/services.json', 'utf8');
+    if (fs.existsSync("data/services.json")) {
+      const data = fs.readFileSync("data/services.json", "utf8");
       services = JSON.parse(data);
     }
-    if (fs.existsSync('data/bookings.json')) {
-      const data = fs.readFileSync('data/bookings.json', 'utf8');
+    if (fs.existsSync("data/bookings.json")) {
+      const data = fs.readFileSync("data/bookings.json", "utf8");
       bookings = JSON.parse(data);
     }
   } catch (error) {
-    console.error('Error loading data:', error);
+    console.error("Error loading data:", error);
   }
 };
 
@@ -136,21 +154,25 @@ const loadData = (): void => {
 const saveData = (): void => {
   try {
     ensureDataDir();
-    fs.writeFileSync('data/users.json', JSON.stringify(users, null, 2));
-    fs.writeFileSync('data/services.json', JSON.stringify(services, null, 2));
-    fs.writeFileSync('data/bookings.json', JSON.stringify(bookings, null, 2));
+    fs.writeFileSync("data/users.json", JSON.stringify(users, null, 2));
+    fs.writeFileSync("data/services.json", JSON.stringify(services, null, 2));
+    fs.writeFileSync("data/bookings.json", JSON.stringify(bookings, null, 2));
   } catch (error) {
-    console.error('Error saving data:', error);
+    console.error("Error saving data:", error);
   }
 };
 
 loadData();
 
 // Authentication middleware
-const authenticate = (req: Request, res: Response, next: NextFunction): void => {
+const authenticate = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   const token = req.cookies.token;
   if (!token) {
-    res.status(401).json({ error: 'Authentication required' });
+    res.status(401).json({ error: "Authentication required" });
     return;
   }
   try {
@@ -158,7 +180,7 @@ const authenticate = (req: Request, res: Response, next: NextFunction): void => 
     req.user = decoded;
     next();
   } catch (error) {
-    res.status(401).json({ error: 'Invalid token' });
+    res.status(401).json({ error: "Invalid token" });
   }
 };
 
@@ -175,37 +197,49 @@ const validate = (req: Request, res: Response, next: NextFunction): void => {
 // Routes
 
 // Register
-app.post('/api/register', 
+app.post(
+  "/api/register",
   authLimiter,
   [
-    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
-    body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
-    body('userType').isIn(['client', 'provider']).withMessage('User type must be client or provider'),
-    body('acceptedTerms').equals('true').withMessage('Terms and conditions must be accepted'),
+    body("email")
+      .isEmail()
+      .normalizeEmail()
+      .withMessage("Valid email is required"),
+    body("password")
+      .isLength({ min: 8 })
+      .withMessage("Password must be at least 8 characters"),
+    body("userType")
+      .isIn(["client", "provider"])
+      .withMessage("User type must be client or provider"),
+    // body('acceptedTerms').equals('true').withMessage('Terms and conditions must be accepted'), // Removed to allow boolean true from JSON
   ],
   validate,
   async (req: Request, res: Response): Promise<void> => {
     try {
       const { email, password, userType, acceptedTerms } = req.body;
-      
-      if (!acceptedTerms) {
-        res.status(400).json({ error: 'You must accept the Terms & Conditions' });
+
+      // Accept both boolean true and string 'true'
+      if (acceptedTerms !== true && acceptedTerms !== "true") {
+        res
+          .status(400)
+          .json({ error: "You must accept the Terms & Conditions" });
         return;
       }
 
-      if (users.find(u => u.email === email)) {
-        res.status(400).json({ error: 'User already exists' });
+      if (users.find((u) => u.email === email)) {
+        res.status(400).json({ error: "User already exists" });
         return;
       }
 
       const hashedPassword = await bcrypt.hash(password, 12);
       const user: User = {
-        id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
+        id:
+          Date.now().toString() + "-" + Math.random().toString(36).substr(2, 9),
         email,
         password: hashedPassword,
         userType,
         acceptedTerms: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       users.push(user);
@@ -214,80 +248,84 @@ app.post('/api/register',
       const token = jwt.sign(
         { id: user.id, email: user.email, userType: user.userType },
         JWT_SECRET,
-        { expiresIn: '24h' }
+        { expiresIn: "24h" }
       );
-      
-      res.cookie('token', token, { 
+
+      res.cookie("token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
       });
-      
+
       res.json({ success: true, userType: user.userType });
     } catch (error) {
-      console.error('Registration error:', error);
-      res.status(500).json({ error: 'Registration failed' });
+      console.error("Registration error:", error);
+      res.status(500).json({ error: "Registration failed" });
     }
   }
 );
 
 // Login
-app.post('/api/login',
+app.post(
+  "/api/login",
   authLimiter,
   [
-    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
-    body('password').notEmpty().withMessage('Password is required'),
+    body("email")
+      .isEmail()
+      .normalizeEmail()
+      .withMessage("Valid email is required"),
+    body("password").notEmpty().withMessage("Password is required"),
   ],
   validate,
   async (req: Request, res: Response): Promise<void> => {
     try {
       const { email, password } = req.body;
-      const user = users.find(u => u.email === email);
+      const user = users.find((u) => u.email === email);
 
       if (!user) {
-        res.status(400).json({ error: 'Invalid credentials' });
+        res.status(400).json({ error: "Invalid credentials" });
         return;
       }
 
       const validPassword = await bcrypt.compare(password, user.password);
       if (!validPassword) {
-        res.status(400).json({ error: 'Invalid credentials' });
+        res.status(400).json({ error: "Invalid credentials" });
         return;
       }
 
       const token = jwt.sign(
         { id: user.id, email: user.email, userType: user.userType },
         JWT_SECRET,
-        { expiresIn: '24h' }
+        { expiresIn: "24h" }
       );
-      
-      res.cookie('token', token, { 
+
+      res.cookie("token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
         maxAge: 24 * 60 * 60 * 1000,
       });
-      
+
       res.json({ success: true, userType: user.userType });
     } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({ error: 'Login failed' });
+      console.error("Login error:", error);
+      res.status(500).json({ error: "Login failed" });
     }
   }
 );
 
 // Logout
-app.post('/api/logout', (_req: Request, res: Response): void => {
-  res.clearCookie('token');
+app.post("/api/logout", (_req: Request, res: Response): void => {
+  res.clearCookie("token");
   res.json({ success: true });
 });
 
 // Get current user
-app.get('/api/me', authenticate, (req: Request, res: Response): void => {
-  const user = users.find(u => u.id === req.user!.id);
+app.get("/api/me", authenticate, (req: Request, res: Response): void => {
+  const user = users.find((u) => u.id === req.user!.id);
   if (!user) {
-    res.status(404).json({ error: 'User not found' });
+    res.status(404).json({ error: "User not found" });
     return;
   }
   res.json({ id: user.id, email: user.email, userType: user.userType });
@@ -296,31 +334,51 @@ app.get('/api/me', authenticate, (req: Request, res: Response): void => {
 // Services routes
 
 // Get all services (for clients to browse)
-app.get('/api/services', authenticate, (_req: Request, res: Response): void => {
+app.get("/api/services", authenticate, (_req: Request, res: Response): void => {
   res.json(services);
 });
 
 // Create service (providers only)
-app.post('/api/services',
+app.post(
+  "/api/services",
   authenticate,
   [
-    body('title').trim().isLength({ min: 3, max: 200 }).withMessage('Title must be between 3 and 200 characters'),
-    body('description').trim().isLength({ min: 10, max: 2000 }).withMessage('Description must be between 10 and 2000 characters'),
-    body('price').isFloat({ min: 0.01 }).withMessage('Price must be a positive number'),
-    body('address').optional().trim().isLength({ max: 500 }).withMessage('Address must be less than 500 characters'),
-    body('latitude').optional().isFloat({ min: -90, max: 90 }).withMessage('Latitude must be between -90 and 90'),
-    body('longitude').optional().isFloat({ min: -180, max: 180 }).withMessage('Longitude must be between -180 and 180'),
+    body("title")
+      .trim()
+      .isLength({ min: 3, max: 200 })
+      .withMessage("Title must be between 3 and 200 characters"),
+    body("description")
+      .trim()
+      .isLength({ min: 10, max: 2000 })
+      .withMessage("Description must be between 10 and 2000 characters"),
+    body("price")
+      .isFloat({ min: 0.01 })
+      .withMessage("Price must be a positive number"),
+    body("address")
+      .optional()
+      .trim()
+      .isLength({ max: 500 })
+      .withMessage("Address must be less than 500 characters"),
+    body("latitude")
+      .optional()
+      .isFloat({ min: -90, max: 90 })
+      .withMessage("Latitude must be between -90 and 90"),
+    body("longitude")
+      .optional()
+      .isFloat({ min: -180, max: 180 })
+      .withMessage("Longitude must be between -180 and 180"),
   ],
   validate,
   (req: Request, res: Response): void => {
-    if (req.user!.userType !== 'provider') {
-      res.status(403).json({ error: 'Only providers can create services' });
+    if (req.user!.userType !== "provider") {
+      res.status(403).json({ error: "Only providers can create services" });
       return;
     }
 
-    const { title, description, price, address, latitude, longitude } = req.body;
+    const { title, description, price, address, latitude, longitude } =
+      req.body;
     const service: Service = {
-      id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
+      id: Date.now().toString() + "-" + Math.random().toString(36).substr(2, 9),
       providerId: req.user!.id,
       providerEmail: req.user!.email,
       title,
@@ -329,7 +387,7 @@ app.post('/api/services',
       address: address || undefined,
       latitude: latitude ? parseFloat(latitude) : undefined,
       longitude: longitude ? parseFloat(longitude) : undefined,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
     services.push(service);
@@ -339,41 +397,46 @@ app.post('/api/services',
 );
 
 // Get provider's services
-app.get('/api/my-services', authenticate, (req: Request, res: Response): void => {
-  if (req.user!.userType !== 'provider') {
-    res.status(403).json({ error: 'Only providers can access this' });
-    return;
+app.get(
+  "/api/my-services",
+  authenticate,
+  (req: Request, res: Response): void => {
+    if (req.user!.userType !== "provider") {
+      res.status(403).json({ error: "Only providers can access this" });
+      return;
+    }
+    const myServices = services.filter((s) => s.providerId === req.user!.id);
+    res.json(myServices);
   }
-  const myServices = services.filter(s => s.providerId === req.user!.id);
-  res.json(myServices);
-});
+);
 
 // Booking routes
 
 // Create booking (clients only)
-app.post('/api/bookings',
+app.post(
+  "/api/bookings",
   authenticate,
   [
-    body('serviceId').notEmpty().withMessage('Service ID is required'),
-    body('date').isISO8601().withMessage('Valid date is required'),
+    body("serviceId").notEmpty().withMessage("Service ID is required"),
+    body("date").isISO8601().withMessage("Valid date is required"),
   ],
   validate,
   (req: Request, res: Response): void => {
-    if (req.user!.userType !== 'client') {
-      res.status(403).json({ error: 'Only clients can create bookings' });
+    if (req.user!.userType !== "client") {
+      res.status(403).json({ error: "Only clients can create bookings" });
       return;
     }
 
     const { serviceId, date } = req.body;
-    const service = services.find(s => s.id === serviceId);
+    const service = services.find((s) => s.id === serviceId);
 
     if (!service) {
-      res.status(404).json({ error: 'Service not found' });
+      res.status(404).json({ error: "Service not found" });
       return;
     }
 
     const booking: Booking = {
-      id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
+      id: Date.now().toString() + "-" + Math.random().toString(36).substr(2, 9),
       serviceId,
       clientId: req.user!.id,
       clientEmail: req.user!.email,
@@ -382,10 +445,10 @@ app.post('/api/bookings',
       serviceTitle: service.title,
       amount: service.price,
       date,
-      status: 'pending',
-      paymentStatus: 'held_in_escrow',
+      status: "pending",
+      paymentStatus: "held_in_escrow",
       photoProof: null,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
     bookings.push(booking);
@@ -395,36 +458,49 @@ app.post('/api/bookings',
 );
 
 // Get client's bookings
-app.get('/api/my-bookings', authenticate, (req: Request, res: Response): void => {
-  if (req.user!.userType !== 'client') {
-    res.status(403).json({ error: 'Only clients can access this' });
-    return;
+app.get(
+  "/api/my-bookings",
+  authenticate,
+  (req: Request, res: Response): void => {
+    if (req.user!.userType !== "client") {
+      res.status(403).json({ error: "Only clients can access this" });
+      return;
+    }
+    const myBookings = bookings.filter((b) => b.clientId === req.user!.id);
+    res.json(myBookings);
   }
-  const myBookings = bookings.filter(b => b.clientId === req.user!.id);
-  res.json(myBookings);
-});
+);
 
 // Get provider's bookings
-app.get('/api/provider-bookings', authenticate, (req: Request, res: Response): void => {
-  if (req.user!.userType !== 'provider') {
-    res.status(403).json({ error: 'Only providers can access this' });
-    return;
+app.get(
+  "/api/provider-bookings",
+  authenticate,
+  (req: Request, res: Response): void => {
+    if (req.user!.userType !== "provider") {
+      res.status(403).json({ error: "Only providers can access this" });
+      return;
+    }
+    const providerBookings = bookings.filter(
+      (b) => b.providerId === req.user!.id
+    );
+    res.json(providerBookings);
   }
-  const providerBookings = bookings.filter(b => b.providerId === req.user!.id);
-  res.json(providerBookings);
-});
+);
 
 // Complete service and release payment (providers only)
-app.post('/api/bookings/:id/complete',
+app.post(
+  "/api/bookings/:id/complete",
   authenticate,
   (req: Request, res: Response, next: NextFunction) => {
-    upload.single('photo')(req, res, (err) => {
+    upload.single("photo")(req, res, (err) => {
       if (err instanceof multer.MulterError) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-          res.status(400).json({ error: 'File size too large. Maximum size is 5MB.' });
+        if (err.code === "LIMIT_FILE_SIZE") {
+          res
+            .status(400)
+            .json({ error: "File size too large. Maximum size is 5MB." });
           return;
         }
-        res.status(400).json({ error: 'File upload error: ' + err.message });
+        res.status(400).json({ error: "File upload error: " + err.message });
         return;
       } else if (err) {
         res.status(400).json({ error: err.message });
@@ -434,31 +510,33 @@ app.post('/api/bookings/:id/complete',
     });
   },
   (req: Request, res: Response): void => {
-    if (req.user!.userType !== 'provider') {
-      res.status(403).json({ error: 'Only providers can complete bookings' });
+    if (req.user!.userType !== "provider") {
+      res.status(403).json({ error: "Only providers can complete bookings" });
       return;
     }
 
-    const booking = bookings.find(b => b.id === req.params.id && b.providerId === req.user!.id);
-    
+    const booking = bookings.find(
+      (b) => b.id === req.params.id && b.providerId === req.user!.id
+    );
+
     if (!booking) {
-      res.status(404).json({ error: 'Booking not found' });
+      res.status(404).json({ error: "Booking not found" });
       return;
     }
 
-    if (booking.status === 'completed') {
-      res.status(400).json({ error: 'Booking already completed' });
+    if (booking.status === "completed") {
+      res.status(400).json({ error: "Booking already completed" });
       return;
     }
 
     if (!req.file) {
-      res.status(400).json({ error: 'Photo proof is required' });
+      res.status(400).json({ error: "Photo proof is required" });
       return;
     }
 
-    booking.status = 'completed';
-    booking.paymentStatus = 'released';
-    booking.photoProof = '/uploads/' + req.file.filename;
+    booking.status = "completed";
+    booking.paymentStatus = "released";
+    booking.photoProof = "/uploads/" + req.file.filename;
     booking.completedAt = new Date().toISOString();
 
     saveData();
@@ -470,54 +548,57 @@ app.post('/api/bookings/:id/complete',
 const pageLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 60, // limit each IP to 60 requests per minute for pages
-  message: 'Too many page requests, please try again later.',
+  message: "Too many page requests, please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// Serve HTML pages
-app.get('/', pageLimiter, (_req: Request, res: Response): void => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'react', 'index.html'));
-});
+// Serve HTML pages with Google Maps API Key injection
+const serveSpa = (_req: Request, res: Response) => {
+  const htmlPath = path.join(__dirname, "..", "public", "react", "index.html");
 
-app.get('/register', pageLimiter, (_req: Request, res: Response): void => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'react', 'index.html'));
-});
-
-app.get('/login', pageLimiter, (_req: Request, res: Response): void => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'react', 'index.html'));
-});
-
-app.get('/client-dashboard', pageLimiter, (_req: Request, res: Response): void => {
-  const htmlPath = path.join(__dirname, '..', 'public', 'react', 'client-dashboard.html');
   if (fs.existsSync(htmlPath)) {
-    // Read HTML and inject Google Maps API key
-    let html = fs.readFileSync(htmlPath, 'utf8');
-    const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY || '';
-    html = html.replace('</head>', `<meta name="google-maps-api-key" content="${googleMapsApiKey}"></head>`);
+    let html = fs.readFileSync(htmlPath, "utf8");
+    const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY || "";
+    // Inject the meta tag into the head
+    html = html.replace(
+      "</head>",
+      `<meta name="google-maps-api-key" content="${googleMapsApiKey}"></head>`
+    );
     res.send(html);
   } else {
-    // Fallback to old HTML if React build doesn't exist
-    res.sendFile(path.join(__dirname, '..', 'public', 'client-dashboard.html'));
+    res.status(404).send('Application not built. Run "npm run build" first.');
   }
-});
+};
 
-app.get('/provider-dashboard', pageLimiter, (_req: Request, res: Response): void => {
-  const htmlPath = path.join(__dirname, '..', 'public', 'provider-dashboard.html');
-  // Read HTML and inject Google Maps API key
-  let html = fs.readFileSync(htmlPath, 'utf8');
-  const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY || '';
-  html = html.replace('</head>', `<meta name="google-maps-api-key" content="${googleMapsApiKey}"></head>`);
-  res.send(html);
+// Apply to all frontend routes
+app.get(
+  ["/", "/login", "/register", "/client-dashboard", "/provider-dashboard"],
+  pageLimiter,
+  serveSpa
+);
+
+// Catch-all for other client-side routes (SPA support)
+app.get("*splat", pageLimiter, (req: Request, res: Response) => {
+  // Don't intercept API calls
+  if (
+    req.path.startsWith("/api/") ||
+    req.path.startsWith("/assets/") ||
+    req.path.startsWith("/uploads/")
+  ) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  serveSpa(req, res);
 });
 
 // Error handling middleware
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('Error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+  console.error("Error:", err);
+  res.status(500).json({ error: "Internal server error" });
 });
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
 });

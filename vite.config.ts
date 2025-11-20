@@ -1,25 +1,29 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path from "path";
 
 export default defineConfig({
   plugins: [react()],
-  root: 'src-react',
+  root: "src-react",
+  envDir: "../",
   build: {
-    outDir: '../public/react',
+    outDir: "../public/react",
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'src-react/index.html'),
-        clientDashboard: path.resolve(__dirname, 'src-react/client-dashboard.html'),
+        main: path.resolve(__dirname, "src-react/index.html"),
+        clientDashboard: path.resolve(
+          __dirname,
+          "src-react/client-dashboard.html"
+        ),
       },
     },
   },
   server: {
     port: 5173,
     proxy: {
-      '/api': {
-        target: 'http://localhost:3000',
+      "/api": {
+        target: "http://localhost:3000",
         changeOrigin: true,
       },
     },
