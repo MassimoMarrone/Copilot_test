@@ -8,6 +8,8 @@ Applicazione web per la prenotazione di servizi di pulizia con sistema di pagame
 - ✅ Registrazione con accettazione obbligatoria dei Termini & Condizioni
 - ✅ Login separato per Clienti e Fornitori
 - ✅ Termini e Condizioni completi visualizzati durante la registrazione
+- ✅ **Nuova UI React**: Login e registrazione tramite modal popup nella navbar
+- ✅ **Navbar persistente**: Accesso rapido a login/registrazione da qualsiasi punto della pagina
 
 ### Dashboard Separate
 
@@ -73,10 +75,13 @@ http://localhost:3000
 
 ### Script Disponibili
 
-- `npm run build` - Compila il codice TypeScript in JavaScript
+- `npm run build` - Compila backend TypeScript e frontend React
+- `npm run build:backend` - Compila solo il backend TypeScript
+- `npm run build:react` - Compila solo il frontend React con Vite
 - `npm start` - Avvia il server (richiede build precedente)
-- `npm run dev` - Compila e avvia in un solo comando
-- `npm run clean` - Pulisce la cartella dist
+- `npm run dev` - Compila e avvia il backend in un solo comando
+- `npm run dev:react` - Avvia il server di sviluppo Vite per React
+- `npm run clean` - Pulisce le cartelle dist e public/react
 
 ## Utilizzo
 
@@ -135,19 +140,24 @@ http://localhost:3000
 - **Upload File**: Multer con validazione
 - **Sicurezza**: Helmet.js, express-rate-limit, express-validator
 - **Configurazione**: dotenv
-- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
+- **Frontend**: React 19 con TypeScript, Vite
+- **UI/UX**: Modal-based login/registration, responsive navbar
 - **Storage**: File system (JSON files) - da sostituire con database in produzione
 
 ## Note
 
-### Versione TypeScript con Sicurezza Migliorata
+### Versione React con UI Moderna
 
 Questa versione include:
-- ✅ Backend scritto in TypeScript per maggiore sicurezza e manutenibilità
-- ✅ Rate limiting implementato
-- ✅ Validazione input su tutti i campi
-- ✅ Header di sicurezza HTTP (Helmet)
-- ✅ Gestione errori robusta
+- ✅ **Frontend React 19**: Interfaccia utente moderna e reattiva
+- ✅ **Modal-based Authentication**: Login e registrazione tramite modal popup invece di pagine separate
+- ✅ **Navbar persistente**: Accesso rapido all'autenticazione da qualsiasi sezione della pagina
+- ✅ **Modal Switching**: Passaggio fluido tra login e registrazione senza chiudere il modal
+- ✅ **Backend TypeScript**: Sicurezza e manutenibilità migliorata
+- ✅ **Rate limiting**: Protezione contro abusi
+- ✅ **Validazione input**: Validazione su tutti i campi
+- ✅ **Header di sicurezza**: Helmet.js configurato
+- ✅ **Gestione errori**: Gestione robusta degli errori
 
 ### Ulteriori Miglioramenti per Produzione
 
