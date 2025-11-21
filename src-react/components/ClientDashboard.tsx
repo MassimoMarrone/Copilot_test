@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import SearchBar from "./SearchBar";
+// import SearchBar from "./SearchBar"; // Removed
 import ChatModal from "./ChatModal";
 import BecomeProviderModal from "./BecomeProviderModal";
 import UserMenu from "./UserMenu";
@@ -38,7 +38,7 @@ interface ClientDashboardProps {
 
 const ClientDashboard: React.FC<ClientDashboardProps> = () => {
   const [services, setServices] = useState<Service[]>([]);
-  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
+  /* const [filteredServices, setFilteredServices] = useState<Service[]>([]); */
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [bookingDate, setBookingDate] = useState("");
@@ -51,7 +51,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
   const [showBecomeProviderModal, setShowBecomeProviderModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isProvider, setIsProvider] = useState(false);
-  const [userEmail, setUserEmail] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>("");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -99,7 +99,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
       const response = await fetch("/api/services");
       const data = await response.json();
       setServices(data);
-      setFilteredServices(data);
+      // setFilteredServices(data);
     } catch (error) {
       console.error("Error loading services:", error);
     }
@@ -115,6 +115,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
     }
   };
 
+  /*
   const handleSearch = (
     query: string,
     location?: { lat: number; lng: number; address: string }
@@ -150,8 +151,10 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
 
     setFilteredServices(filtered);
   };
+  */
 
   // Haversine formula to calculate distance between two coordinates
+  /*
   const calculateDistance = (
     lat1: number,
     lon1: number,
@@ -170,6 +173,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
+  */
 
   const openBookingModal = (service: Service) => {
     setSelectedService(service);
@@ -232,7 +236,9 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
       );
       const data = await response.json();
       if (response.ok) {
-        alert("Pagamento confermato! La prenotazione è stata creata con successo ed è ora in escrow.");
+        alert(
+          "Pagamento confermato! La prenotazione è stata creata con successo ed è ora in escrow."
+        );
         loadBookings();
         navigate("/client-dashboard");
       } else {
@@ -244,6 +250,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
     }
   };
 
+  /*
   const handlePayment = async (bookingId: string) => {
     try {
       const response = await fetch("/api/create-checkout-session", {
@@ -266,6 +273,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
       alert("Errore di connessione");
     }
   };
+  */
 
   const handleLogout = async () => {
     try {
@@ -281,45 +289,12 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
       <div className="dashboard-header">
         <h1>🏠 Dashboard Cliente</h1>
         <div className="header-actions">
-          <UserMenu 
-            userEmail={userEmail} 
+          <UserMenu
+            userEmail={userEmail}
             userType="client"
             isProvider={isProvider}
             onBecomeProvider={() => setShowBecomeProviderModal(true)}
           />
-        </div>
-      </div>
-
-      <div className="dashboard-section">
-        <h2>🔍 Ricerca Servizi</h2>
-        <SearchBar onSearch={handleSearch} />
-
-        <div className="services-grid">
-          {filteredServices.length === 0 ? (
-            <div className="empty-state">
-              <p>Nessun servizio disponibile.</p>
-            </div>
-          ) : (
-            filteredServices.map((service) => (
-              <div key={service.id} className="service-card">
-                <h3>{service.title}</h3>
-                <p className="service-description">{service.description}</p>
-                {service.address && (
-                  <p className="service-location">📍 {service.address}</p>
-                )}
-                <p className="service-price">€{service.price.toFixed(2)}</p>
-                <p className="service-provider">
-                  <small>Fornitore: {service.providerEmail}</small>
-                </p>
-                <button
-                  onClick={() => openBookingModal(service)}
-                  className="btn btn-book"
-                >
-                  Prenota
-                </button>
-              </div>
-            ))
-          )}
         </div>
       </div>
 
@@ -381,15 +356,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                       : "Non Pagato"}
                   </span>
                 </p>
-                {booking.paymentStatus === "unpaid" && (
-                  <button
-                    onClick={() => handlePayment(booking.id)}
-                    className="btn btn-primary"
-                    style={{ marginRight: "10px", marginBottom: "10px" }}
-                  >
-                    💳 Paga Ora
-                  </button>
-                )}
+                {/* Payment button removed as payment is now required at booking time */}
                 {booking.photoProof && (
                   <div className="photo-proof">
                     <p>
@@ -426,7 +393,9 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
             <h2>Prenota Servizio</h2>
             <div className="service-summary">
               <h3>{selectedService.title}</h3>
-              <p className="price">Prezzo: €{selectedService.price.toFixed(2)}</p>
+              <p className="price">
+                Prezzo: €{selectedService.price.toFixed(2)}
+              </p>
             </div>
             <form onSubmit={handleBooking}>
               <div className="form-group">
@@ -483,9 +452,11 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                 />
               </div>
               <div className="info-box">
-                ℹ️ <strong>Pagamento Obbligatorio:</strong> Sarai reindirizzato alla pagina di pagamento. 
-                La prenotazione sarà confermata solo dopo il completamento del pagamento. 
-                Il pagamento sarà trattenuto in modo sicuro in escrow fino al completamento del servizio.
+                ℹ️ <strong>Pagamento Obbligatorio:</strong> Sarai reindirizzato
+                alla pagina di pagamento. La prenotazione sarà confermata solo
+                dopo il completamento del pagamento. Il pagamento sarà
+                trattenuto in modo sicuro in escrow fino al completamento del
+                servizio.
               </div>
               <div className="button-group">
                 <button type="submit" className="btn btn-primary">

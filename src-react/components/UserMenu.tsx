@@ -1,15 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import '../styles/UserMenu.css';
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import "../styles/UserMenu.css";
 
 interface UserMenuProps {
   userEmail?: string;
-  userType?: 'client' | 'provider';
+  userType?: "client" | "provider";
   isProvider?: boolean;
   onBecomeProvider?: () => void;
+  onLogout?: () => void;
 }
 
-const UserMenu: React.FC<UserMenuProps> = ({ userEmail, userType, isProvider, onBecomeProvider }) => {
+const UserMenu: React.FC<UserMenuProps> = ({
+  userEmail,
+  userType,
+  isProvider,
+  onBecomeProvider,
+  onLogout,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -21,54 +28,59 @@ const UserMenu: React.FC<UserMenuProps> = ({ userEmail, userType, isProvider, on
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   const handleLogout = async () => {
+    if (onLogout) {
+      onLogout();
+      return;
+    }
     try {
-      await fetch('/api/logout', { method: 'POST' });
-      navigate('/');
+      await fetch("/api/logout", { method: "POST" });
+      navigate("/");
+      window.location.reload(); // Ensure state is cleared
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     }
   };
 
   const goToDashboard = () => {
-    if (userType === 'provider') {
-      navigate('/provider-dashboard');
+    if (userType === "provider") {
+      navigate("/provider-dashboard");
     } else {
-      navigate('/client-dashboard');
+      navigate("/client-dashboard");
     }
     setIsOpen(false);
   };
 
   const goToProfile = () => {
-    navigate('/profile');
+    navigate("/profile");
     setIsOpen(false);
   };
 
   const goToOtherDashboard = () => {
-    if (userType === 'provider') {
-      navigate('/client-dashboard');
+    if (userType === "provider") {
+      navigate("/client-dashboard");
     } else {
-      navigate('/provider-dashboard');
+      navigate("/provider-dashboard");
     }
     setIsOpen(false);
   };
 
   return (
     <div className="user-menu" ref={menuRef}>
-      <button 
+      <button
         className="user-menu-button"
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Menu utente"
       >
         <span className="user-icon">👤</span>
-        <span className="user-email">{userEmail || 'Utente'}</span>
-        <span className={`dropdown-arrow ${isOpen ? 'open' : ''}`}>▼</span>
+        <span className="user-email">{userEmail || "Utente"}</span>
+        <span className={`dropdown-arrow ${isOpen ? "open" : ""}`}>▼</span>
       </button>
 
       {isOpen && (
@@ -78,7 +90,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ userEmail, userType, isProvider, on
             <div className="user-info">
               <div className="user-name">{userEmail}</div>
               <div className="user-role">
-                {userType === 'provider' ? 'Fornitore' : 'Cliente'}
+                {userType === "provider" ? "Fornitore" : "Cliente"}
               </div>
             </div>
           </div>
@@ -95,15 +107,21 @@ const UserMenu: React.FC<UserMenuProps> = ({ userEmail, userType, isProvider, on
             <span>Profilo Utente</span>
           </button>
 
-          {isProvider && userType === 'client' && (
+          {isProvider && userType === "client" && (
             <button className="user-menu-item" onClick={goToOtherDashboard}>
               <span className="menu-icon">🏪</span>
               <span>Dashboard Fornitore</span>
             </button>
           )}
 
-          {!isProvider && userType === 'client' && onBecomeProvider && (
-            <button className="user-menu-item" onClick={() => { setIsOpen(false); onBecomeProvider(); }}>
+          {!isProvider && userType === "client" && onBecomeProvider && (
+            <button
+              className="user-menu-item"
+              onClick={() => {
+                setIsOpen(false);
+                onBecomeProvider();
+              }}
+            >
               <span className="menu-icon">🎯</span>
               <span>Diventa Fornitore</span>
             </button>

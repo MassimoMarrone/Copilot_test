@@ -1,12 +1,20 @@
-import React from 'react';
-import '../styles/Navbar.css';
+import React from "react";
+import UserMenu from "./UserMenu";
+import "../styles/Navbar.css";
 
 interface NavbarProps {
   onLoginClick: () => void;
   onRegisterClick: () => void;
+  user?: any; // We can refine this type later
+  onLogout?: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onRegisterClick }) => {
+const Navbar: React.FC<NavbarProps> = ({
+  onLoginClick,
+  onRegisterClick,
+  user,
+  onLogout,
+}) => {
   return (
     <nav className="navbar">
       <div className="navbar-container">
@@ -14,12 +22,26 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onRegisterClick }) => {
           <h1>🏠 Servizi di Pulizia</h1>
         </div>
         <div className="navbar-buttons">
-          <button className="btn-navbar btn-login" onClick={onLoginClick}>
-            Accedi
-          </button>
-          <button className="btn-navbar btn-register" onClick={onRegisterClick}>
-            Registrati
-          </button>
+          {user ? (
+            <UserMenu
+              userEmail={user.email}
+              userType={user.userType}
+              isProvider={user.isProvider}
+              onLogout={onLogout}
+            />
+          ) : (
+            <>
+              <button className="btn-navbar btn-login" onClick={onLoginClick}>
+                Accedi
+              </button>
+              <button
+                className="btn-navbar btn-register"
+                onClick={onRegisterClick}
+              >
+                Registrati
+              </button>
+            </>
+          )}
         </div>
       </div>
     </nav>
