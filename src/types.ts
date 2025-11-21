@@ -6,7 +6,7 @@ export interface User {
   id: string;
   email: string;
   password: string;
-  userType: 'client' | 'provider'; // Kept for backward compatibility, use isClient/isProvider for new logic
+  userType: "client" | "provider"; // Kept for backward compatibility, use isClient/isProvider for new logic
   isClient: boolean; // All users start as clients
   isProvider: boolean; // Can become provider by accepting provider terms
   acceptedTerms: boolean; // Client terms
@@ -37,8 +37,8 @@ export interface Booking {
   serviceTitle: string;
   amount: number;
   date: string;
-  status: 'pending' | 'completed' | 'cancelled';
-  paymentStatus: 'held_in_escrow' | 'released' | 'cancelled';
+  status: "pending" | "completed" | "cancelled";
+  paymentStatus: "unpaid" | "held_in_escrow" | "released" | "cancelled";
   photoProof: string | null;
   createdAt: string;
   completedAt?: string;
@@ -49,7 +49,7 @@ export interface ChatMessage {
   bookingId: string;
   senderId: string;
   senderEmail: string;
-  senderType: 'client' | 'provider';
+  senderType: "client" | "provider";
   message: string;
   createdAt: string;
 }
@@ -57,7 +57,7 @@ export interface ChatMessage {
 export interface JWTPayload {
   id: string;
   email: string;
-  userType: 'client' | 'provider';
+  userType: "client" | "provider";
 }
 
 declare global {

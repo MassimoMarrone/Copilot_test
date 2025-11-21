@@ -10,6 +10,7 @@ import rateLimit from "express-rate-limit";
 import { body, validationResult } from "express-validator";
 import dotenv from "dotenv";
 import { User, Service, Booking, JWTPayload, ChatMessage } from "./types";
+import Stripe from "stripe";
 
 // Load environment variables
 dotenv.config();
@@ -22,6 +23,10 @@ const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || "5242880", 10); // 5
 const ALLOWED_FILE_TYPES = (
   process.env.ALLOWED_FILE_TYPES || "image/jpeg,image/jpg,image/png,image/gif"
 ).split(",");
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+  apiVersion: "2025-11-17.clover",
+});
 
 // Security: Helmet middleware for setting security headers
 app.use(
@@ -162,7 +167,10 @@ const saveData = (): void => {
     fs.writeFileSync("data/users.json", JSON.stringify(users, null, 2));
     fs.writeFileSync("data/services.json", JSON.stringify(services, null, 2));
     fs.writeFileSync("data/bookings.json", JSON.stringify(bookings, null, 2));
-    fs.writeFileSync("data/chatMessages.json", JSON.stringify(chatMessages, null, 2));
+    fs.writeFileSync(
+      "data/chatMessages.json",
+      JSON.stringify(chatMessages, null, 2)
+    );
   } catch (error) {
     console.error("Error saving data:", error);
   }
@@ -202,12 +210,16 @@ const validate = (req: Request, res: Response, next: NextFunction): void => {
 
 // Helper function to check if user is a provider (handles backward compatibility)
 const isUserProvider = (user: User): boolean => {
-  return user.isProvider !== undefined ? user.isProvider : user.userType === "provider";
+  return user.isProvider !== undefined
+    ? user.isProvider
+    : user.userType === "provider";
 };
 
 // Helper function to check if user is a client (handles backward compatibility)
 const isUserClient = (user: User): boolean => {
-  return user.isClient !== undefined ? user.isClient : user.userType === "client";
+  return user.isClient !== undefined
+    ? user.isClient
+    : user.userType === "client";
 };
 
 // Routes
@@ -245,7 +257,10 @@ app.post(
 
       const hashedPassword = await bcrypt.hash(password, 12);
       const user: User = {
-        id: Date.now().toString() + "-" + Math.random().toString(36).substring(2, 11),
+        id:
+          Date.now().toString() +
+          "-" +
+          Math.random().toString(36).substring(2, 11),
         email,
         password: hashedPassword,
         userType: "client", // All users start as clients
@@ -271,7 +286,12 @@ app.post(
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
       });
 
-      res.json({ success: true, userType: "client", isClient: true, isProvider: false });
+      res.json({
+        success: true,
+        userType: "client",
+        isClient: true,
+        isProvider: false,
+      });
     } catch (error) {
       console.error("Registration error:", error);
       res.status(500).json({ error: "Registration failed" });
@@ -341,12 +361,12 @@ app.get("/api/me", authenticate, (req: Request, res: Response): void => {
     res.status(404).json({ error: "User not found" });
     return;
   }
-  res.json({ 
-    id: user.id, 
-    email: user.email, 
+  res.json({
+    id: user.id,
+    email: user.email,
     userType: user.userType,
     isClient: isUserClient(user),
-    isProvider: isUserProvider(user)
+    isProvider: isUserProvider(user),
   });
 });
 
@@ -392,10 +412,10 @@ app.post(
       // Issue a new token with updated info
       // Keep userType as 'client' since user is still primarily a client who can also provide
       const token = jwt.sign(
-        { 
-          id: user.id, 
-          email: user.email, 
-          userType: "client"
+        {
+          id: user.id,
+          email: user.email,
+          userType: "client",
         },
         JWT_SECRET,
         { expiresIn: "24h" }
@@ -456,7 +476,7 @@ app.post(
   validate,
   (req: Request, res: Response): void => {
     const user = users.find((u) => u.id === req.user!.id);
-    
+
     if (!user || !isUserProvider(user)) {
       res.status(403).json({ error: "Only providers can create services" });
       return;
@@ -465,7 +485,10 @@ app.post(
     const { title, description, price, address, latitude, longitude } =
       req.body;
     const service: Service = {
-      id: Date.now().toString() + "-" + Math.random().toString(36).substring(2, 11),
+      id:
+        Date.now().toString() +
+        "-" +
+        Math.random().toString(36).substring(2, 11),
       providerId: req.user!.id,
       providerEmail: req.user!.email,
       title,
@@ -489,7 +512,7 @@ app.get(
   authenticate,
   (req: Request, res: Response): void => {
     const user = users.find((u) => u.id === req.user!.id);
-    
+
     if (!user || !isUserProvider(user)) {
       res.status(403).json({ error: "Only providers can access this" });
       return;
@@ -525,7 +548,10 @@ app.post(
     }
 
     const booking: Booking = {
-      id: Date.now().toString() + "-" + Math.random().toString(36).substring(2, 11),
+      id:
+        Date.now().toString() +
+        "-" +
+        Math.random().toString(36).substring(2, 11),
       serviceId,
       clientId: req.user!.id,
       clientEmail: req.user!.email,
@@ -535,7 +561,7 @@ app.post(
       amount: service.price,
       date,
       status: "pending",
-      paymentStatus: "held_in_escrow",
+      paymentStatus: "unpaid",
       photoProof: null,
       createdAt: new Date().toISOString(),
     };
@@ -566,7 +592,7 @@ app.get(
   authenticate,
   (req: Request, res: Response): void => {
     const user = users.find((u) => u.id === req.user!.id);
-    
+
     if (!user || !isUserProvider(user)) {
       res.status(403).json({ error: "Only providers can access this" });
       return;
@@ -602,7 +628,7 @@ app.post(
   },
   (req: Request, res: Response): void => {
     const user = users.find((u) => u.id === req.user!.id);
-    
+
     if (!user || !isUserProvider(user)) {
       res.status(403).json({ error: "Only providers can complete bookings" });
       return;
@@ -637,43 +663,145 @@ app.post(
   }
 );
 
+// Stripe Payment Route
+app.post(
+  "/api/create-checkout-session",
+  authenticate,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { bookingId } = req.body;
+      const booking = bookings.find((b) => b.id === bookingId);
+
+      if (!booking) {
+        res.status(404).json({ error: "Booking not found" });
+        return;
+      }
+
+      // Ensure only the client who made the booking can pay
+      if (booking.clientId !== req.user!.id) {
+        res.status(403).json({ error: "Unauthorized to pay for this booking" });
+        return;
+      }
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "eur",
+              product_data: {
+                name: booking.serviceTitle,
+                description: `Booking ID: ${booking.id}`,
+              },
+              unit_amount: Math.round(booking.amount * 100), // Amount in cents
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        success_url: `${req.protocol}://${req.get(
+          "host"
+        )}/client-dashboard.html?payment=success&bookingId=${bookingId}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${req.protocol}://${req.get(
+          "host"
+        )}/client-dashboard.html?payment=cancel`,
+        metadata: {
+          bookingId: booking.id,
+          clientId: req.user!.id,
+        },
+      });
+
+      res.json({ id: session.id, url: session.url });
+    } catch (error) {
+      console.error("Stripe error:", error);
+      res.status(500).json({ error: "Failed to create checkout session" });
+    }
+  }
+);
+
+// Verify payment and update booking status
+app.get(
+  "/api/verify-payment",
+  authenticate,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { session_id } = req.query;
+
+      if (!session_id || typeof session_id !== "string") {
+        res.status(400).json({ error: "Session ID is required" });
+        return;
+      }
+
+      const session = await stripe.checkout.sessions.retrieve(session_id);
+
+      if (session.payment_status === "paid") {
+        const bookingId = session.metadata?.bookingId;
+        const booking = bookings.find((b) => b.id === bookingId);
+
+        if (booking) {
+          booking.paymentStatus = "held_in_escrow";
+          saveData();
+          res.json({ success: true, booking });
+        } else {
+          res.status(404).json({ error: "Booking not found" });
+        }
+      } else {
+        res.status(400).json({ error: "Payment not completed" });
+      }
+    } catch (error) {
+      console.error("Payment verification error:", error);
+      res.status(500).json({ error: "Payment verification failed" });
+    }
+  }
+);
+
 // Chat routes
 
 // Send a message in a booking chat
-app.post('/api/bookings/:bookingId/messages',
+app.post(
+  "/api/bookings/:bookingId/messages",
   authenticate,
   [
-    body('message').trim().isLength({ min: 1, max: 1000 }).withMessage('Message must be between 1 and 1000 characters'),
+    body("message")
+      .trim()
+      .isLength({ min: 1, max: 1000 })
+      .withMessage("Message must be between 1 and 1000 characters"),
   ],
   validate,
   (req: Request, res: Response): void => {
     const { bookingId } = req.params;
     const { message } = req.body;
-    
+
     // Verify the booking exists and user is part of it
-    const booking = bookings.find(b => b.id === bookingId);
-    
+    const booking = bookings.find((b) => b.id === bookingId);
+
     if (!booking) {
-      res.status(404).json({ error: 'Booking not found' });
+      res.status(404).json({ error: "Booking not found" });
       return;
     }
-    
+
     // Check if user is either the client or provider for this booking
-    if (booking.clientId !== req.user!.id && booking.providerId !== req.user!.id) {
-      res.status(403).json({ error: 'You do not have access to this chat' });
+    if (
+      booking.clientId !== req.user!.id &&
+      booking.providerId !== req.user!.id
+    ) {
+      res.status(403).json({ error: "You do not have access to this chat" });
       return;
     }
-    
+
     const chatMessage: ChatMessage = {
-      id: Date.now().toString() + '-' + Math.random().toString(36).substring(2, 11),
+      id:
+        Date.now().toString() +
+        "-" +
+        Math.random().toString(36).substring(2, 11),
       bookingId,
       senderId: req.user!.id,
       senderEmail: req.user!.email,
       senderType: req.user!.userType,
       message,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
-    
+
     chatMessages.push(chatMessage);
     saveData();
     res.json(chatMessage);
@@ -681,30 +809,37 @@ app.post('/api/bookings/:bookingId/messages',
 );
 
 // Get all messages for a booking
-app.get('/api/bookings/:bookingId/messages',
+app.get(
+  "/api/bookings/:bookingId/messages",
   authenticate,
   (req: Request, res: Response): void => {
     const { bookingId } = req.params;
-    
+
     // Verify the booking exists and user is part of it
-    const booking = bookings.find(b => b.id === bookingId);
-    
+    const booking = bookings.find((b) => b.id === bookingId);
+
     if (!booking) {
-      res.status(404).json({ error: 'Booking not found' });
+      res.status(404).json({ error: "Booking not found" });
       return;
     }
-    
+
     // Check if user is either the client or provider for this booking
-    if (booking.clientId !== req.user!.id && booking.providerId !== req.user!.id) {
-      res.status(403).json({ error: 'You do not have access to this chat' });
+    if (
+      booking.clientId !== req.user!.id &&
+      booking.providerId !== req.user!.id
+    ) {
+      res.status(403).json({ error: "You do not have access to this chat" });
       return;
     }
-    
+
     // Get all messages for this booking, sorted by creation time
     const messages = chatMessages
-      .filter(m => m.bookingId === bookingId)
-      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    
+      .filter((m) => m.bookingId === bookingId)
+      .sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+
     res.json(messages);
   }
 );
