@@ -641,9 +641,9 @@ app.get(
     );
 
     // Extract unique dates
-    const bookedDates = serviceBookings.map(b => 
-      new Date(b.date).toISOString().split('T')[0]
-    );
+    const bookedDates = Array.from(new Set(
+      serviceBookings.map(b => new Date(b.date).toISOString().split('T')[0])
+    ));
 
     res.json({ bookedDates });
   }
