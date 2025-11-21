@@ -10,6 +10,7 @@ export interface User {
   isClient: boolean; // All users start as clients
   isProvider: boolean; // Can become provider by accepting provider terms
   isAdmin?: boolean; // Admin flag
+  isBlocked?: boolean; // Blocked flag
   acceptedTerms: boolean; // Client terms
   acceptedProviderTerms?: boolean; // Provider terms (if isProvider is true)
   createdAt: string;
@@ -39,7 +40,7 @@ export interface Booking {
   amount: number;
   date: string;
   status: "pending" | "completed" | "cancelled";
-  paymentStatus: "unpaid" | "held_in_escrow" | "released" | "cancelled";
+  paymentStatus: "unpaid" | "held_in_escrow" | "released" | "cancelled" | "refunded";
   photoProof: string | null;
   createdAt: string;
   completedAt?: string;

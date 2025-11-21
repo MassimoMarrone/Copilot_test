@@ -479,7 +479,12 @@ app.post(
 
 // Get all services (for clients to browse)
 app.get("/api/services", authenticate, (_req: Request, res: Response): void => {
-  res.json(services);
+  // Filter out services from blocked providers
+  const activeServices = services.filter((service) => {
+    const provider = users.find((u) => u.id === service.providerId);
+    return provider && !provider.isBlocked;
+  });
+  res.json(activeServices);
 });
 
 // Create service (providers only)
@@ -738,6 +743,90 @@ app.get(
     );
 
     res.json({ bookedDates });
+  }
+);
+
+// Cancel booking (providers only)
+app.post(
+  "/api/bookings/:id/cancel",
+  authenticate,
+  (req: Request, res: Response): void => {
+    const user = users.find((u) => u.id === req.user!.id);
+
+    if (!user || !isUserProvider(user)) {
+      res.status(403).json({ error: "Only providers can cancel bookings" });
+      return;
+    }
+
+    const booking = bookings.find(
+      (b) => b.id === req.params.id && b.providerId === req.user!.id
+    );
+
+    if (!booking) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+
+    if (booking.status === "completed") {
+      res.status(400).json({ error: "Cannot cancel a completed booking" });
+      return;
+    }
+
+    if (booking.status === "cancelled") {
+      res.status(400).json({ error: "Booking already cancelled" });
+      return;
+    }
+
+    booking.status = "cancelled";
+    // In a real app, you would also trigger a refund here if payment was held in escrow
+    if (booking.paymentStatus === "held_in_escrow") {
+      booking.paymentStatus = "refunded";
+    }
+
+    saveData();
+    res.json(booking);
+  }
+);
+
+// Cancel booking (providers only)
+app.post(
+  "/api/bookings/:id/cancel",
+  authenticate,
+  (req: Request, res: Response): void => {
+    const user = users.find((u) => u.id === req.user!.id);
+
+    if (!user || !isUserProvider(user)) {
+      res.status(403).json({ error: "Only providers can cancel bookings" });
+      return;
+    }
+
+    const booking = bookings.find(
+      (b) => b.id === req.params.id && b.providerId === req.user!.id
+    );
+
+    if (!booking) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+
+    if (booking.status === "completed") {
+      res.status(400).json({ error: "Cannot cancel a completed booking" });
+      return;
+    }
+
+    if (booking.status === "cancelled") {
+      res.status(400).json({ error: "Booking already cancelled" });
+      return;
+    }
+
+    booking.status = "cancelled";
+    // In a real app, you would also trigger a refund here if payment was held in escrow
+    if (booking.paymentStatus === "held_in_escrow") {
+      booking.paymentStatus = "refunded";
+    }
+
+    saveData();
+    res.json(booking);
   }
 );
 
@@ -1064,6 +1153,63 @@ app.get(
   }
 );
 
+app.post(
+  "/api/admin/users/:id/block",
+  authenticate,
+  requireAdmin,
+  (req: Request, res: Response) => {
+    const { id } = req.params;
+    const user = users.find((u) => u.id === id);
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    if (user.userType === "admin") {
+      res.status(400).json({ error: "Cannot block an admin" });
+      return;
+    }
+
+    user.isBlocked = true;
+
+    // Cancel all pending bookings for this user (as client or provider)
+    bookings.forEach((booking) => {
+      if (
+        (booking.clientId === id || booking.providerId === id) &&
+        booking.status === "pending"
+      ) {
+        booking.status = "cancelled";
+        if (booking.paymentStatus === "held_in_escrow") {
+          booking.paymentStatus = "refunded";
+        }
+      }
+    });
+
+    saveData();
+    res.json({ success: true });
+  }
+);
+
+app.post(
+  "/api/admin/users/:id/unblock",
+  authenticate,
+  requireAdmin,
+  (req: Request, res: Response) => {
+    const { id } = req.params;
+    const user = users.find((u) => u.id === id);
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    user.isBlocked = false;
+    saveData();
+    res.json({ success: true });
+  }
+);
+
 app.delete(
   "/api/admin/users/:id",
   authenticate,
@@ -1119,6 +1265,43 @@ app.delete(
     }
 
     services.splice(serviceIndex, 1);
+    saveData();
+    res.json({ success: true });
+  }
+);
+
+app.get(
+  "/api/admin/bookings",
+  authenticate,
+  requireAdmin,
+  (_req: Request, res: Response) => {
+    res.json(bookings);
+  }
+);
+
+app.post(
+  "/api/admin/bookings/:id/cancel",
+  authenticate,
+  requireAdmin,
+  (req: Request, res: Response) => {
+    const { id } = req.params;
+    const booking = bookings.find((b) => b.id === id);
+
+    if (!booking) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+
+    if (booking.status === "cancelled") {
+      res.status(400).json({ error: "Booking already cancelled" });
+      return;
+    }
+
+    booking.status = "cancelled";
+    if (booking.paymentStatus === "held_in_escrow") {
+      booking.paymentStatus = "refunded";
+    }
+
     saveData();
     res.json({ success: true });
   }

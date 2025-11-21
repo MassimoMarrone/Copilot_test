@@ -296,20 +296,86 @@ const ProviderDashboard: React.FC = () => {
                   <span className={`status ${booking.paymentStatus}`}>
                     {booking.paymentStatus === "held_in_escrow"
                       ? "Trattenuto in Escrow"
-                      : "Rilasciato"}
+                      : booking.paymentStatus === "released"
+                      ? "Rilasciato"
+                      : booking.paymentStatus === "refunded"
+                      ? "Rimborsato"
+                      : "Non pagato"}
                   </span>
                 </p>
 
-                {booking.status === "pending" && (
-                  <button
-                    onClick={() => {
-                      setSelectedBooking(booking);
-                      setShowCompleteModal(true);
+                {booking.status !== "cancelled" &&
+                  booking.status !== "completed" && (
+                    <div className="booking-actions">
+                      <button
+                        onClick={() => {
+                          setSelectedBooking(booking);
+                          setShowCompleteModal(true);
+                        }}
+                        className="btn btn-success"
+                      >
+                        Completa Servizio & Rilascia Payout
+                      </button>
+                      <button
+                        className="btn-cancel"
+                        style={{
+                          backgroundColor: "#dc3545",
+                          color: "white",
+                          marginLeft: "10px",
+                          padding: "8px 16px",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                        }}
+                        onClick={async () => {
+                          if (
+                            !window.confirm(
+                              "Sei sicuro di voler cancellare questa prenotazione? Se il pagamento è stato effettuato, verrà rimborsato."
+                            )
+                          )
+                            return;
+
+                          try {
+                            const response = await fetch(
+                              `/api/bookings/${booking.id}/cancel`,
+                              {
+                                method: "POST",
+                              }
+                            );
+                            if (response.ok) {
+                              alert("Prenotazione cancellata con successo");
+                              loadBookings();
+                            } else {
+                              const data = await response.json();
+                              alert(
+                                data.error ||
+                                  "Errore durante la cancellazione della prenotazione"
+                              );
+                            }
+                          } catch (error) {
+                            alert("Errore di connessione");
+                          }
+                        }}
+                      >
+                        Cancella
+                      </button>
+                    </div>
+                  )}
+
+                {booking.status === "completed" && (
+                  <div className="completed-badge">✅ Completato</div>
+                )}
+                {booking.status === "cancelled" && (
+                  <div
+                    className="cancelled-badge"
+                    style={{
+                      color: "#dc3545",
+                      fontWeight: "bold",
+                      marginTop: "10px",
                     }}
-                    className="btn btn-success"
                   >
-                    Completa Servizio & Rilascia Payout
-                  </button>
+                    ❌ Cancellato
+                  </div>
                 )}
 
                 {booking.photoProof && (
