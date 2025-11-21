@@ -374,13 +374,7 @@ app.post(
 
       const user = users[userIndex];
 
-      // Check if already a provider
-      if (user.isProvider) {
-        res.status(400).json({ error: "You are already a provider" });
-        return;
-      }
-
-      // Check if already a provider (backward compatibility)
+      // Check if already a provider (handles backward compatibility)
       if (isUserProvider(user)) {
         res.status(400).json({ error: "You are already a provider" });
         return;
