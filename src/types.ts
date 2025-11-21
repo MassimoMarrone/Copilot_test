@@ -14,6 +14,7 @@ export interface User {
   acceptedTerms: boolean; // Client terms
   acceptedProviderTerms?: boolean; // Provider terms (if isProvider is true)
   stripeAccountId?: string; // Stripe Connect Account ID for payouts
+  googleId?: string; // Google ID for OAuth users
   createdAt: string;
 }
 

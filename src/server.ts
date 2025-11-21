@@ -11,6 +11,7 @@ import { body, validationResult } from "express-validator";
 import dotenv from "dotenv";
 import { User, Service, Booking, JWTPayload, ChatMessage } from "./types";
 import Stripe from "stripe";
+import { OAuth2Client } from "google-auth-library";
 
 // Load environment variables
 dotenv.config();
@@ -28,6 +29,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-11-17.clover",
 });
 
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 const PLATFORM_FEE_PERCENTAGE = 0.1; // 10% platform fee
 
 // Security: Helmet middleware for setting security headers
@@ -36,17 +39,33 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "https://maps.googleapis.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com"],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://maps.googleapis.com",
+          "https://accounts.google.com",
+          "https://gsi.client-web.google.com",
+        ],
         imgSrc: [
           "'self'",
           "data:",
           "blob:",
           "https://maps.googleapis.com",
           "https://maps.gstatic.com",
+          "https://lh3.googleusercontent.com",
         ],
-        connectSrc: ["'self'", "https://maps.googleapis.com"],
-        frameSrc: ["https://maps.googleapis.com"],
+        connectSrc: [
+          "'self'",
+          "https://maps.googleapis.com",
+          "https://accounts.google.com",
+          "https://gsi.client-web.google.com",
+        ],
+        frameSrc: [
+          "https://maps.googleapis.com",
+          "https://accounts.google.com",
+          "https://gsi.client-web.google.com",
+        ],
       },
     },
   })
@@ -362,6 +381,12 @@ app.post(
         return;
       }
 
+      // If user has no password (google auth only) and tries to login with password
+      if (!user.password) {
+        res.status(400).json({ error: "Please sign in with Google" });
+        return;
+      }
+
       const validPassword = await bcrypt.compare(password, user.password);
       if (!validPassword) {
         res.status(400).json({ error: "Invalid credentials" });
@@ -385,6 +410,82 @@ app.post(
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ error: "Login failed" });
+    }
+  }
+);
+
+// Google Auth
+app.post(
+  "/api/auth/google",
+  authLimiter,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { token } = req.body;
+
+      if (!process.env.GOOGLE_CLIENT_ID) {
+        console.error("GOOGLE_CLIENT_ID is not set");
+        res.status(500).json({ error: "Server configuration error" });
+        return;
+      }
+
+      const ticket = await googleClient.verifyIdToken({
+        idToken: token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+
+      if (!payload || !payload.email) {
+        res.status(400).json({ error: "Invalid Google token" });
+        return;
+      }
+
+      const { email, sub: googleId } = payload;
+
+      let user = users.find((u) => u.email === email);
+
+      if (user) {
+        // User exists, update googleId if not present
+        if (!user.googleId) {
+          user.googleId = googleId;
+          saveData();
+        }
+      } else {
+        // Create new user
+        user = {
+          id:
+            Date.now().toString() +
+            "-" +
+            Math.random().toString(36).substring(2, 11),
+          email,
+          password: "", // No password for Google users
+          userType: "client",
+          isClient: true,
+          isProvider: false,
+          acceptedTerms: true,
+          createdAt: new Date().toISOString(),
+          googleId,
+        };
+        users.push(user);
+        saveData();
+      }
+
+      const jwtToken = jwt.sign(
+        { id: user.id, email: user.email, userType: user.userType },
+        JWT_SECRET,
+        { expiresIn: "24h" }
+      );
+
+      res.cookie("token", jwtToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 24 * 60 * 60 * 1000,
+      });
+
+      res.json({ success: true, userType: user.userType });
+    } catch (error) {
+      console.error("Google Auth error:", error);
+      res.status(401).json({ error: "Google authentication failed" });
     }
   }
 );
@@ -480,7 +581,7 @@ app.post(
 // Services routes
 
 // Get all services (for clients to browse)
-app.get("/api/services", authenticate, (_req: Request, res: Response): void => {
+app.get("/api/services", (_req: Request, res: Response): void => {
   // Filter out services from blocked providers
   const activeServices = services.filter((service) => {
     const provider = users.find((u) => u.id === service.providerId);
@@ -748,48 +849,6 @@ app.get(
     );
 
     res.json({ bookedDates });
-  }
-);
-
-// Cancel booking (providers only)
-app.post(
-  "/api/bookings/:id/cancel",
-  authenticate,
-  (req: Request, res: Response): void => {
-    const user = users.find((u) => u.id === req.user!.id);
-
-    if (!user || !isUserProvider(user)) {
-      res.status(403).json({ error: "Only providers can cancel bookings" });
-      return;
-    }
-
-    const booking = bookings.find(
-      (b) => b.id === req.params.id && b.providerId === req.user!.id
-    );
-
-    if (!booking) {
-      res.status(404).json({ error: "Booking not found" });
-      return;
-    }
-
-    if (booking.status === "completed") {
-      res.status(400).json({ error: "Cannot cancel a completed booking" });
-      return;
-    }
-
-    if (booking.status === "cancelled") {
-      res.status(400).json({ error: "Booking already cancelled" });
-      return;
-    }
-
-    booking.status = "cancelled";
-    // In a real app, you would also trigger a refund here if payment was held in escrow
-    if (booking.paymentStatus === "held_in_escrow") {
-      booking.paymentStatus = "refunded";
-    }
-
-    saveData();
-    res.json(booking);
   }
 );
 

@@ -1,5 +1,6 @@
 import React, { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import "../styles/Modal.css";
 
 interface RegisterModalProps {
@@ -22,6 +23,40 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
   const navigate = useNavigate();
 
   if (!isOpen) return null;
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setIsLoading(true);
+    setErrorMessage("");
+    try {
+      const response = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token: credentialResponse.credential }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        onClose();
+        if (data.userType === "admin") {
+          navigate("/admin-dashboard");
+        } else if (data.userType === "client") {
+          // All users are now registered as clients
+          navigate("/client-dashboard");
+        } else {
+          navigate("/provider-dashboard");
+        }
+      } else {
+        setErrorMessage(data.error || "Google registration failed");
+      }
+    } catch (error) {
+      setErrorMessage("Connection error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleTermsScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.target as HTMLDivElement;
@@ -85,6 +120,51 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
           ×
         </button>
         <h2 className="modal-title">Registrati</h2>
+
+        <div
+          className="google-login-wrapper"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            marginBottom: "1.5rem",
+          }}
+        >
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => {
+              setErrorMessage("Google Registration Failed");
+            }}
+            theme="filled_blue"
+            shape="pill"
+            text="signup_with"
+          />
+          <p
+            style={{
+              fontSize: "0.8rem",
+              color: "#666",
+              marginTop: "0.5rem",
+              textAlign: "center",
+            }}
+          >
+            Continuando con Google, accetti i nostri Termini e Condizioni.
+          </p>
+        </div>
+
+        <div
+          className="divider"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            textAlign: "center",
+            marginBottom: "1.5rem",
+            color: "#666",
+          }}
+        >
+          <span style={{ flex: 1, borderBottom: "1px solid #ddd" }}></span>
+          <span style={{ padding: "0 10px", fontSize: "0.9rem" }}>OPPURE</span>
+          <span style={{ flex: 1, borderBottom: "1px solid #ddd" }}></span>
+        </div>
 
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
