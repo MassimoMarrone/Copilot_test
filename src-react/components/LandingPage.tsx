@@ -31,10 +31,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick, onRegisterClick
     try {
       const response = await fetch('/api/services');
       const data = await response.json();
-      setServices(data);
-      setFilteredServices(data);
+      const servicesArray = Array.isArray(data) ? data : [];
+      setServices(servicesArray);
+      setFilteredServices(servicesArray);
     } catch (error) {
       console.error('Error loading services:', error);
+      setServices([]);
+      setFilteredServices([]);
     }
   };
 
@@ -128,7 +131,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick, onRegisterClick
                   <p>Nessun servizio trovato. Prova con una ricerca diversa.</p>
                 </div>
               ) : (
-                filteredServices.slice(0, 6).map((service) => (
+                (Array.isArray(filteredServices) ? filteredServices : []).slice(0, 6).map((service) => (
                   <div key={service.id} className="service-card" onClick={() => handleServiceClick(service)}>
                     <h3>{service.title}</h3>
                     <p className="service-description">{service.description}</p>
