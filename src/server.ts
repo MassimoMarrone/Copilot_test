@@ -524,68 +524,113 @@ app.get(
 
 // Booking routes
 
-// Create booking (clients only)
+// Create booking and checkout session (clients only)
+// This endpoint now creates a Stripe checkout session and stores booking details in metadata
+// The actual booking is created after successful payment verification
 app.post(
   "/api/bookings",
   authenticate,
   [
     body("serviceId").notEmpty().withMessage("Service ID is required"),
     body("date").isISO8601().withMessage("Valid date is required"),
+    body("clientPhone")
+      .optional()
+      .trim()
+      .isLength({ max: 50 })
+      .withMessage("Phone number must be less than 50 characters"),
+    body("preferredTime")
+      .optional()
+      .trim()
+      .isLength({ max: 50 })
+      .withMessage("Preferred time must be less than 50 characters"),
+    body("notes")
+      .optional()
+      .trim()
+      .isLength({ max: 1000 })
+      .withMessage("Notes must be less than 1000 characters"),
+    body("address")
+      .optional()
+      .trim()
+      .isLength({ max: 500 })
+      .withMessage("Address must be less than 500 characters"),
   ],
   validate,
-  (req: Request, res: Response): void => {
-    if (req.user!.userType !== "client") {
-      res.status(403).json({ error: "Only clients can create bookings" });
-      return;
-    }
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      if (req.user!.userType !== "client") {
+        res.status(403).json({ error: "Only clients can create bookings" });
+        return;
+      }
 
-    const { serviceId, date } = req.body;
-    const service = services.find((s) => s.id === serviceId);
+      const { serviceId, date, clientPhone, preferredTime, notes, address } = req.body;
+      const service = services.find((s) => s.id === serviceId);
 
-    if (!service) {
-      res.status(404).json({ error: "Service not found" });
-      return;
-    }
+      if (!service) {
+        res.status(404).json({ error: "Service not found" });
+        return;
+      }
 
-    // Check for overlapping bookings on the same date for the same service
-    // Only check bookings that are not cancelled
-    const bookingDate = new Date(date).toISOString().split('T')[0]; // Get date part only
-    const existingBooking = bookings.find(
-      (b) =>
-        b.serviceId === serviceId &&
-        b.status !== "cancelled" &&
-        new Date(b.date).toISOString().split('T')[0] === bookingDate
-    );
+      // Check for overlapping bookings on the same date for the same service
+      // Only check bookings that are not cancelled
+      const bookingDate = new Date(date).toISOString().split('T')[0]; // Get date part only
+      const existingBooking = bookings.find(
+        (b) =>
+          b.serviceId === serviceId &&
+          b.status !== "cancelled" &&
+          new Date(b.date).toISOString().split('T')[0] === bookingDate
+      );
 
-    if (existingBooking) {
-      res.status(400).json({ 
-        error: "This service is already booked for the selected date. Please choose a different date." 
+      if (existingBooking) {
+        res.status(400).json({ 
+          error: "This service is already booked for the selected date. Please choose a different date." 
+        });
+        return;
+      }
+
+      // Create Stripe checkout session with booking details in metadata
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "eur",
+              product_data: {
+                name: service.title,
+                description: `Service booking for ${new Date(date).toLocaleDateString('it-IT')}`,
+              },
+              unit_amount: Math.round(service.price * 100), // Amount in cents
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        success_url: `${req.protocol}://${req.get(
+          "host"
+        )}/client-dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${req.protocol}://${req.get(
+          "host"
+        )}/client-dashboard?payment=cancel`,
+        metadata: {
+          serviceId: service.id,
+          clientId: req.user!.id,
+          clientEmail: req.user!.email,
+          providerId: service.providerId,
+          providerEmail: service.providerEmail,
+          serviceTitle: service.title,
+          amount: service.price.toString(),
+          date: date,
+          clientPhone: clientPhone || "",
+          preferredTime: preferredTime || "",
+          notes: notes || "",
+          address: address || "",
+        },
       });
-      return;
+
+      res.json({ id: session.id, url: session.url });
+    } catch (error) {
+      console.error("Booking creation error:", error);
+      res.status(500).json({ error: "Failed to create booking checkout session" });
     }
-
-    const booking: Booking = {
-      id:
-        Date.now().toString() +
-        "-" +
-        Math.random().toString(36).substring(2, 11),
-      serviceId,
-      clientId: req.user!.id,
-      clientEmail: req.user!.email,
-      providerId: service.providerId,
-      providerEmail: service.providerEmail,
-      serviceTitle: service.title,
-      amount: service.price,
-      date,
-      status: "pending",
-      paymentStatus: "unpaid",
-      photoProof: null,
-      createdAt: new Date().toISOString(),
-    };
-
-    bookings.push(booking);
-    saveData();
-    res.json(booking);
   }
 );
 
@@ -716,7 +761,8 @@ app.post(
   }
 );
 
-// Stripe Payment Route
+// Legacy Stripe Payment Route - kept for backward compatibility with existing unpaid bookings
+// For new bookings, payment is handled directly in the /api/bookings endpoint
 app.post(
   "/api/create-checkout-session",
   authenticate,
@@ -765,7 +811,7 @@ app.post(
         mode: "payment",
         success_url: `${req.protocol}://${req.get(
           "host"
-        )}/client-dashboard?payment=success&bookingId=${bookingId}&session_id={CHECKOUT_SESSION_ID}`,
+        )}/client-dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${req.protocol}://${req.get(
           "host"
         )}/client-dashboard?payment=cancel`,
@@ -783,7 +829,7 @@ app.post(
   }
 );
 
-// Verify payment and update booking status
+// Verify payment and create booking
 app.get(
   "/api/verify-payment",
   authenticate,
@@ -799,15 +845,58 @@ app.get(
       const session = await stripe.checkout.sessions.retrieve(session_id);
 
       if (session.payment_status === "paid") {
-        const bookingId = session.metadata?.bookingId;
-        const booking = bookings.find((b) => b.id === bookingId);
+        const metadata = session.metadata;
+        
+        // Check if this is from the new booking flow (has serviceId in metadata)
+        if (metadata?.serviceId) {
+          // New flow: Create booking after payment
+          // Generate a unique booking ID based on session ID to prevent duplicates
+          const bookingId = `booking-${session.id}`;
+          
+          // Check if booking already exists for this session to prevent duplicates
+          const existingBooking = bookings.find((b) => b.id === bookingId);
+          
+          if (existingBooking) {
+            res.json({ success: true, booking: existingBooking });
+            return;
+          }
 
-        if (booking) {
-          booking.paymentStatus = "held_in_escrow";
+          // Create the booking with payment already in escrow
+          const booking: Booking = {
+            id: bookingId,
+            serviceId: metadata.serviceId,
+            clientId: metadata.clientId,
+            clientEmail: metadata.clientEmail,
+            providerId: metadata.providerId,
+            providerEmail: metadata.providerEmail,
+            serviceTitle: metadata.serviceTitle,
+            amount: parseFloat(metadata.amount),
+            date: metadata.date,
+            status: "pending",
+            paymentStatus: "held_in_escrow",
+            photoProof: null,
+            createdAt: new Date().toISOString(),
+            clientPhone: metadata.clientPhone ? metadata.clientPhone : undefined,
+            preferredTime: metadata.preferredTime ? metadata.preferredTime : undefined,
+            notes: metadata.notes ? metadata.notes : undefined,
+            address: metadata.address ? metadata.address : undefined,
+          };
+
+          bookings.push(booking);
           saveData();
           res.json({ success: true, booking });
         } else {
-          res.status(404).json({ error: "Booking not found" });
+          // Old flow: Update existing booking (for backward compatibility)
+          const bookingId = metadata?.bookingId;
+          const booking = bookings.find((b) => b.id === bookingId);
+
+          if (booking) {
+            booking.paymentStatus = "held_in_escrow";
+            saveData();
+            res.json({ success: true, booking });
+          } else {
+            res.status(404).json({ error: "Booking not found" });
+          }
         }
       } else {
         res.status(400).json({ error: "Payment not completed" });

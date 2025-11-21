@@ -233,8 +233,10 @@
   background: white;
   border-radius: 12px;
   padding: 32px;
-  max-width: 500px;
+  max-width: 600px;
   width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
   position: relative;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
 }
@@ -287,6 +289,43 @@
 .form-group input:focus {
   outline: none;
   border-color: #007bff;
+}
+
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: inherit;
+  transition: border-color 0.3s ease;
+  resize: vertical;
+}
+
+.form-group textarea:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.service-summary {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  border: 2px solid #e0e0e0;
+}
+
+.service-summary h3 {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.service-summary .price {
+  color: #28a745;
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0;
 }
 
 .info-box {

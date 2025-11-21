@@ -25,6 +25,10 @@ interface Booking {
   status: string;
   paymentStatus: string;
   photoProof?: string;
+  clientPhone?: string;
+  preferredTime?: string;
+  notes?: string;
+  address?: string;
 }
 
 const ProviderDashboard: React.FC = () => {
@@ -254,10 +258,30 @@ const ProviderDashboard: React.FC = () => {
                 <p>
                   <strong>Cliente:</strong> {booking.clientEmail}
                 </p>
+                {booking.clientPhone && (
+                  <p>
+                    <strong>Telefono Cliente:</strong> {booking.clientPhone}
+                  </p>
+                )}
                 <p>
                   <strong>Data:</strong>{" "}
                   {new Date(booking.date).toLocaleDateString("it-IT")}
                 </p>
+                {booking.preferredTime && (
+                  <p>
+                    <strong>Orario Preferito:</strong> {booking.preferredTime}
+                  </p>
+                )}
+                {booking.address && (
+                  <p>
+                    <strong>Indirizzo:</strong> {booking.address}
+                  </p>
+                )}
+                {booking.notes && (
+                  <p>
+                    <strong>Note del Cliente:</strong> {booking.notes}
+                  </p>
+                )}
                 <p>
                   <strong>Importo:</strong>{" "}
                   <span className="price">€{booking.amount.toFixed(2)}</span>
