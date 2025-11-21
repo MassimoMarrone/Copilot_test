@@ -547,6 +547,23 @@ app.post(
       return;
     }
 
+    // Check for overlapping bookings on the same date for the same service
+    // Only check bookings that are not cancelled
+    const bookingDate = new Date(date).toISOString().split('T')[0]; // Get date part only
+    const existingBooking = bookings.find(
+      (b) =>
+        b.serviceId === serviceId &&
+        b.status !== "cancelled" &&
+        new Date(b.date).toISOString().split('T')[0] === bookingDate
+    );
+
+    if (existingBooking) {
+      res.status(400).json({ 
+        error: "This service is already booked for the selected date. Please choose a different date." 
+      });
+      return;
+    }
+
     const booking: Booking = {
       id:
         Date.now().toString() +
@@ -604,6 +621,34 @@ app.get(
   }
 );
 
+// Get booked dates for a specific service
+app.get(
+  "/api/services/:serviceId/booked-dates",
+  authenticate,
+  (req: Request, res: Response): void => {
+    const { serviceId } = req.params;
+    
+    const service = services.find((s) => s.id === serviceId);
+    
+    if (!service) {
+      res.status(404).json({ error: "Service not found" });
+      return;
+    }
+
+    // Get all non-cancelled bookings for this service
+    const serviceBookings = bookings.filter(
+      (b) => b.serviceId === serviceId && b.status !== "cancelled"
+    );
+
+    // Extract unique dates
+    const bookedDates = Array.from(new Set(
+      serviceBookings.map(b => new Date(b.date).toISOString().split('T')[0])
+    ));
+
+    res.json({ bookedDates });
+  }
+);
+
 // Complete service and release payment (providers only)
 app.post(
   "/api/bookings/:id/complete",
@@ -648,6 +693,14 @@ app.post(
       return;
     }
 
+    // Validate payment status before completing the booking
+    if (booking.paymentStatus !== "held_in_escrow") {
+      res.status(400).json({ 
+        error: "Payment must be completed and held in escrow before completing the service" 
+      });
+      return;
+    }
+
     if (!req.file) {
       res.status(400).json({ error: "Photo proof is required" });
       return;
@@ -680,6 +733,17 @@ app.post(
       // Ensure only the client who made the booking can pay
       if (booking.clientId !== req.user!.id) {
         res.status(403).json({ error: "Unauthorized to pay for this booking" });
+        return;
+      }
+
+      // Check if the booking is still in a payable state
+      if (booking.paymentStatus !== "unpaid") {
+        res.status(400).json({ error: "This booking has already been paid or is not in a payable state" });
+        return;
+      }
+
+      if (booking.status === "cancelled") {
+        res.status(400).json({ error: "Cannot pay for a cancelled booking" });
         return;
       }
 
