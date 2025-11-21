@@ -25,6 +25,10 @@ interface Booking {
   status: string;
   paymentStatus: string;
   photoProof?: string;
+  clientPhone?: string;
+  preferredTime?: string;
+  notes?: string;
+  address?: string;
 }
 
 interface ClientDashboardProps {
@@ -37,6 +41,10 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [bookingDate, setBookingDate] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
+  const [preferredTime, setPreferredTime] = useState("");
+  const [bookingNotes, setBookingNotes] = useState("");
+  const [bookingAddress, setBookingAddress] = useState("");
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
   const [showBecomeProviderModal, setShowBecomeProviderModal] = useState(false);
@@ -165,12 +173,20 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
     setShowBookingModal(true);
     const today = new Date().toISOString().split("T")[0];
     setBookingDate(today);
+    setClientPhone("");
+    setPreferredTime("");
+    setBookingNotes("");
+    setBookingAddress("");
   };
 
   const closeBookingModal = () => {
     setShowBookingModal(false);
     setSelectedService(null);
     setBookingDate("");
+    setClientPhone("");
+    setPreferredTime("");
+    setBookingNotes("");
+    setBookingAddress("");
   };
 
   const handleBooking = async (e: React.FormEvent) => {
@@ -186,15 +202,17 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
         body: JSON.stringify({
           serviceId: selectedService.id,
           date: bookingDate,
+          clientPhone: clientPhone,
+          preferredTime: preferredTime,
+          notes: bookingNotes,
+          address: bookingAddress,
         }),
       });
 
       if (response.ok) {
-        alert(
-          "Prenotazione confermata! Il pagamento è stato trattenuto in escrow."
-        );
-        closeBookingModal();
-        loadBookings();
+        const { url } = await response.json();
+        // Redirect to Stripe checkout immediately
+        window.location.href = url;
       } else {
         const data = await response.json();
         alert(data.error || "Errore nella prenotazione");
@@ -211,7 +229,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
       );
       const data = await response.json();
       if (response.ok) {
-        alert("Pagamento confermato! La prenotazione è ora in escrow.");
+        alert("Pagamento confermato! La prenotazione è stata creata con successo ed è ora in escrow.");
         loadBookings();
         navigate("/client-dashboard");
       } else {
@@ -330,6 +348,21 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                   <strong>Data:</strong>{" "}
                   {new Date(booking.date).toLocaleDateString("it-IT")}
                 </p>
+                {booking.preferredTime && (
+                  <p>
+                    <strong>Orario Preferito:</strong> {booking.preferredTime}
+                  </p>
+                )}
+                {booking.address && (
+                  <p>
+                    <strong>Indirizzo:</strong> {booking.address}
+                  </p>
+                )}
+                {booking.clientPhone && (
+                  <p>
+                    <strong>Telefono:</strong> {booking.clientPhone}
+                  </p>
+                )}
                 <p>
                   <strong>Importo:</strong>{" "}
                   <span className="price">€{booking.amount.toFixed(2)}</span>
@@ -337,6 +370,11 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                 <p>
                   <strong>Fornitore:</strong> {booking.providerEmail}
                 </p>
+                {booking.notes && (
+                  <p>
+                    <strong>Note:</strong> {booking.notes}
+                  </p>
+                )}
                 <p>
                   <strong>Stato:</strong>{" "}
                   <span className={`status ${booking.status}`}>
@@ -396,9 +434,13 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
               &times;
             </button>
             <h2>Prenota Servizio</h2>
+            <div className="service-summary">
+              <h3>{selectedService.title}</h3>
+              <p className="price">Prezzo: €{selectedService.price.toFixed(2)}</p>
+            </div>
             <form onSubmit={handleBooking}>
               <div className="form-group">
-                <label htmlFor="bookingDate">Data del Servizio:</label>
+                <label htmlFor="bookingDate">Data del Servizio: *</label>
                 <input
                   type="date"
                   id="bookingDate"
@@ -408,15 +450,56 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                   required
                 />
               </div>
+              <div className="form-group">
+                <label htmlFor="clientPhone">Telefono di Contatto:</label>
+                <input
+                  type="tel"
+                  id="clientPhone"
+                  value={clientPhone}
+                  onChange={(e) => setClientPhone(e.target.value)}
+                  placeholder="+39 123 456 7890"
+                  maxLength={50}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="preferredTime">Orario Preferito:</label>
+                <input
+                  type="time"
+                  id="preferredTime"
+                  value={preferredTime}
+                  onChange={(e) => setPreferredTime(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="bookingAddress">Indirizzo del Servizio:</label>
+                <input
+                  type="text"
+                  id="bookingAddress"
+                  value={bookingAddress}
+                  onChange={(e) => setBookingAddress(e.target.value)}
+                  placeholder="Via, Città, CAP"
+                  maxLength={500}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="bookingNotes">Note Aggiuntive:</label>
+                <textarea
+                  id="bookingNotes"
+                  value={bookingNotes}
+                  onChange={(e) => setBookingNotes(e.target.value)}
+                  placeholder="Aggiungi qualsiasi informazione utile per il fornitore..."
+                  rows={4}
+                  maxLength={1000}
+                />
+              </div>
               <div className="info-box">
-                ℹ️ <strong>Pagamento in Escrow:</strong> Il pagamento sarà
-                trattenuto in modo sicuro fino al completamento del servizio. Il
-                fornitore riceverà il pagamento solo dopo aver caricato la prova
-                fotografica del lavoro completato.
+                ℹ️ <strong>Pagamento Obbligatorio:</strong> Sarai reindirizzato alla pagina di pagamento. 
+                La prenotazione sarà confermata solo dopo il completamento del pagamento. 
+                Il pagamento sarà trattenuto in modo sicuro in escrow fino al completamento del servizio.
               </div>
               <div className="button-group">
                 <button type="submit" className="btn btn-primary">
-                  Conferma Prenotazione
+                  Procedi al Pagamento
                 </button>
                 <button
                   type="button"

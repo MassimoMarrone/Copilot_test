@@ -42,6 +42,11 @@ export interface Booking {
   photoProof: string | null;
   createdAt: string;
   completedAt?: string;
+  // Additional booking details
+  clientPhone?: string;
+  preferredTime?: string;
+  notes?: string;
+  address?: string;
 }
 
 export interface ChatMessage {
