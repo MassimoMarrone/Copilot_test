@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import ChatModal from "./ChatModal";
 import BecomeProviderModal from "./BecomeProviderModal";
+import UserMenu from "./UserMenu";
 import "../styles/ClientDashboard.css";
 
 interface Service {
@@ -50,6 +51,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
   const [showBecomeProviderModal, setShowBecomeProviderModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isProvider, setIsProvider] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>('');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -78,6 +80,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
         return;
       }
       const user = await response.json();
+      setUserEmail(user.email);
       // Check if user is a provider (has isProvider flag)
       if (user.isProvider !== undefined) {
         setIsProvider(user.isProvider);
@@ -278,25 +281,11 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
       <div className="dashboard-header">
         <h1>🏠 Dashboard Cliente</h1>
         <div className="header-actions">
-          {!isProvider && (
-            <button
-              onClick={() => setShowBecomeProviderModal(true)}
-              className="btn btn-provider"
-            >
-              🎯 Diventa Fornitore
-            </button>
-          )}
-          {isProvider && (
-            <button
-              onClick={() => navigate("/provider-dashboard")}
-              className="btn btn-secondary"
-            >
-              📊 Dashboard Fornitore
-            </button>
-          )}
-          <button onClick={handleLogout} className="btn btn-logout">
-            Logout
-          </button>
+          <UserMenu 
+            userEmail={userEmail} 
+            userType="client"
+            isProvider={isProvider}
+          />
         </div>
       </div>
 

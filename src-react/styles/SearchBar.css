@@ -1,9 +1,10 @@
 .search-bar-container {
   background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   margin-bottom: 24px;
+  max-width: 100%;
 }
 
 .search-form {
@@ -33,20 +34,22 @@
 }
 
 .search-button {
-  padding: 12px 24px;
-  background: #007bff;
+  padding: 12px 32px;
+  background: #667eea;
   color: white;
   border: none;
   border-radius: 8px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
   white-space: nowrap;
 }
 
 .search-button:hover {
-  background: #0056b3;
+  background: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .location-controls {
