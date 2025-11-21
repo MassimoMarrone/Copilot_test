@@ -200,6 +200,16 @@ const validate = (req: Request, res: Response, next: NextFunction): void => {
   next();
 };
 
+// Helper function to check if user is a provider (handles backward compatibility)
+const isUserProvider = (user: User): boolean => {
+  return user.isProvider !== undefined ? user.isProvider : user.userType === "provider";
+};
+
+// Helper function to check if user is a client (handles backward compatibility)
+const isUserClient = (user: User): boolean => {
+  return user.isClient !== undefined ? user.isClient : user.userType === "client";
+};
+
 // Routes
 
 // Register - All users start as clients
@@ -335,8 +345,8 @@ app.get("/api/me", authenticate, (req: Request, res: Response): void => {
     id: user.id, 
     email: user.email, 
     userType: user.userType,
-    isClient: user.isClient !== undefined ? user.isClient : user.userType === "client",
-    isProvider: user.isProvider !== undefined ? user.isProvider : user.userType === "provider"
+    isClient: isUserClient(user),
+    isProvider: isUserProvider(user)
   });
 });
 
@@ -370,6 +380,12 @@ app.post(
         return;
       }
 
+      // Check if already a provider (backward compatibility)
+      if (isUserProvider(user)) {
+        res.status(400).json({ error: "You are already a provider" });
+        return;
+      }
+
       // Update user to be a provider
       users[userIndex] = {
         ...user,
@@ -380,11 +396,12 @@ app.post(
       saveData();
 
       // Issue a new token with updated info
+      // Keep userType as 'client' since user is still primarily a client who can also provide
       const token = jwt.sign(
         { 
           id: user.id, 
           email: user.email, 
-          userType: user.isClient ? "client" : "provider" 
+          userType: "client"
         },
         JWT_SECRET,
         { expiresIn: "24h" }
@@ -445,9 +462,8 @@ app.post(
   validate,
   (req: Request, res: Response): void => {
     const user = users.find((u) => u.id === req.user!.id);
-    const isProvider = user && (user.isProvider || user.userType === "provider");
     
-    if (!isProvider) {
+    if (!user || !isUserProvider(user)) {
       res.status(403).json({ error: "Only providers can create services" });
       return;
     }
@@ -479,9 +495,8 @@ app.get(
   authenticate,
   (req: Request, res: Response): void => {
     const user = users.find((u) => u.id === req.user!.id);
-    const isProvider = user && (user.isProvider || user.userType === "provider");
     
-    if (!isProvider) {
+    if (!user || !isUserProvider(user)) {
       res.status(403).json({ error: "Only providers can access this" });
       return;
     }
@@ -557,9 +572,8 @@ app.get(
   authenticate,
   (req: Request, res: Response): void => {
     const user = users.find((u) => u.id === req.user!.id);
-    const isProvider = user && (user.isProvider || user.userType === "provider");
     
-    if (!isProvider) {
+    if (!user || !isUserProvider(user)) {
       res.status(403).json({ error: "Only providers can access this" });
       return;
     }
@@ -594,9 +608,8 @@ app.post(
   },
   (req: Request, res: Response): void => {
     const user = users.find((u) => u.id === req.user!.id);
-    const isProvider = user && (user.isProvider || user.userType === "provider");
     
-    if (!isProvider) {
+    if (!user || !isUserProvider(user)) {
       res.status(403).json({ error: "Only providers can complete bookings" });
       return;
     }
