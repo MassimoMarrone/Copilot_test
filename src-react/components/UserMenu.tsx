@@ -48,6 +48,31 @@ const UserMenu: React.FC<UserMenuProps> = ({
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (
+      !window.confirm(
+        "Sei sicuro di voler eliminare il tuo account? Questa azione è irreversibile e cancellerà tutti i tuoi dati e le prenotazioni pendenti."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/me", { method: "DELETE" });
+      if (response.ok) {
+        alert("Account eliminato con successo.");
+        navigate("/");
+        window.location.reload();
+      } else {
+        const data = await response.json();
+        alert(data.error || "Errore durante l'eliminazione dell'account");
+      }
+    } catch (error) {
+      console.error("Delete account error:", error);
+      alert("Errore di connessione");
+    }
+  };
+
   const goToDashboard = () => {
     if (userType === "admin") {
       navigate("/admin-dashboard");
@@ -152,6 +177,14 @@ const UserMenu: React.FC<UserMenuProps> = ({
           )}
 
           <div className="user-menu-divider"></div>
+
+          <button
+            className="user-menu-item delete-account"
+            onClick={handleDeleteAccount}
+          >
+            <span className="menu-icon">🗑️</span>
+            <span>Elimina Account</span>
+          </button>
 
           <button className="user-menu-item logout" onClick={handleLogout}>
             <span className="menu-icon">🚪</span>

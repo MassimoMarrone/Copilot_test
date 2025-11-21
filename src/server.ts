@@ -521,6 +521,55 @@ app.get("/api/me", authenticate, (req: Request, res: Response): void => {
   });
 });
 
+// Delete own account
+app.delete("/api/me", authenticate, (req: Request, res: Response): void => {
+  const userId = req.user!.id;
+  const userIndex = users.findIndex((u) => u.id === userId);
+
+  if (userIndex === -1) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+
+  // Prevent deleting the last admin if the user is an admin
+  if (
+    users[userIndex].userType === "admin" &&
+    users.filter((u) => u.userType === "admin").length <= 1
+  ) {
+    res.status(400).json({ error: "Cannot delete the last admin" });
+    return;
+  }
+
+  // Cancel all pending bookings for this user (as client or provider)
+  bookings.forEach((booking) => {
+    if (
+      (booking.clientId === userId || booking.providerId === userId) &&
+      booking.status === "pending"
+    ) {
+      booking.status = "cancelled";
+      if (booking.paymentStatus === "held_in_escrow") {
+        booking.paymentStatus = "refunded";
+      }
+    }
+  });
+
+  // Remove user
+  users.splice(userIndex, 1);
+
+  // Clean up related data
+  // Remove services created by this user
+  services = services.filter((s) => s.providerId !== userId);
+
+  // Note: We keep completed/cancelled bookings for historical records,
+  // but in a real app you might want to anonymize them or handle them differently.
+
+  saveData();
+
+  // Clear cookie
+  res.clearCookie("token");
+  res.json({ success: true });
+});
+
 // Become a provider - upgrade from client to provider
 app.post(
   "/api/become-provider",

@@ -142,6 +142,14 @@
   background: #fee;
 }
 
+.user-menu-item.delete-account {
+  color: #dc3545;
+}
+
+.user-menu-item.delete-account:hover {
+  background: #fee;
+}
+
 .menu-icon {
   font-size: 18px;
   width: 24px;
