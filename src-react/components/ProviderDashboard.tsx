@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AddressAutocomplete from "./AddressAutocomplete";
 import ChatModal from "./ChatModal";
+import UserMenu from "./UserMenu";
 import "../styles/ProviderDashboard.css";
 
 interface Service {
@@ -38,6 +39,7 @@ const ProviderDashboard: React.FC = () => {
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [userEmail, setUserEmail] = useState<string>('');
 
   // New Service Form State
   const [newService, setNewService] = useState({
@@ -68,6 +70,7 @@ const ProviderDashboard: React.FC = () => {
         return;
       }
       const user = await response.json();
+      setUserEmail(user.email);
       // Check if user is a provider (has isProvider flag or userType is provider)
       const isProviderUser = user.isProvider || user.userType === "provider";
       if (!isProviderUser) {
@@ -196,20 +199,16 @@ const ProviderDashboard: React.FC = () => {
         <h1>🛠️ Dashboard Fornitore</h1>
         <div className="header-actions">
           <button
-            className="btn btn-secondary"
-            onClick={() => navigate("/client-dashboard")}
-          >
-            🏠 Dashboard Cliente
-          </button>
-          <button
             className="btn-add-service"
             onClick={() => setShowServiceModal(true)}
           >
             + Nuovo Servizio
           </button>
-          <button onClick={handleLogout} className="btn btn-logout">
-            Logout
-          </button>
+          <UserMenu 
+            userEmail={userEmail} 
+            userType="provider"
+            isProvider={true}
+          />
         </div>
       </div>
 

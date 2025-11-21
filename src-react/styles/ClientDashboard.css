@@ -1,7 +1,9 @@
 .client-dashboard {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 32px 24px;
+  min-height: 100vh;
+  background: #f8f9fa;
 }
 
 .dashboard-header {
@@ -9,10 +11,10 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 32px;
-  padding: 20px;
+  padding: 24px 32px;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 .dashboard-header h1 {
@@ -63,12 +65,19 @@
 
 .dashboard-section {
   margin-bottom: 32px;
+  background: white;
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
 .dashboard-section h2 {
   color: #333;
   font-size: 24px;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
+  margin-top: 0;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f0f0f0;
 }
 
 .services-grid {
