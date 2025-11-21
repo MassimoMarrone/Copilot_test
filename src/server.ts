@@ -420,7 +420,7 @@ app.post(
   authLimiter,
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const { token } = req.body;
+      const { token, acceptedTerms } = req.body;
 
       if (!process.env.GOOGLE_CLIENT_ID) {
         console.error("GOOGLE_CLIENT_ID is not set");
@@ -450,6 +450,15 @@ app.post(
           saveData();
         }
       } else {
+        // New user trying to register via Google
+        if (acceptedTerms !== true && acceptedTerms !== "true") {
+          res.status(400).json({
+            error: "Devi accettare i Termini e Condizioni per registrarti",
+            code: "TERMS_REQUIRED",
+          });
+          return;
+        }
+
         // Create new user
         user = {
           id:

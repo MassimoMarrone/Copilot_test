@@ -27,13 +27,23 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
   const handleGoogleSuccess = async (credentialResponse: any) => {
     setIsLoading(true);
     setErrorMessage("");
+
+    if (!acceptedTerms) {
+      setErrorMessage("Devi accettare i Termini e Condizioni per continuare.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch("/api/auth/google", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ token: credentialResponse.credential }),
+        body: JSON.stringify({
+          token: credentialResponse.credential,
+          acceptedTerms: acceptedTerms,
+        }),
       });
 
       const data = await response.json();
@@ -121,6 +131,66 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
         </button>
         <h2 className="modal-title">Registrati</h2>
 
+        <div className="terms-section" style={{ marginBottom: "1.5rem" }}>
+          <h3>Termini e Condizioni</h3>
+          <div className="terms-box" onScroll={handleTermsScroll}>
+            <p>
+              <strong>TERMINI E CONDIZIONI D'USO</strong>
+            </p>
+            <p>
+              1. <strong>Accettazione dei Termini</strong>: Utilizzando questo
+              servizio, accetti di essere vincolato da questi termini e
+              condizioni.
+            </p>
+            <p>
+              2. <strong>Sistema di Pagamento Escrow</strong>: Tutti i pagamenti
+              per i servizi di pulizia vengono trattenuti in escrow fino al
+              completamento del servizio.
+            </p>
+            <p>
+              3. <strong>Responsabilità del Fornitore</strong>: I fornitori
+              devono completare i servizi come concordato e fornire una prova
+              fotografica del lavoro svolto.
+            </p>
+            <p>
+              4. <strong>Rilascio del Pagamento</strong>: Il pagamento viene
+              rilasciato al fornitore solo dopo aver caricato la prova
+              fotografica del servizio completato.
+            </p>
+            <p>
+              5. <strong>Cancellazione</strong>: Le cancellazioni devono essere
+              effettuate almeno 24 ore prima del servizio programmato.
+            </p>
+            <p>
+              6. <strong>Privacy</strong>: Ci impegniamo a proteggere i tuoi
+              dati personali secondo le normative sulla privacy.
+            </p>
+            <p>
+              7. <strong>Risoluzione delle Controversie</strong>: Eventuali
+              controversie saranno risolte tramite mediazione.
+            </p>
+          </div>
+
+          <div className="form-group checkbox-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                id="register-acceptedTerms"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                required
+                disabled={isLoading || !hasScrolledToBottom}
+              />
+              <span>Accetto i Termini e Condizioni (obbligatorio)</span>
+            </label>
+            {!hasScrolledToBottom && (
+              <p className="scroll-hint">
+                ⬇️ Scorri fino in fondo per accettare i termini
+              </p>
+            )}
+          </div>
+        </div>
+
         <div
           className="google-login-wrapper"
           style={{
@@ -128,6 +198,9 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
             flexDirection: "column",
             alignItems: "center",
             marginBottom: "1.5rem",
+            opacity: acceptedTerms ? 1 : 0.5,
+            pointerEvents: acceptedTerms ? "auto" : "none",
+            transition: "opacity 0.3s",
           }}
         >
           <GoogleLogin
@@ -139,16 +212,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
             shape="pill"
             text="signup_with"
           />
-          <p
-            style={{
-              fontSize: "0.8rem",
-              color: "#666",
-              marginTop: "0.5rem",
-              textAlign: "center",
-            }}
-          >
-            Continuando con Google, accetti i nostri Termini e Condizioni.
-          </p>
         </div>
 
         <div
@@ -190,66 +253,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
               disabled={isLoading}
               minLength={8}
             />
-          </div>
-
-          <div className="terms-section">
-            <h3>Termini e Condizioni Cliente</h3>
-            <div className="terms-box" onScroll={handleTermsScroll}>
-              <p>
-                <strong>TERMINI E CONDIZIONI D'USO</strong>
-              </p>
-              <p>
-                1. <strong>Accettazione dei Termini</strong>: Utilizzando questo
-                servizio, accetti di essere vincolato da questi termini e
-                condizioni.
-              </p>
-              <p>
-                2. <strong>Sistema di Pagamento Escrow</strong>: Tutti i
-                pagamenti per i servizi di pulizia vengono trattenuti in escrow
-                fino al completamento del servizio.
-              </p>
-              <p>
-                3. <strong>Responsabilità del Fornitore</strong>: I fornitori
-                devono completare i servizi come concordato e fornire una prova
-                fotografica del lavoro svolto.
-              </p>
-              <p>
-                4. <strong>Rilascio del Pagamento</strong>: Il pagamento viene
-                rilasciato al fornitore solo dopo aver caricato la prova
-                fotografica del servizio completato.
-              </p>
-              <p>
-                5. <strong>Cancellazione</strong>: Le cancellazioni devono
-                essere effettuate almeno 24 ore prima del servizio programmato.
-              </p>
-              <p>
-                6. <strong>Privacy</strong>: Ci impegniamo a proteggere i tuoi
-                dati personali secondo le normative sulla privacy.
-              </p>
-              <p>
-                7. <strong>Risoluzione delle Controversie</strong>: Eventuali
-                controversie saranno risolte tramite mediazione.
-              </p>
-            </div>
-
-            <div className="form-group checkbox-group">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  id="register-acceptedTerms"
-                  checked={acceptedTerms}
-                  onChange={(e) => setAcceptedTerms(e.target.checked)}
-                  required
-                  disabled={isLoading || !hasScrolledToBottom}
-                />
-                <span>Accetto i Termini e Condizioni (obbligatorio)</span>
-              </label>
-              {!hasScrolledToBottom && (
-                <p className="scroll-hint">
-                  ⬇️ Scorri fino in fondo per accettare i termini
-                </p>
-              )}
-            </div>
           </div>
 
           {errorMessage && (
