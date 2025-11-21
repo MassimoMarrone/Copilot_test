@@ -23,16 +23,33 @@ Applicazione web per la prenotazione di servizi di pulizia con sistema di pagame
 #### Dashboard Fornitore
 - ➕ Creazione e gestione servizi offerti
 - 📅 Visualizzazione prenotazioni ricevute
+- ❌ Cancellazione prenotazioni (con rimborso automatico se pagate)
 - ✅ Pulsante "Completa Servizio & Rilascia Payout"
 - 📸 Upload obbligatorio di prova fotografica per rilascio pagamento
 - 💰 Monitoraggio stato pagamenti
+
+#### Dashboard Amministratore (Nuovo)
+- 🛡️ Accesso esclusivo per gestione piattaforma
+- 👥 Gestione Utenti: Visualizzazione, eliminazione e blocco/sblocco utenti
+- 🚫 Blocco Utenti: Nasconde i servizi dell'utente e cancella le prenotazioni pendenti
+- 🛠️ Gestione Servizi: Monitoraggio ed eliminazione servizi inappropriati
+- 📅 Gestione Prenotazioni: Visualizzazione completa e cancellazione d'ufficio (con rimborso)
 
 ### Sistema di Pagamento Escrow
 - 💳 Al momento della prenotazione, i fondi vengono trattenuti in escrow
 - 🔒 Il pagamento rimane bloccato fino al completamento del servizio
 - 📸 Il fornitore deve caricare una foto prova del lavoro completato
 - ✅ Solo dopo l'upload della foto, il pagamento viene rilasciato al fornitore
-- 🔐 Protezione per entrambe le parti della transazione
+- � **Rimborso**: In caso di cancellazione (da parte del fornitore o admin), i fondi vengono rimborsati automaticamente
+- �🔐 Protezione per entrambe le parti della transazione
+
+### Sicurezza e Architettura
+- 🔐 **Autenticazione JWT**: Accesso sicuro basato su token con scadenza
+- 🛡️ **Role-Based Access Control (RBAC)**: Permessi differenziati per Client, Provider e Admin
+- 🚦 **Rate Limiting**: Protezione contro abusi e attacchi DDoS su API e login
+- 🔒 **Helmet**: Header di sicurezza HTTP configurati
+- 🧼 **Input Validation**: Validazione rigorosa dei dati in ingresso
+- ⚡ **Architettura Scalabile**: Backend Node.js/Express e Frontend React/Vite
 
 ## Requisiti
 
@@ -106,6 +123,14 @@ http://localhost:3000
 6. Quando completi un servizio, clicca "Completa Servizio & Rilascia Payout"
 7. Carica una foto prova del lavoro completato (obbligatorio)
 8. Il pagamento verrà automaticamente rilasciato dall'escrow
+9. Possibilità di cancellare prenotazioni in caso di imprevisti (con rimborso al cliente)
+
+### Per gli Amministratori
+
+1. Accesso tramite credenziali dedicate (configurabili in `.env`)
+2. Monitoraggio globale di utenti, servizi e prenotazioni
+3. Intervento in caso di dispute o contenuti inappropriati
+4. Blocco utenti malevoli e cancellazione prenotazioni problematiche
 
 ## Sicurezza
 
