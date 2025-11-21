@@ -6,8 +6,11 @@ export interface User {
   id: string;
   email: string;
   password: string;
-  userType: 'client' | 'provider';
-  acceptedTerms: boolean;
+  userType: 'client' | 'provider'; // Kept for backward compatibility, use isClient/isProvider for new logic
+  isClient: boolean; // All users start as clients
+  isProvider: boolean; // Can become provider by accepting provider terms
+  acceptedTerms: boolean; // Client terms
+  acceptedProviderTerms?: boolean; // Provider terms (if isProvider is true)
   createdAt: string;
 }
 

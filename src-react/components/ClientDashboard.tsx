@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import ChatModal from "./ChatModal";
+import BecomeProviderModal from "./BecomeProviderModal";
 import "../styles/ClientDashboard.css";
 
 interface Service {
@@ -38,7 +39,9 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
   const [bookingDate, setBookingDate] = useState("");
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
+  const [showBecomeProviderModal, setShowBecomeProviderModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [isProvider, setIsProvider] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,7 +58,12 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
         return;
       }
       const user = await response.json();
-      if (user.userType !== "client") {
+      // Check if user is a provider (has isProvider flag)
+      if (user.isProvider !== undefined) {
+        setIsProvider(user.isProvider);
+      }
+      // For backward compatibility, also check userType
+      if (user.userType === "provider" && !user.isClient) {
         navigate("/provider-dashboard");
       }
     } catch (error) {
@@ -197,9 +205,27 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
     <div className="client-dashboard">
       <div className="dashboard-header">
         <h1>🏠 Dashboard Cliente</h1>
-        <button onClick={handleLogout} className="btn btn-logout">
-          Logout
-        </button>
+        <div className="header-actions">
+          {!isProvider && (
+            <button
+              onClick={() => setShowBecomeProviderModal(true)}
+              className="btn btn-provider"
+            >
+              🎯 Diventa Fornitore
+            </button>
+          )}
+          {isProvider && (
+            <button
+              onClick={() => navigate("/provider-dashboard")}
+              className="btn btn-secondary"
+            >
+              📊 Dashboard Fornitore
+            </button>
+          )}
+          <button onClick={handleLogout} className="btn btn-logout">
+            Logout
+          </button>
+        </div>
       </div>
 
       <div className="dashboard-section">
@@ -353,6 +379,12 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
           otherPartyEmail={selectedBooking.providerEmail}
         />
       )}
+
+      {/* Become Provider Modal */}
+      <BecomeProviderModal
+        isOpen={showBecomeProviderModal}
+        onClose={() => setShowBecomeProviderModal(false)}
+      />
     </div>
   );
 };
