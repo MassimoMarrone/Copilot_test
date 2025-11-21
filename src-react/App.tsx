@@ -2,6 +2,7 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import ClientDashboard from "./components/ClientDashboard";
+import ProviderDashboard from "./components/ProviderDashboard";
 import "./styles/App.css";
 
 function App() {
@@ -10,11 +11,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/client-dashboard" element={<ClientDashboard />} />
-        {/* Aggiungeremo qui la rotta per il provider in futuro */}
-        <Route
-          path="/provider-dashboard"
-          element={<div>Dashboard Fornitore (In costruzione)</div>}
-        />
+        <Route path="/provider-dashboard" element={<ProviderDashboard />} />
       </Routes>
     </div>
   );

@@ -39,6 +39,12 @@ const ChatModal: React.FC<ChatModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       loadMessages();
+      // Poll for new messages every 3 seconds
+      const intervalId = setInterval(() => {
+        loadMessages(true);
+      }, 3000);
+
+      return () => clearInterval(intervalId);
     }
   }, [isOpen, bookingId]);
 
@@ -46,21 +52,34 @@ const ChatModal: React.FC<ChatModalProps> = ({
     scrollToBottom();
   }, [messages]);
 
-  const loadMessages = async () => {
+  const loadMessages = async (isPolling = false) => {
     try {
-      setLoading(true);
-      setError(null);
+      if (!isPolling) {
+        setLoading(true);
+        setError(null);
+      }
+      
       const response = await fetch(`/api/bookings/${bookingId}/messages`);
       
       if (response.ok) {
         const data = await response.json();
-        setMessages(data);
+        // Only update if we have new messages or it's the first load to avoid re-renders
+        setMessages(prevMessages => {
+          if (JSON.stringify(prevMessages) !== JSON.stringify(data)) {
+            return data;
+          }
+          return prevMessages;
+        });
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Errore nel caricamento dei messaggi");
+        if (!isPolling) {
+          const errorData = await response.json();
+          setError(errorData.error || "Errore nel caricamento dei messaggi");
+        }
       }
     } catch (err) {
-      setError("Errore di connessione");
+      if (!isPolling) {
+        setError("Errore di connessione");
+      }
     } finally {
       setLoading(false);
     }

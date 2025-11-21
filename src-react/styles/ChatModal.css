@@ -137,6 +137,7 @@
 /* Message Bubble */
 .chat-message {
   display: flex;
+  width: 100%;
   animation: messageSlideIn 0.3s ease-out;
 }
 
