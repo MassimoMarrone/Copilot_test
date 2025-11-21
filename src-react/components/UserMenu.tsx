@@ -4,7 +4,7 @@ import "../styles/UserMenu.css";
 
 interface UserMenuProps {
   userEmail?: string;
-  userType?: "client" | "provider";
+  userType?: "client" | "provider" | "admin";
   isProvider?: boolean;
   onBecomeProvider?: () => void;
   onLogout?: () => void;
@@ -49,7 +49,9 @@ const UserMenu: React.FC<UserMenuProps> = ({
   };
 
   const goToDashboard = () => {
-    if (userType === "provider") {
+    if (userType === "admin") {
+      navigate("/admin-dashboard");
+    } else if (userType === "provider") {
       navigate("/provider-dashboard");
     } else {
       navigate("/client-dashboard");
@@ -90,7 +92,11 @@ const UserMenu: React.FC<UserMenuProps> = ({
             <div className="user-info">
               <div className="user-name">{userEmail}</div>
               <div className="user-role">
-                {userType === "provider" ? "Fornitore" : "Cliente"}
+                {userType === "admin"
+                  ? "Amministratore"
+                  : userType === "provider"
+                  ? "Fornitore"
+                  : "Cliente"}
               </div>
             </div>
           </div>

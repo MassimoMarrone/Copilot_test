@@ -222,6 +222,45 @@ const isUserClient = (user: User): boolean => {
     : user.userType === "client";
 };
 
+// Initialize default admin if not exists
+const initAdmin = async () => {
+  const adminEmail = process.env.ADMIN_EMAIL || "admin@example.com";
+  const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+
+  const adminExists = users.find((u) => u.email === adminEmail);
+  if (!adminExists) {
+    const hashedPassword = await bcrypt.hash(adminPassword, 12);
+    const adminUser: User = {
+      id: "admin-user-id",
+      email: adminEmail,
+      password: hashedPassword,
+      userType: "admin",
+      isClient: false,
+      isProvider: false,
+      isAdmin: true,
+      acceptedTerms: true,
+      createdAt: new Date().toISOString(),
+    };
+    users.push(adminUser);
+    saveData();
+    console.log(`Admin user created: ${adminEmail}`);
+  }
+};
+initAdmin();
+
+// Admin middleware
+const requireAdmin = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (!req.user || req.user.userType !== "admin") {
+    res.status(403).json({ error: "Admin access required" });
+    return;
+  }
+  next();
+};
+
 // Routes
 
 // Register - All users start as clients
@@ -793,12 +832,10 @@ app.post(
 
       // Check if the booking is still in a payable state
       if (booking.paymentStatus !== "unpaid") {
-        res
-          .status(400)
-          .json({
-            error:
-              "This booking has already been paid or is not in a payable state",
-          });
+        res.status(400).json({
+          error:
+            "This booking has already been paid or is not in a payable state",
+        });
         return;
       }
 
@@ -1015,6 +1052,78 @@ app.get(
   }
 );
 
+// Admin Routes
+app.get(
+  "/api/admin/users",
+  authenticate,
+  requireAdmin,
+  (_req: Request, res: Response) => {
+    // Return users without passwords
+    const safeUsers = users.map(({ password, ...user }) => user);
+    res.json(safeUsers);
+  }
+);
+
+app.delete(
+  "/api/admin/users/:id",
+  authenticate,
+  requireAdmin,
+  (req: Request, res: Response) => {
+    const { id } = req.params;
+    const userIndex = users.findIndex((u) => u.id === id);
+
+    if (userIndex === -1) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    // Prevent deleting the last admin
+    if (
+      users[userIndex].userType === "admin" &&
+      users.filter((u) => u.userType === "admin").length <= 1
+    ) {
+      res.status(400).json({ error: "Cannot delete the last admin" });
+      return;
+    }
+
+    users.splice(userIndex, 1);
+    // Also clean up related data
+    services = services.filter((s) => s.providerId !== id);
+    bookings = bookings.filter((b) => b.clientId !== id && b.providerId !== id);
+
+    saveData();
+    res.json({ success: true });
+  }
+);
+
+app.get(
+  "/api/admin/services",
+  authenticate,
+  requireAdmin,
+  (_req: Request, res: Response) => {
+    res.json(services);
+  }
+);
+
+app.delete(
+  "/api/admin/services/:id",
+  authenticate,
+  requireAdmin,
+  (req: Request, res: Response) => {
+    const { id } = req.params;
+    const serviceIndex = services.findIndex((s) => s.id === id);
+
+    if (serviceIndex === -1) {
+      res.status(404).json({ error: "Service not found" });
+      return;
+    }
+
+    services.splice(serviceIndex, 1);
+    saveData();
+    res.json({ success: true });
+  }
+);
+
 // Rate limiter for page routes
 const pageLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
@@ -1050,22 +1159,18 @@ app.get(
 );
 
 // Catch-all for other client-side routes (SPA support)
-app.get(
-  "*splat",
-  pageLimiter,
-  (req: Request, res: Response) => {
-    // Don't intercept API calls
-    if (
-      req.path.startsWith("/api/") ||
-      req.path.startsWith("/assets/") ||
-      req.path.startsWith("/uploads/")
-    ) {
-      res.status(404).json({ error: "Not found" });
-      return;
-    }
-    serveSpa(req, res);
+app.get("*splat", pageLimiter, (req: Request, res: Response) => {
+  // Don't intercept API calls
+  if (
+    req.path.startsWith("/api/") ||
+    req.path.startsWith("/assets/") ||
+    req.path.startsWith("/uploads/")
+  ) {
+    res.status(404).json({ error: "Not found" });
+    return;
   }
-);
+  serveSpa(req, res);
+});
 
 // Error handling middleware
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {

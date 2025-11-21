@@ -6,9 +6,10 @@ export interface User {
   id: string;
   email: string;
   password: string;
-  userType: "client" | "provider"; // Kept for backward compatibility, use isClient/isProvider for new logic
+  userType: "client" | "provider" | "admin"; // Kept for backward compatibility, use isClient/isProvider for new logic
   isClient: boolean; // All users start as clients
   isProvider: boolean; // Can become provider by accepting provider terms
+  isAdmin?: boolean; // Admin flag
   acceptedTerms: boolean; // Client terms
   acceptedProviderTerms?: boolean; // Provider terms (if isProvider is true)
   createdAt: string;
@@ -54,7 +55,7 @@ export interface ChatMessage {
   bookingId: string;
   senderId: string;
   senderEmail: string;
-  senderType: "client" | "provider";
+  senderType: "client" | "provider" | "admin";
   message: string;
   createdAt: string;
 }
@@ -62,7 +63,8 @@ export interface ChatMessage {
 export interface JWTPayload {
   id: string;
   email: string;
-  userType: "client" | "provider";
+  userType: "client" | "provider" | "admin";
+  isAdmin?: boolean;
 }
 
 declare global {

@@ -40,7 +40,9 @@ const LoginModal: React.FC<LoginModalProps> = ({
       if (response.ok) {
         onClose(); // Chiudi il modale
         // Redirect based on user type
-        if (data.userType === "client") {
+        if (data.userType === "admin") {
+          navigate("/admin-dashboard");
+        } else if (data.userType === "client") {
           // Stay on the current page (Home/Search) for clients
           // navigate("/client-dashboard");
           window.location.reload(); // Reload to update auth state
