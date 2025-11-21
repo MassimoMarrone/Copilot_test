@@ -562,7 +562,8 @@ app.post(
         return;
       }
 
-      const { serviceId, date, clientPhone, preferredTime, notes, address } = req.body;
+      const { serviceId, date, clientPhone, preferredTime, notes, address } =
+        req.body;
       const service = services.find((s) => s.id === serviceId);
 
       if (!service) {
@@ -572,17 +573,18 @@ app.post(
 
       // Check for overlapping bookings on the same date for the same service
       // Only check bookings that are not cancelled
-      const bookingDate = new Date(date).toISOString().split('T')[0]; // Get date part only
+      const bookingDate = new Date(date).toISOString().split("T")[0]; // Get date part only
       const existingBooking = bookings.find(
         (b) =>
           b.serviceId === serviceId &&
           b.status !== "cancelled" &&
-          new Date(b.date).toISOString().split('T')[0] === bookingDate
+          new Date(b.date).toISOString().split("T")[0] === bookingDate
       );
 
       if (existingBooking) {
-        res.status(400).json({ 
-          error: "This service is already booked for the selected date. Please choose a different date." 
+        res.status(400).json({
+          error:
+            "This service is already booked for the selected date. Please choose a different date.",
         });
         return;
       }
@@ -596,7 +598,9 @@ app.post(
               currency: "eur",
               product_data: {
                 name: service.title,
-                description: `Service booking for ${new Date(date).toLocaleDateString('it-IT')}`,
+                description: `Service booking for ${new Date(
+                  date
+                ).toLocaleDateString("it-IT")}`,
               },
               unit_amount: Math.round(service.price * 100), // Amount in cents
             },
@@ -629,7 +633,9 @@ app.post(
       res.json({ id: session.id, url: session.url });
     } catch (error) {
       console.error("Booking creation error:", error);
-      res.status(500).json({ error: "Failed to create booking checkout session" });
+      res
+        .status(500)
+        .json({ error: "Failed to create booking checkout session" });
     }
   }
 );
@@ -672,9 +678,9 @@ app.get(
   authenticate,
   (req: Request, res: Response): void => {
     const { serviceId } = req.params;
-    
+
     const service = services.find((s) => s.id === serviceId);
-    
+
     if (!service) {
       res.status(404).json({ error: "Service not found" });
       return;
@@ -686,9 +692,11 @@ app.get(
     );
 
     // Extract unique dates
-    const bookedDates = Array.from(new Set(
-      serviceBookings.map(b => new Date(b.date).toISOString().split('T')[0])
-    ));
+    const bookedDates = Array.from(
+      new Set(
+        serviceBookings.map((b) => new Date(b.date).toISOString().split("T")[0])
+      )
+    );
 
     res.json({ bookedDates });
   }
@@ -740,8 +748,9 @@ app.post(
 
     // Validate payment status before completing the booking
     if (booking.paymentStatus !== "held_in_escrow") {
-      res.status(400).json({ 
-        error: "Payment must be completed and held in escrow before completing the service" 
+      res.status(400).json({
+        error:
+          "Payment must be completed and held in escrow before completing the service",
       });
       return;
     }
@@ -784,7 +793,12 @@ app.post(
 
       // Check if the booking is still in a payable state
       if (booking.paymentStatus !== "unpaid") {
-        res.status(400).json({ error: "This booking has already been paid or is not in a payable state" });
+        res
+          .status(400)
+          .json({
+            error:
+              "This booking has already been paid or is not in a payable state",
+          });
         return;
       }
 
@@ -846,16 +860,16 @@ app.get(
 
       if (session.payment_status === "paid") {
         const metadata = session.metadata;
-        
+
         // Check if this is from the new booking flow (has serviceId in metadata)
         if (metadata?.serviceId) {
           // New flow: Create booking after payment
           // Generate a unique booking ID based on session ID to prevent duplicates
           const bookingId = `booking-${session.id}`;
-          
+
           // Check if booking already exists for this session to prevent duplicates
           const existingBooking = bookings.find((b) => b.id === bookingId);
-          
+
           if (existingBooking) {
             res.json({ success: true, booking: existingBooking });
             return;
@@ -876,8 +890,12 @@ app.get(
             paymentStatus: "held_in_escrow",
             photoProof: null,
             createdAt: new Date().toISOString(),
-            clientPhone: metadata.clientPhone ? metadata.clientPhone : undefined,
-            preferredTime: metadata.preferredTime ? metadata.preferredTime : undefined,
+            clientPhone: metadata.clientPhone
+              ? metadata.clientPhone
+              : undefined,
+            preferredTime: metadata.preferredTime
+              ? metadata.preferredTime
+              : undefined,
             notes: metadata.notes ? metadata.notes : undefined,
             address: metadata.address ? metadata.address : undefined,
           };
@@ -1032,18 +1050,22 @@ app.get(
 );
 
 // Catch-all for other client-side routes (SPA support)
-app.get("*splat", pageLimiter, (req: Request, res: Response) => {
-  // Don't intercept API calls
-  if (
-    req.path.startsWith("/api/") ||
-    req.path.startsWith("/assets/") ||
-    req.path.startsWith("/uploads/")
-  ) {
-    res.status(404).json({ error: "Not found" });
-    return;
+app.get(
+  "*splat",
+  pageLimiter,
+  (req: Request, res: Response) => {
+    // Don't intercept API calls
+    if (
+      req.path.startsWith("/api/") ||
+      req.path.startsWith("/assets/") ||
+      req.path.startsWith("/uploads/")
+    ) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    serveSpa(req, res);
   }
-  serveSpa(req, res);
-});
+);
 
 // Error handling middleware
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {

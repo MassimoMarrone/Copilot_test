@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "module": "es6",
+    "target": "es6",
+    "checkJs": false,
+    "lib": ["dom", "es6"]
+  },
+  "include": ["public/**/*"],
+  "exclude": ["node_modules", "dist", "src"]
+}
