@@ -64,7 +64,9 @@ const ProviderDashboard: React.FC = () => {
         return;
       }
       const user = await response.json();
-      if (user.userType !== "provider") {
+      // Check if user is a provider (has isProvider flag or userType is provider)
+      const isProviderUser = user.isProvider || user.userType === "provider";
+      if (!isProviderUser) {
         navigate("/client-dashboard");
       }
     } catch (error) {
@@ -189,6 +191,12 @@ const ProviderDashboard: React.FC = () => {
       <div className="dashboard-header">
         <h1>🛠️ Dashboard Fornitore</h1>
         <div className="header-actions">
+          <button
+            className="btn btn-secondary"
+            onClick={() => navigate("/client-dashboard")}
+          >
+            🏠 Dashboard Cliente
+          </button>
           <button
             className="btn-add-service"
             onClick={() => setShowServiceModal(true)}

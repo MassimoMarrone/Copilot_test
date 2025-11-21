@@ -15,13 +15,22 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
 }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [userType, setUserType] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   if (!isOpen) return null;
+
+  const handleTermsScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLDivElement;
+    const bottom =
+      target.scrollHeight - target.scrollTop <= target.clientHeight + 1;
+    if (bottom) {
+      setHasScrolledToBottom(true);
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -40,19 +49,15 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password, userType, acceptedTerms }),
+        body: JSON.stringify({ email, password, acceptedTerms }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
         onClose(); // Chiudi il modale
-        // Redirect based on user type
-        if (data.userType === "client") {
-          navigate("/client-dashboard");
-        } else {
-          navigate("/provider-dashboard");
-        }
+        // All users are now registered as clients
+        navigate("/client-dashboard");
       } else {
         // Handle express-validator errors array or single error message
         const msg = data.errors
@@ -107,24 +112,9 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="register-userType">Tipo di Account:</label>
-            <select
-              id="register-userType"
-              value={userType}
-              onChange={(e) => setUserType(e.target.value)}
-              required
-              disabled={isLoading}
-            >
-              <option value="">Seleziona...</option>
-              <option value="client">Cliente (Prenota servizi)</option>
-              <option value="provider">Fornitore (Offri servizi)</option>
-            </select>
-          </div>
-
           <div className="terms-section">
-            <h3>Termini e Condizioni</h3>
-            <div className="terms-box">
+            <h3>Termini e Condizioni Cliente</h3>
+            <div className="terms-box" onScroll={handleTermsScroll}>
               <p>
                 <strong>TERMINI E CONDIZIONI D'USO</strong>
               </p>
@@ -170,10 +160,15 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
                   checked={acceptedTerms}
                   onChange={(e) => setAcceptedTerms(e.target.checked)}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || !hasScrolledToBottom}
                 />
                 <span>Accetto i Termini e Condizioni (obbligatorio)</span>
               </label>
+              {!hasScrolledToBottom && (
+                <p className="scroll-hint">
+                  ⬇️ Scorri fino in fondo per accettare i termini
+                </p>
+              )}
             </div>
           </div>
 

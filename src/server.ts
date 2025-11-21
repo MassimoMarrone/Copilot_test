@@ -202,7 +202,7 @@ const validate = (req: Request, res: Response, next: NextFunction): void => {
 
 // Routes
 
-// Register
+// Register - All users start as clients
 app.post(
   "/api/register",
   authLimiter,
@@ -214,15 +214,11 @@ app.post(
     body("password")
       .isLength({ min: 8 })
       .withMessage("Password must be at least 8 characters"),
-    body("userType")
-      .isIn(["client", "provider"])
-      .withMessage("User type must be client or provider"),
-    // body('acceptedTerms').equals('true').withMessage('Terms and conditions must be accepted'), // Removed to allow boolean true from JSON
   ],
   validate,
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const { email, password, userType, acceptedTerms } = req.body;
+      const { email, password, acceptedTerms } = req.body;
 
       // Accept both boolean true and string 'true'
       if (acceptedTerms !== true && acceptedTerms !== "true") {
@@ -242,7 +238,9 @@ app.post(
         id: Date.now().toString() + "-" + Math.random().toString(36).substring(2, 11),
         email,
         password: hashedPassword,
-        userType,
+        userType: "client", // All users start as clients
+        isClient: true,
+        isProvider: false,
         acceptedTerms: true,
         createdAt: new Date().toISOString(),
       };
@@ -251,7 +249,7 @@ app.post(
       saveData();
 
       const token = jwt.sign(
-        { id: user.id, email: user.email, userType: user.userType },
+        { id: user.id, email: user.email, userType: "client" },
         JWT_SECRET,
         { expiresIn: "24h" }
       );
@@ -263,7 +261,7 @@ app.post(
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
       });
 
-      res.json({ success: true, userType: user.userType });
+      res.json({ success: true, userType: "client", isClient: true, isProvider: false });
     } catch (error) {
       console.error("Registration error:", error);
       res.status(500).json({ error: "Registration failed" });
@@ -333,8 +331,79 @@ app.get("/api/me", authenticate, (req: Request, res: Response): void => {
     res.status(404).json({ error: "User not found" });
     return;
   }
-  res.json({ id: user.id, email: user.email, userType: user.userType });
+  res.json({ 
+    id: user.id, 
+    email: user.email, 
+    userType: user.userType,
+    isClient: user.isClient !== undefined ? user.isClient : user.userType === "client",
+    isProvider: user.isProvider !== undefined ? user.isProvider : user.userType === "provider"
+  });
 });
+
+// Become a provider - upgrade from client to provider
+app.post(
+  "/api/become-provider",
+  authenticate,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { acceptedProviderTerms } = req.body;
+
+      // Accept both boolean true and string 'true'
+      if (acceptedProviderTerms !== true && acceptedProviderTerms !== "true") {
+        res
+          .status(400)
+          .json({ error: "You must accept the Provider Terms & Conditions" });
+        return;
+      }
+
+      const userIndex = users.findIndex((u) => u.id === req.user!.id);
+      if (userIndex === -1) {
+        res.status(404).json({ error: "User not found" });
+        return;
+      }
+
+      const user = users[userIndex];
+
+      // Check if already a provider
+      if (user.isProvider) {
+        res.status(400).json({ error: "You are already a provider" });
+        return;
+      }
+
+      // Update user to be a provider
+      users[userIndex] = {
+        ...user,
+        isProvider: true,
+        acceptedProviderTerms: true,
+      };
+
+      saveData();
+
+      // Issue a new token with updated info
+      const token = jwt.sign(
+        { 
+          id: user.id, 
+          email: user.email, 
+          userType: user.isClient ? "client" : "provider" 
+        },
+        JWT_SECRET,
+        { expiresIn: "24h" }
+      );
+
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      });
+
+      res.json({ success: true, isProvider: true });
+    } catch (error) {
+      console.error("Become provider error:", error);
+      res.status(500).json({ error: "Failed to become provider" });
+    }
+  }
+);
 
 // Services routes
 
@@ -375,7 +444,10 @@ app.post(
   ],
   validate,
   (req: Request, res: Response): void => {
-    if (req.user!.userType !== "provider") {
+    const user = users.find((u) => u.id === req.user!.id);
+    const isProvider = user && (user.isProvider || user.userType === "provider");
+    
+    if (!isProvider) {
       res.status(403).json({ error: "Only providers can create services" });
       return;
     }
@@ -406,7 +478,10 @@ app.get(
   "/api/my-services",
   authenticate,
   (req: Request, res: Response): void => {
-    if (req.user!.userType !== "provider") {
+    const user = users.find((u) => u.id === req.user!.id);
+    const isProvider = user && (user.isProvider || user.userType === "provider");
+    
+    if (!isProvider) {
       res.status(403).json({ error: "Only providers can access this" });
       return;
     }
@@ -481,7 +556,10 @@ app.get(
   "/api/provider-bookings",
   authenticate,
   (req: Request, res: Response): void => {
-    if (req.user!.userType !== "provider") {
+    const user = users.find((u) => u.id === req.user!.id);
+    const isProvider = user && (user.isProvider || user.userType === "provider");
+    
+    if (!isProvider) {
       res.status(403).json({ error: "Only providers can access this" });
       return;
     }
@@ -515,7 +593,10 @@ app.post(
     });
   },
   (req: Request, res: Response): void => {
-    if (req.user!.userType !== "provider") {
+    const user = users.find((u) => u.id === req.user!.id);
+    const isProvider = user && (user.isProvider || user.userType === "provider");
+    
+    if (!isProvider) {
       res.status(403).json({ error: "Only providers can complete bookings" });
       return;
     }
