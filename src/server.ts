@@ -28,6 +28,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-11-17.clover",
 });
 
+const PLATFORM_FEE_PERCENTAGE = 0.1; // 10% platform fee
+
 // Security: Helmet middleware for setting security headers
 app.use(
   helmet({
@@ -652,6 +654,9 @@ app.post(
           },
         ],
         mode: "payment",
+        payment_intent_data: {
+          capture_method: "manual", // Authorize only (freeze funds)
+        },
         success_url: `${req.protocol}://${req.get(
           "host"
         )}/client-dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
@@ -852,7 +857,7 @@ app.post(
       next();
     });
   },
-  (req: Request, res: Response): void => {
+  async (req: Request, res: Response): Promise<void> => {
     const user = users.find((u) => u.id === req.user!.id);
 
     if (!user || !isUserProvider(user)) {
@@ -875,16 +880,56 @@ app.post(
     }
 
     // Validate payment status before completing the booking
-    if (booking.paymentStatus !== "held_in_escrow") {
+    if (
+      booking.paymentStatus !== "held_in_escrow" &&
+      booking.paymentStatus !== "authorized"
+    ) {
       res.status(400).json({
         error:
-          "Payment must be completed and held in escrow before completing the service",
+          "Payment must be authorized or held in escrow before completing the service",
       });
       return;
     }
 
     if (!req.file) {
       res.status(400).json({ error: "Photo proof is required" });
+      return;
+    }
+
+    // Calculate transfer amount (Total - Platform Fee)
+    const platformFee = booking.amount * PLATFORM_FEE_PERCENTAGE;
+    const transferAmount = Math.round((booking.amount - platformFee) * 100); // Amount in cents
+
+    try {
+      // 1. Capture the funds if they are just authorized
+      if (booking.paymentStatus === "authorized" && booking.paymentIntentId) {
+        await stripe.paymentIntents.capture(booking.paymentIntentId);
+        console.log(`Captured payment for booking ${booking.id}`);
+      }
+
+      // 2. Transfer funds to provider if they have a connected Stripe account
+      if (user.stripeAccountId) {
+        await stripe.transfers.create({
+          amount: transferAmount,
+          currency: "eur",
+          destination: user.stripeAccountId,
+          description: `Payout for booking ${booking.id}`,
+        });
+        console.log(
+          `Transferred ${transferAmount / 100} EUR to provider ${user.email} (${
+            user.stripeAccountId
+          })`
+        );
+      } else {
+        console.log(
+          `Provider ${user.email} has no Stripe account connected. Funds remain in platform account.`
+        );
+      }
+    } catch (stripeError: any) {
+      console.error("Stripe capture/transfer failed:", stripeError);
+      res.status(500).json({
+        error: "Payment processing failed: " + stripeError.message,
+      });
       return;
     }
 
@@ -895,6 +940,25 @@ app.post(
 
     saveData();
     res.json(booking);
+  }
+);
+
+// Debug endpoint to set Stripe Account ID (for testing transfers)
+app.post(
+  "/api/debug/set-stripe-account",
+  authenticate,
+  (req: Request, res: Response): void => {
+    const { stripeAccountId } = req.body;
+    const userIndex = users.findIndex((u) => u.id === req.user!.id);
+
+    if (userIndex === -1) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    users[userIndex].stripeAccountId = stripeAccountId;
+    saveData();
+    res.json({ success: true, stripeAccountId });
   }
 );
 
@@ -984,8 +1048,11 @@ app.get(
 
       const session = await stripe.checkout.sessions.retrieve(session_id);
 
-      if (session.payment_status === "paid") {
+      // Check if the session is complete (user finished the flow)
+      // With capture_method: 'manual', payment_status will be 'unpaid' but status 'complete'
+      if (session.status === "complete") {
         const metadata = session.metadata;
+        const paymentIntentId = session.payment_intent as string;
 
         // Check if this is from the new booking flow (has serviceId in metadata)
         if (metadata?.serviceId) {
@@ -1001,7 +1068,7 @@ app.get(
             return;
           }
 
-          // Create the booking with payment already in escrow
+          // Create the booking with payment authorized (frozen)
           const booking: Booking = {
             id: bookingId,
             serviceId: metadata.serviceId,
@@ -1013,7 +1080,8 @@ app.get(
             amount: parseFloat(metadata.amount),
             date: metadata.date,
             status: "pending",
-            paymentStatus: "held_in_escrow",
+            paymentStatus: "authorized", // Funds are frozen
+            paymentIntentId: paymentIntentId,
             photoProof: null,
             createdAt: new Date().toISOString(),
             clientPhone: metadata.clientPhone
@@ -1035,7 +1103,8 @@ app.get(
           const booking = bookings.find((b) => b.id === bookingId);
 
           if (booking) {
-            booking.paymentStatus = "held_in_escrow";
+            booking.paymentStatus = "authorized";
+            booking.paymentIntentId = paymentIntentId;
             saveData();
             res.json({ success: true, booking });
           } else {

@@ -39,7 +39,7 @@ const ProviderDashboard: React.FC = () => {
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-  const [userEmail, setUserEmail] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>("");
 
   // New Service Form State
   const [newService, setNewService] = useState({
@@ -204,8 +204,8 @@ const ProviderDashboard: React.FC = () => {
           >
             + Nuovo Servizio
           </button>
-          <UserMenu 
-            userEmail={userEmail} 
+          <UserMenu
+            userEmail={userEmail}
             userType="provider"
             isProvider={true}
           />
@@ -296,6 +296,8 @@ const ProviderDashboard: React.FC = () => {
                   <span className={`status ${booking.paymentStatus}`}>
                     {booking.paymentStatus === "held_in_escrow"
                       ? "Trattenuto in Escrow"
+                      : booking.paymentStatus === "authorized"
+                      ? "Autorizzato (Congelato)"
                       : booking.paymentStatus === "released"
                       ? "Rilasciato"
                       : booking.paymentStatus === "refunded"

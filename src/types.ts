@@ -13,6 +13,7 @@ export interface User {
   isBlocked?: boolean; // Blocked flag
   acceptedTerms: boolean; // Client terms
   acceptedProviderTerms?: boolean; // Provider terms (if isProvider is true)
+  stripeAccountId?: string; // Stripe Connect Account ID for payouts
   createdAt: string;
 }
 
@@ -40,7 +41,14 @@ export interface Booking {
   amount: number;
   date: string;
   status: "pending" | "completed" | "cancelled";
-  paymentStatus: "unpaid" | "held_in_escrow" | "released" | "cancelled" | "refunded";
+  paymentStatus:
+    | "unpaid"
+    | "authorized"
+    | "held_in_escrow"
+    | "released"
+    | "cancelled"
+    | "refunded";
+  paymentIntentId?: string; // To capture the payment later
   photoProof: string | null;
   createdAt: string;
   completedAt?: string;

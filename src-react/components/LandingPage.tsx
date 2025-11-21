@@ -27,6 +27,13 @@ const LandingPage: React.FC<LandingPageProps> = ({
   const [services, setServices] = useState<Service[]>([]);
   const [filteredServices, setFilteredServices] = useState<Service[]>([]);
   const [showResults, setShowResults] = useState(true);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [bookingDate, setBookingDate] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
+  const [preferredTime, setPreferredTime] = useState("");
+  const [bookingNotes, setBookingNotes] = useState("");
+  const [bookingAddress, setBookingAddress] = useState("");
 
   useEffect(() => {
     loadServices();
@@ -105,23 +112,60 @@ const LandingPage: React.FC<LandingPageProps> = ({
 
   const handleServiceClick = (service: Service) => {
     if (user) {
-      // If logged in, go to dashboard to book (or open modal here in future)
-      // For now, let's redirect to dashboard with a query param to open booking
-      // But since we removed search from dashboard, we might need to pass the service details
-      // simpler: just navigate to dashboard and maybe we can re-add a "Book Service" hidden mode there?
-      // Or better: Just tell them to go to dashboard? No that's bad UX.
-
-      // Let's just redirect to client dashboard for now, assuming they can see their bookings.
-      // The user said "dashboard must contain only data relative to services".
-      // If they want to BOOK, they are on the search page.
-      // So the booking modal SHOULD be here.
-
-      alert(
-        `Prenotazione per ${service.title} - Funzionalità in arrivo su questa pagina!`
-      );
+      setSelectedService(service);
+      setShowBookingModal(true);
+      const today = new Date().toISOString().split("T")[0];
+      setBookingDate(today);
+      setClientPhone("");
+      setPreferredTime("");
+      setBookingNotes("");
+      setBookingAddress("");
     } else {
       alert("Per prenotare questo servizio, effettua il login o registrati.");
       onLoginClick();
+    }
+  };
+
+  const closeBookingModal = () => {
+    setShowBookingModal(false);
+    setSelectedService(null);
+    setBookingDate("");
+    setClientPhone("");
+    setPreferredTime("");
+    setBookingNotes("");
+    setBookingAddress("");
+  };
+
+  const handleBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedService) return;
+
+    try {
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          serviceId: selectedService.id,
+          date: bookingDate,
+          clientPhone: clientPhone,
+          preferredTime: preferredTime,
+          notes: bookingNotes,
+          address: bookingAddress,
+        }),
+      });
+
+      if (response.ok) {
+        const { url } = await response.json();
+        // Redirect to Stripe checkout immediately
+        window.location.href = url;
+      } else {
+        const data = await response.json();
+        alert(data.error || "Errore nella prenotazione");
+      }
+    } catch (error) {
+      alert("Errore di connessione");
     }
   };
 
@@ -203,6 +247,98 @@ const LandingPage: React.FC<LandingPageProps> = ({
           <p>&copy; 2024 Servizi di Pulizia. Tutti i diritti riservati.</p>
         </div>
       </footer>
+
+      {/* Booking Modal */}
+      {showBookingModal && selectedService && (
+        <div className="modal-overlay" onClick={closeBookingModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={closeBookingModal}>
+              &times;
+            </button>
+            <h2>Prenota Servizio</h2>
+            <div className="service-summary">
+              <h3>{selectedService.title}</h3>
+              <p className="price">
+                Prezzo: €{selectedService.price.toFixed(2)}
+              </p>
+            </div>
+            <form onSubmit={handleBooking}>
+              <div className="form-group">
+                <label htmlFor="bookingDate">Data del Servizio: *</label>
+                <input
+                  type="date"
+                  id="bookingDate"
+                  value={bookingDate}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => setBookingDate(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="clientPhone">Telefono di Contatto:</label>
+                <input
+                  type="tel"
+                  id="clientPhone"
+                  value={clientPhone}
+                  onChange={(e) => setClientPhone(e.target.value)}
+                  placeholder="+39 123 456 7890"
+                  maxLength={50}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="preferredTime">Orario Preferito:</label>
+                <input
+                  type="time"
+                  id="preferredTime"
+                  value={preferredTime}
+                  onChange={(e) => setPreferredTime(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="bookingAddress">Indirizzo del Servizio:</label>
+                <input
+                  type="text"
+                  id="bookingAddress"
+                  value={bookingAddress}
+                  onChange={(e) => setBookingAddress(e.target.value)}
+                  placeholder="Via, Città, CAP"
+                  maxLength={500}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="bookingNotes">Note Aggiuntive:</label>
+                <textarea
+                  id="bookingNotes"
+                  value={bookingNotes}
+                  onChange={(e) => setBookingNotes(e.target.value)}
+                  placeholder="Aggiungi qualsiasi informazione utile per il fornitore..."
+                  rows={4}
+                  maxLength={1000}
+                />
+              </div>
+              <div className="info-box">
+                ℹ️ <strong>Pagamento Obbligatorio:</strong> Sarai reindirizzato
+                alla pagina di pagamento. La prenotazione sarà confermata solo
+                dopo il completamento del pagamento. Il pagamento sarà
+                trattenuto in modo sicuro in escrow fino al completamento del
+                servizio.
+              </div>
+              <div className="button-group">
+                <button type="submit" className="btn btn-primary">
+                  Procedi al Pagamento
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={closeBookingModal}
+                >
+                  Annulla
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 };

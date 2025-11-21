@@ -237,7 +237,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
       const data = await response.json();
       if (response.ok) {
         alert(
-          "Pagamento confermato! La prenotazione è stata creata con successo ed è ora in escrow."
+          "Pagamento autorizzato! La prenotazione è confermata. I fondi saranno prelevati solo al completamento del servizio."
         );
         loadBookings();
         navigate("/client-dashboard");
@@ -351,6 +351,8 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                   <span className={`status ${booking.paymentStatus}`}>
                     {booking.paymentStatus === "held_in_escrow"
                       ? "Trattenuto in Escrow"
+                      : booking.paymentStatus === "authorized"
+                      ? "Autorizzato (In attesa)"
                       : booking.paymentStatus === "released"
                       ? "Rilasciato al Fornitore"
                       : "Non Pagato"}

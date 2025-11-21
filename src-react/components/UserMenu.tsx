@@ -103,6 +103,17 @@ const UserMenu: React.FC<UserMenuProps> = ({
 
           <div className="user-menu-divider"></div>
 
+          <button
+            className="user-menu-item"
+            onClick={() => {
+              navigate("/");
+              setIsOpen(false);
+            }}
+          >
+            <span className="menu-icon">🏠</span>
+            <span>Home / Cerca</span>
+          </button>
+
           <button className="user-menu-item" onClick={goToDashboard}>
             <span className="menu-icon">📊</span>
             <span>Dashboard</span>
@@ -113,10 +124,17 @@ const UserMenu: React.FC<UserMenuProps> = ({
             <span>Profilo Utente</span>
           </button>
 
-          {isProvider && userType === "client" && (
+          {/* If I am a provider, allow switching between dashboards */}
+          {isProvider && (
             <button className="user-menu-item" onClick={goToOtherDashboard}>
-              <span className="menu-icon">🏪</span>
-              <span>Dashboard Fornitore</span>
+              <span className="menu-icon">
+                {userType === "client" ? "🏪" : "👤"}
+              </span>
+              <span>
+                {userType === "client"
+                  ? "Passa a Dashboard Fornitore"
+                  : "Passa a Dashboard Cliente"}
+              </span>
             </button>
           )}
 
