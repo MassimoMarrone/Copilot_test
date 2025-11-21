@@ -58,13 +58,13 @@ const ChatModal: React.FC<ChatModalProps> = ({
         setLoading(true);
         setError(null);
       }
-      
+
       const response = await fetch(`/api/bookings/${bookingId}/messages`);
-      
+
       if (response.ok) {
         const data = await response.json();
         // Only update if we have new messages or it's the first load to avoid re-renders
-        setMessages(prevMessages => {
+        setMessages((prevMessages) => {
           if (JSON.stringify(prevMessages) !== JSON.stringify(data)) {
             return data;
           }
@@ -87,7 +87,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!newMessage.trim()) {
       return;
     }
@@ -150,7 +150,10 @@ const ChatModal: React.FC<ChatModalProps> = ({
 
   return (
     <div className="chat-modal-overlay" onClick={onClose}>
-      <div className="chat-modal-container" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="chat-modal-container"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="chat-modal-header">
           <div className="chat-header-info">
             <h3>💬 Chat</h3>
