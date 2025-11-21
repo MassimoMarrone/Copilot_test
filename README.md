@@ -5,6 +5,7 @@ Applicazione web per la prenotazione di servizi di pulizia con sistema di pagame
 ## Funzionalità
 
 ### Autenticazione & Legale
+
 - ✅ Registrazione con accettazione obbligatoria dei Termini & Condizioni
 - ✅ Login separato per Clienti e Fornitori
 - ✅ Termini e Condizioni completi visualizzati durante la registrazione
@@ -14,6 +15,7 @@ Applicazione web per la prenotazione di servizi di pulizia con sistema di pagame
 ### Dashboard Separate
 
 #### Dashboard Cliente
+
 - 🔍 Ricerca e visualizzazione di tutti i servizi disponibili
 - 📅 Prenotazione servizi con selezione data
 - 📋 Visualizzazione delle proprie prenotazioni
@@ -21,6 +23,7 @@ Applicazione web per la prenotazione di servizi di pulizia con sistema di pagame
 - 📸 Visualizzazione prove fotografiche dei servizi completati
 
 #### Dashboard Fornitore
+
 - ➕ Creazione e gestione servizi offerti
 - 📅 Visualizzazione prenotazioni ricevute
 - ❌ Cancellazione prenotazioni (con rimborso automatico se pagate)
@@ -29,6 +32,7 @@ Applicazione web per la prenotazione di servizi di pulizia con sistema di pagame
 - 💰 Monitoraggio stato pagamenti
 
 #### Dashboard Amministratore (Nuovo)
+
 - 🛡️ Accesso esclusivo per gestione piattaforma
 - 👥 Gestione Utenti: Visualizzazione, eliminazione e blocco/sblocco utenti
 - 🚫 Blocco Utenti: Nasconde i servizi dell'utente e cancella le prenotazioni pendenti
@@ -36,6 +40,7 @@ Applicazione web per la prenotazione di servizi di pulizia con sistema di pagame
 - 📅 Gestione Prenotazioni: Visualizzazione completa e cancellazione d'ufficio (con rimborso)
 
 ### Sistema di Pagamento Escrow
+
 - 💳 Al momento della prenotazione, i fondi vengono trattenuti in escrow
 - 🔒 Il pagamento rimane bloccato fino al completamento del servizio
 - 📸 Il fornitore deve caricare una foto prova del lavoro completato
@@ -44,6 +49,7 @@ Applicazione web per la prenotazione di servizi di pulizia con sistema di pagame
 - �🔐 Protezione per entrambe le parti della transazione
 
 ### Sicurezza e Architettura
+
 - 🔐 **Autenticazione JWT**: Accesso sicuro basato su token con scadenza
 - 🛡️ **Role-Based Access Control (RBAC)**: Permessi differenziati per Client, Provider e Admin
 - 🚦 **Rate Limiting**: Protezione contro abusi e attacchi DDoS su API e login
@@ -59,33 +65,39 @@ Applicazione web per la prenotazione di servizi di pulizia con sistema di pagame
 ## Installazione
 
 1. Clona il repository:
+
 ```bash
 git clone https://github.com/MassimoMarrone/Copilot_test.git
 cd Copilot_test
 ```
 
 2. Installa le dipendenze:
+
 ```bash
 npm install
 ```
 
 3. (Opzionale) Configura le variabili d'ambiente:
+
 ```bash
 cp .env.example .env
 # Modifica .env con le tue configurazioni
 ```
 
 4. Compila il codice TypeScript:
+
 ```bash
 npm run build
 ```
 
 5. Avvia il server:
+
 ```bash
 npm start
 ```
 
 6. Apri il browser e vai a:
+
 ```
 http://localhost:3000
 ```
@@ -174,6 +186,7 @@ http://localhost:3000
 ### Versione React con UI Moderna
 
 Questa versione include:
+
 - ✅ **Frontend React 19**: Interfaccia utente moderna e reattiva
 - ✅ **Modal-based Authentication**: Login e registrazione tramite modal popup invece di pagine separate
 - ✅ **Navbar persistente**: Accesso rapido all'autenticazione da qualsiasi sezione della pagina

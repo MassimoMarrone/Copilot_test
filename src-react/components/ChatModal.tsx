@@ -101,6 +101,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
         },
         body: JSON.stringify({
           message: newMessage.trim(),
+          senderType: currentUserType,
         }),
       });
 

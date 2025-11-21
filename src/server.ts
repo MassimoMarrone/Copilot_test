@@ -1272,6 +1272,21 @@ app.post(
       return;
     }
 
+    // Determine sender type based on booking role
+    // If user is both client and provider (self-booking), prefer the one specified in body if available
+    let senderType: "client" | "provider" = req.user!.userType as "client" | "provider";
+    
+    if (booking.providerId === req.user!.id && booking.clientId === req.user!.id) {
+       // Self booking: check explicit intent from body
+       if (req.body.senderType === "provider") senderType = "provider";
+       else if (req.body.senderType === "client") senderType = "client";
+       // else fallback to token userType (which is usually client)
+    } else if (booking.providerId === req.user!.id) {
+      senderType = "provider";
+    } else if (booking.clientId === req.user!.id) {
+      senderType = "client";
+    }
+
     const chatMessage: ChatMessage = {
       id:
         Date.now().toString() +
@@ -1280,7 +1295,7 @@ app.post(
       bookingId,
       senderId: req.user!.id,
       senderEmail: req.user!.email,
-      senderType: req.user!.userType,
+      senderType: senderType,
       message,
       createdAt: new Date().toISOString(),
     };
