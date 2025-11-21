@@ -850,8 +850,11 @@ app.get(
         // Check if this is from the new booking flow (has serviceId in metadata)
         if (metadata?.serviceId) {
           // New flow: Create booking after payment
+          // Generate a unique booking ID based on session ID to prevent duplicates
+          const bookingId = `booking-${session.id}`;
+          
           // Check if booking already exists for this session to prevent duplicates
-          const existingBooking = bookings.find((b) => b.id === session.id);
+          const existingBooking = bookings.find((b) => b.id === bookingId);
           
           if (existingBooking) {
             res.json({ success: true, booking: existingBooking });
@@ -860,7 +863,7 @@ app.get(
 
           // Create the booking with payment already in escrow
           const booking: Booking = {
-            id: session.id, // Use session ID as booking ID to prevent duplicates
+            id: bookingId,
             serviceId: metadata.serviceId,
             clientId: metadata.clientId,
             clientEmail: metadata.clientEmail,
@@ -873,10 +876,10 @@ app.get(
             paymentStatus: "held_in_escrow",
             photoProof: null,
             createdAt: new Date().toISOString(),
-            clientPhone: metadata.clientPhone || undefined,
-            preferredTime: metadata.preferredTime || undefined,
-            notes: metadata.notes || undefined,
-            address: metadata.address || undefined,
+            clientPhone: metadata.clientPhone ? metadata.clientPhone : undefined,
+            preferredTime: metadata.preferredTime ? metadata.preferredTime : undefined,
+            notes: metadata.notes ? metadata.notes : undefined,
+            address: metadata.address ? metadata.address : undefined,
           };
 
           bookings.push(booking);
