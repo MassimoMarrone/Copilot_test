@@ -6,9 +6,10 @@ interface UserMenuProps {
   userEmail?: string;
   userType?: 'client' | 'provider';
   isProvider?: boolean;
+  onBecomeProvider?: () => void;
 }
 
-const UserMenu: React.FC<UserMenuProps> = ({ userEmail, userType, isProvider }) => {
+const UserMenu: React.FC<UserMenuProps> = ({ userEmail, userType, isProvider, onBecomeProvider }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -101,8 +102,8 @@ const UserMenu: React.FC<UserMenuProps> = ({ userEmail, userType, isProvider }) 
             </button>
           )}
 
-          {!isProvider && userType === 'client' && (
-            <button className="user-menu-item" onClick={() => { setIsOpen(false); }}>
+          {!isProvider && userType === 'client' && onBecomeProvider && (
+            <button className="user-menu-item" onClick={() => { setIsOpen(false); onBecomeProvider(); }}>
               <span className="menu-icon">🎯</span>
               <span>Diventa Fornitore</span>
             </button>

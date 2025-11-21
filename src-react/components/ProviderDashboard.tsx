@@ -207,6 +207,7 @@ const ProviderDashboard: React.FC = () => {
           <UserMenu 
             userEmail={userEmail} 
             userType="provider"
+            isProvider={true}
           />
         </div>
       </div>

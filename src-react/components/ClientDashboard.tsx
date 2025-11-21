@@ -285,6 +285,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
             userEmail={userEmail} 
             userType="client"
             isProvider={isProvider}
+            onBecomeProvider={() => setShowBecomeProviderModal(true)}
           />
         </div>
       </div>
