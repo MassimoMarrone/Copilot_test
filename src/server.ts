@@ -701,10 +701,10 @@ app.post(
         mode: "payment",
         success_url: `${req.protocol}://${req.get(
           "host"
-        )}/client-dashboard.html?payment=success&bookingId=${bookingId}&session_id={CHECKOUT_SESSION_ID}`,
+        )}/client-dashboard?payment=success&bookingId=${bookingId}&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${req.protocol}://${req.get(
           "host"
-        )}/client-dashboard.html?payment=cancel`,
+        )}/client-dashboard?payment=cancel`,
         metadata: {
           bookingId: booking.id,
           clientId: req.user!.id,

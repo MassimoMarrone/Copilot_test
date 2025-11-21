@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import ChatModal from "./ChatModal";
 import BecomeProviderModal from "./BecomeProviderModal";
@@ -43,12 +43,24 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isProvider, setIsProvider] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     loadServices();
     loadBookings();
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    const paymentStatus = searchParams.get("payment");
+    const sessionId = searchParams.get("session_id");
+
+    if (paymentStatus === "success" && sessionId) {
+      verifyPayment(sessionId);
+    } else if (paymentStatus === "cancel") {
+      alert("Pagamento annullato.");
+    }
+  }, [searchParams]);
 
   const checkAuth = async () => {
     try {
@@ -192,6 +204,48 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
     }
   };
 
+  const verifyPayment = async (sessionId: string) => {
+    try {
+      const response = await fetch(
+        `/api/verify-payment?session_id=${sessionId}`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        alert("Pagamento confermato! La prenotazione è ora in escrow.");
+        loadBookings();
+        navigate("/client-dashboard");
+      } else {
+        alert(data.error || "Errore nella verifica del pagamento");
+      }
+    } catch (error) {
+      console.error("Error verifying payment:", error);
+      alert("Errore di connessione durante la verifica del pagamento");
+    }
+  };
+
+  const handlePayment = async (bookingId: string) => {
+    try {
+      const response = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ bookingId }),
+      });
+
+      if (response.ok) {
+        const { url } = await response.json();
+        window.location.href = url;
+      } else {
+        const data = await response.json();
+        alert(data.error || "Errore nell'inizializzazione del pagamento");
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      alert("Errore di connessione");
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await fetch("/api/logout", { method: "POST" });
@@ -294,9 +348,20 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                   <span className={`status ${booking.paymentStatus}`}>
                     {booking.paymentStatus === "held_in_escrow"
                       ? "Trattenuto in Escrow"
-                      : "Rilasciato al Fornitore"}
+                      : booking.paymentStatus === "released"
+                      ? "Rilasciato al Fornitore"
+                      : "Non Pagato"}
                   </span>
                 </p>
+                {booking.paymentStatus === "unpaid" && (
+                  <button
+                    onClick={() => handlePayment(booking.id)}
+                    className="btn btn-primary"
+                    style={{ marginRight: "10px", marginBottom: "10px" }}
+                  >
+                    💳 Paga Ora
+                  </button>
+                )}
                 {booking.photoProof && (
                   <div className="photo-proof">
                     <p>
