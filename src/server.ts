@@ -1414,6 +1414,7 @@ app.post(
       senderEmail: req.user!.email,
       senderType: senderType,
       message,
+      read: false,
       createdAt: new Date().toISOString(),
     };
 
@@ -1459,6 +1460,78 @@ app.get(
   }
 );
 
+// Get unread messages count
+app.get(
+  "/api/unread-messages-count",
+  authenticate,
+  (req: Request, res: Response): void => {
+    const userId = req.user!.id;
+
+    // Find all bookings where user is client or provider
+    const userBookings = bookings.filter(
+      (b) => b.clientId === userId || b.providerId === userId
+    );
+
+    let unreadCount = 0;
+
+    userBookings.forEach((booking) => {
+      // Count unread messages in this booking where the sender is NOT the current user
+      const unreadInBooking = chatMessages.filter(
+        (m) =>
+          m.bookingId === booking.id &&
+          m.senderId !== userId &&
+          m.read === false
+      ).length;
+      unreadCount += unreadInBooking;
+    });
+
+    res.json({ count: unreadCount });
+  }
+);
+
+// Mark messages as read for a booking
+app.put(
+  "/api/bookings/:bookingId/messages/read",
+  authenticate,
+  (req: Request, res: Response): void => {
+    const { bookingId } = req.params;
+    const userId = req.user!.id;
+
+    // Verify the booking exists and user is part of it
+    const booking = bookings.find((b) => b.id === bookingId);
+
+    if (!booking) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+
+    if (booking.clientId !== userId && booking.providerId !== userId) {
+      res.status(403).json({ error: "You do not have access to this chat" });
+      return;
+    }
+
+    let updated = false;
+
+    // Mark all messages in this booking sent by the OTHER party as read
+    chatMessages.forEach((m) => {
+      if (
+        m.bookingId === bookingId &&
+        m.senderId !== userId &&
+        m.read === false
+      ) {
+        m.read = true;
+        updated = true;
+      }
+    });
+
+    if (updated) {
+      saveData();
+    }
+
+    res.json({ success: true });
+  }
+);
+
 // Get all conversations for the current user
 app.get(
   "/api/my-conversations",
@@ -1483,6 +1556,10 @@ app.get(
       const lastMessage =
         bookingMessages.length > 0 ? bookingMessages[0] : null;
 
+      const unreadCount = bookingMessages.filter(
+        (m) => m.senderId !== userId && m.read === false
+      ).length;
+
       return {
         bookingId: booking.id,
         serviceTitle: booking.serviceTitle,
@@ -1492,6 +1569,7 @@ app.get(
             : booking.clientEmail,
         lastMessage: lastMessage,
         updatedAt: lastMessage ? lastMessage.createdAt : booking.createdAt,
+        unreadCount,
       };
     });
 
@@ -1802,6 +1880,7 @@ io.on("connection", (socket) => {
       senderEmail,
       senderType,
       message,
+      read: false,
       createdAt: new Date().toISOString(),
     };
 
@@ -1811,6 +1890,19 @@ io.on("connection", (socket) => {
 
     // Broadcast to room (including sender)
     io.to(bookingId).emit("receive_message", chatMessage);
+
+    // Notify recipient about new message for unread count update
+    const booking = bookings.find((b) => b.id === bookingId);
+    if (booking) {
+      const recipientId =
+        booking.clientId === senderId ? booking.providerId : booking.clientId;
+
+      // Emit event to recipient's personal room
+      io.to(`user_${recipientId}`).emit("message_received_notification", {
+        bookingId,
+        senderId,
+      });
+    }
   });
 
   socket.on("disconnect", () => {

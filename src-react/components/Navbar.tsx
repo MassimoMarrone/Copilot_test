@@ -10,6 +10,7 @@ interface NavbarProps {
   onRegisterClick: () => void;
   user?: any;
   onLogout?: () => void;
+  unreadMessagesCount?: number;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
@@ -17,6 +18,7 @@ const Navbar: React.FC<NavbarProps> = ({
   onRegisterClick,
   user,
   onLogout,
+  unreadMessagesCount = 0,
 }) => {
   const location = useLocation();
 
@@ -54,6 +56,9 @@ const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               Messaggi
+              {unreadMessagesCount > 0 && (
+                <span className="nav-badge">{unreadMessagesCount}</span>
+              )}
             </Link>
           </div>
         )}

@@ -67,6 +67,7 @@ export interface ChatMessage {
   senderEmail: string;
   senderType: "client" | "provider" | "admin";
   message: string;
+  read?: boolean; // New field for read status
   createdAt: string;
 }
 

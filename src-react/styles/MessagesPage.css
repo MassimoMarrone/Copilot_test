@@ -39,6 +39,39 @@
   border-color: #667eea;
 }
 
+.conversation-card.unread {
+  background-color: #f0f7ff;
+  border-left: 4px solid #667eea;
+}
+
+.conversation-card.unread .conversation-header h3 {
+  font-weight: 800;
+  color: #000;
+}
+
+.conversation-card.unread .conversation-preview {
+  font-weight: 600;
+  color: #333;
+}
+
+.conversation-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.unread-badge {
+  background-color: #ff3b30;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  min-width: 20px;
+  text-align: center;
+  margin-left: 10px;
+}
+
 .conversation-avatar {
   width: 50px;
   height: 50px;

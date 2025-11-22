@@ -9,6 +9,7 @@ interface ChatMessage {
   senderEmail: string;
   senderType: "client" | "provider";
   message: string;
+  read?: boolean;
   createdAt: string;
 }
 
@@ -179,7 +180,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
           ) : (
             <div className="chat-messages">
               {messages.map((msg) => {
-                const isOwnMessage = msg.senderType === currentUserType;
+                const isOwnMessage = msg.senderId === userId;
                 return (
                   <div
                     key={msg.id}

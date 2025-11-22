@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import ChatModal from "../components/ChatModal";
+import { useOutletContext } from "react-router-dom";
 import "../styles/MessagesPage.css";
 
 interface Conversation {
@@ -12,10 +13,16 @@ interface Conversation {
     createdAt: string;
   } | null;
   updatedAt: string;
+  unreadCount: number;
+}
+
+interface OutletContextType {
+  refreshUnreadCount: () => void;
 }
 
 const MessagesPage: React.FC = () => {
   const { user } = useAuth();
+  const { refreshUnreadCount } = useOutletContext<OutletContextType>();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(
@@ -41,9 +48,21 @@ const MessagesPage: React.FC = () => {
     }
   };
 
+  const markAsRead = async (bookingId: string) => {
+    try {
+      await fetch(`/api/bookings/${bookingId}/messages/read`, {
+        method: "PUT",
+      });
+      refreshUnreadCount();
+    } catch (error) {
+      console.error("Error marking messages as read:", error);
+    }
+  };
+
   const handleOpenChat = (bookingId: string, otherPartyEmail: string) => {
     setSelectedBookingId(bookingId);
     setSelectedOtherPartyEmail(otherPartyEmail);
+    markAsRead(bookingId);
   };
 
   const handleCloseChat = () => {
@@ -81,7 +100,9 @@ const MessagesPage: React.FC = () => {
             conversations.map((conv) => (
               <div
                 key={conv.bookingId}
-                className="conversation-card"
+                className={`conversation-card ${
+                  conv.unreadCount > 0 ? "unread" : ""
+                }`}
                 onClick={() =>
                   handleOpenChat(conv.bookingId, conv.otherPartyEmail)
                 }
@@ -99,13 +120,18 @@ const MessagesPage: React.FC = () => {
                   <p className="conversation-with">
                     Con: {conv.otherPartyEmail}
                   </p>
-                  <p className="conversation-preview">
-                    {conv.lastMessage ? (
-                      conv.lastMessage.message
-                    ) : (
-                      <em>Nessun messaggio</em>
+                  <div className="conversation-footer">
+                    <p className="conversation-preview">
+                      {conv.lastMessage ? (
+                        conv.lastMessage.message
+                      ) : (
+                        <em>Nessun messaggio</em>
+                      )}
+                    </p>
+                    {conv.unreadCount > 0 && (
+                      <span className="unread-badge">{conv.unreadCount}</span>
                     )}
-                  </p>
+                  </div>
                 </div>
               </div>
             ))
