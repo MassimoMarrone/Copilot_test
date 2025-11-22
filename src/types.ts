@@ -70,6 +70,17 @@ export interface ChatMessage {
   createdAt: string;
 }
 
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: "info" | "success" | "warning" | "error";
+  read: boolean;
+  createdAt: string;
+  link?: string; // Optional link to redirect user (e.g. to booking details)
+}
+
 export interface JWTPayload {
   id: string;
   email: string;

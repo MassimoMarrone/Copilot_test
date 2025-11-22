@@ -11,7 +11,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { body, validationResult } from "express-validator";
 import dotenv from "dotenv";
-import { User, Service, Booking, JWTPayload, ChatMessage } from "./types";
+import { User, Service, Booking, JWTPayload, ChatMessage, Notification } from "./types";
 import Stripe from "stripe";
 import { OAuth2Client } from "google-auth-library";
 
@@ -174,6 +174,7 @@ let users: User[] = [];
 let services: Service[] = [];
 let bookings: Booking[] = [];
 let chatMessages: ChatMessage[] = [];
+let notifications: Notification[] = [];
 
 // Ensure data directory exists
 const ensureDataDir = (): void => {
@@ -202,6 +203,10 @@ const loadData = (): void => {
       const data = fs.readFileSync("data/chatMessages.json", "utf8");
       chatMessages = JSON.parse(data);
     }
+    if (fs.existsSync("data/notifications.json")) {
+      const data = fs.readFileSync("data/notifications.json", "utf8");
+      notifications = JSON.parse(data);
+    }
   } catch (error) {
     console.error("Error loading data:", error);
   }
@@ -218,12 +223,44 @@ const saveData = (): void => {
       "data/chatMessages.json",
       JSON.stringify(chatMessages, null, 2)
     );
+    fs.writeFileSync(
+      "data/notifications.json",
+      JSON.stringify(notifications, null, 2)
+    );
   } catch (error) {
     console.error("Error saving data:", error);
   }
 };
 
 loadData();
+
+// Helper to create and send notification
+const sendNotification = (
+  userId: string,
+  title: string,
+  message: string,
+  type: "info" | "success" | "warning" | "error" = "info",
+  link?: string
+) => {
+  const notification: Notification = {
+    id: Date.now().toString() + "-" + Math.random().toString(36).substring(2, 11),
+    userId,
+    title,
+    message,
+    type,
+    read: false,
+    createdAt: new Date().toISOString(),
+    link,
+  };
+
+  notifications.push(notification);
+  saveData();
+
+  // Emit real-time event
+  io.to(`user_${userId}`).emit("new_notification", notification);
+  
+  return notification;
+};
 
 // Authentication middleware
 const authenticate = (
@@ -974,6 +1011,25 @@ app.post(
     }
 
     saveData();
+
+    // Notify both parties
+    sendNotification(
+      booking.clientId,
+      "Prenotazione Cancellata",
+      `La tua prenotazione per "${booking.serviceTitle}" è stata cancellata.`,
+      "error"
+    );
+    sendNotification(
+      booking.providerId,
+      "Prenotazione Cancellata",
+      `La prenotazione per "${booking.serviceTitle}" è stata cancellata.`,
+      "warning"
+    );
+    
+    // Also emit update event for dashboard refresh
+    io.to(`user_${booking.clientId}`).emit("booking_updated", booking);
+    io.to(`user_${booking.providerId}`).emit("booking_updated", booking);
+
     res.json(booking);
   }
 );
@@ -1082,6 +1138,18 @@ app.post(
     booking.completedAt = new Date().toISOString();
 
     saveData();
+
+    // Notify client
+    sendNotification(
+      booking.clientId,
+      "Servizio Completato",
+      `Il servizio "${booking.serviceTitle}" è stato completato!`,
+      "success"
+    );
+    
+    // Also emit update event for dashboard refresh
+    io.to(`user_${booking.clientId}`).emit("booking_updated", booking);
+
     res.json(booking);
   }
 );
@@ -1239,6 +1307,16 @@ app.get(
 
           bookings.push(booking);
           saveData();
+
+          // Notify provider about new booking
+          sendNotification(
+            booking.providerId,
+            "Nuova Prenotazione",
+            `Hai ricevuto una nuova prenotazione per "${booking.serviceTitle}"`,
+            "success"
+          );
+          // io.to(`user_${booking.providerId}`).emit("booking_created", booking); // Replaced by sendNotification which emits new_notification
+
           res.json({ success: true, booking });
         } else {
           // Old flow: Update existing booking (for backward compatibility)
@@ -1587,6 +1665,60 @@ app.get("*splat", pageLimiter, (req: Request, res: Response) => {
   serveSpa(req, res);
 });
 
+// Notification routes
+
+// Get user notifications
+app.get("/api/notifications", authenticate, (req: Request, res: Response) => {
+  const userNotifications = notifications
+    .filter((n) => n.userId === req.user!.id)
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  res.json(userNotifications);
+});
+
+// Mark notification as read
+app.put(
+  "/api/notifications/:id/read",
+  authenticate,
+  (req: Request, res: Response) => {
+    const { id } = req.params;
+    const notification = notifications.find(
+      (n) => n.id === id && n.userId === req.user!.id
+    );
+
+    if (!notification) {
+      res.status(404).json({ error: "Notification not found" });
+      return;
+    }
+
+    notification.read = true;
+    saveData();
+    res.json({ success: true });
+  }
+);
+
+// Mark all notifications as read
+app.put(
+  "/api/notifications/read-all",
+  authenticate,
+  (req: Request, res: Response) => {
+    let updated = false;
+    notifications.forEach((n) => {
+      if (n.userId === req.user!.id && !n.read) {
+        n.read = true;
+        updated = true;
+      }
+    });
+
+    if (updated) {
+      saveData();
+    }
+    res.json({ success: true });
+  }
+);
+
 // Socket.IO Logic
 io.on("connection", (socket) => {
   console.log("New client connected:", socket.id);
@@ -1594,6 +1726,12 @@ io.on("connection", (socket) => {
   socket.on("join_booking", (bookingId) => {
     socket.join(bookingId);
     console.log(`User ${socket.id} joined booking room: ${bookingId}`);
+  });
+
+  // NEW: Join user specific room for notifications
+  socket.on("join_user_room", (userId) => {
+    socket.join(`user_${userId}`);
+    console.log(`User ${socket.id} joined user room: user_${userId}`);
   });
 
   socket.on("send_message", (data) => {

@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
 import AddressAutocomplete from "./AddressAutocomplete";
+import ToastNotification, { Notification } from "./ToastNotification";
+import NotificationCenter from "./NotificationCenter";
 import ChatModal from "./ChatModal";
 import UserMenu from "./UserMenu";
 import "../styles/ProviderDashboard.css";
+import "../styles/ToastNotification.css";
 
 interface Service {
   id: string;
@@ -41,6 +45,8 @@ const ProviderDashboard: React.FC = () => {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [userEmail, setUserEmail] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [lastNotification, setLastNotification] = useState<Notification | null>(null);
 
   // New Service Form State
   const [newService, setNewService] = useState({
@@ -62,6 +68,37 @@ const ProviderDashboard: React.FC = () => {
     loadServices();
     loadBookings();
   }, []);
+
+  // Socket.IO connection for real-time updates
+  useEffect(() => {
+    if (!userId) return;
+
+    const socket = io("http://localhost:3000");
+
+    socket.on("connect", () => {
+      console.log("Connected to socket server for updates");
+      socket.emit("join_user_room", userId);
+    });
+
+    socket.on("new_notification", (notification: Notification) => {
+      setNotifications((prev) => [...prev, notification]);
+      setLastNotification(notification);
+    });
+
+    socket.on("booking_created", (newBooking: Booking) => {
+      setBookings((prevBookings) => [newBooking, ...prevBookings]);
+    });
+
+    socket.on("booking_updated", (updatedBooking: Booking) => {
+      setBookings((prevBookings) =>
+        prevBookings.map((b) => (b.id === updatedBooking.id ? updatedBooking : b))
+      );
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [userId]);
 
   const checkAuth = async () => {
     try {
@@ -206,6 +243,7 @@ const ProviderDashboard: React.FC = () => {
           >
             + Nuovo Servizio
           </button>
+          <NotificationCenter userId={userId} newIncomingNotification={lastNotification} />
           <UserMenu
             userEmail={userEmail}
             userType="provider"
@@ -407,6 +445,21 @@ const ProviderDashboard: React.FC = () => {
             ))
           )}
         </div>
+      </div>
+
+      {/* Toast Notifications Container */}
+      <div className="toast-container">
+        {notifications.map((notification) => (
+          <ToastNotification
+            key={notification.id}
+            notification={notification}
+            onClose={() =>
+              setNotifications((prev) =>
+                prev.filter((n) => n.id !== notification.id)
+              )
+            }
+          />
+        ))}
       </div>
 
       {/* Create Service Modal */}

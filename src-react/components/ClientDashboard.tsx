@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { io } from "socket.io-client";
+import ToastNotification, { Notification } from "./ToastNotification";
+import NotificationCenter from "./NotificationCenter";
 // import SearchBar from "./SearchBar"; // Removed
 import ChatModal from "./ChatModal";
 import BecomeProviderModal from "./BecomeProviderModal";
 import UserMenu from "./UserMenu";
 import "../styles/ClientDashboard.css";
+import "../styles/ToastNotification.css";
 
 interface Service {
   id: string;
@@ -53,6 +57,8 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
   const [isProvider, setIsProvider] = useState(false);
   const [userEmail, setUserEmail] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [lastNotification, setLastNotification] = useState<Notification | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -72,6 +78,33 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
       alert("Pagamento annullato.");
     }
   }, [searchParams]);
+
+  // Socket.IO connection for real-time updates
+  useEffect(() => {
+    if (!userId) return;
+
+    const socket = io("http://localhost:3000");
+
+    socket.on("connect", () => {
+      console.log("Connected to socket server for updates");
+      socket.emit("join_user_room", userId);
+    });
+
+    socket.on("new_notification", (notification: Notification) => {
+      setNotifications((prev) => [...prev, notification]);
+      setLastNotification(notification);
+    });
+
+    socket.on("booking_updated", (updatedBooking: Booking) => {
+      setBookings((prevBookings) =>
+        prevBookings.map((b) => (b.id === updatedBooking.id ? updatedBooking : b))
+      );
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [userId]);
 
   const checkAuth = async () => {
     try {
@@ -291,6 +324,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
       <div className="dashboard-header">
         <h1>🏠 Dashboard Cliente</h1>
         <div className="header-actions">
+          <NotificationCenter userId={userId} newIncomingNotification={lastNotification} />
           <UserMenu
             userEmail={userEmail}
             userType="client"
@@ -385,6 +419,21 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
             ))
           )}
         </div>
+      </div>
+
+      {/* Toast Notifications Container */}
+      <div className="toast-container">
+        {notifications.map((notification) => (
+          <ToastNotification
+            key={notification.id}
+            notification={notification}
+            onClose={() =>
+              setNotifications((prev) =>
+                prev.filter((n) => n.id !== notification.id)
+              )
+            }
+          />
+        ))}
       </div>
 
       {/* Booking Modal */}
