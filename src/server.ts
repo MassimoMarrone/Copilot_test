@@ -1,4 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
@@ -17,6 +19,15 @@ import { OAuth2Client } from "google-auth-library";
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: ["http://localhost:5173", "http://localhost:3000"], // Allow frontend and self
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
+
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-in-production";
@@ -39,13 +50,21 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com"],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://accounts.google.com",
+          "https://*.google.com",
+        ],
         scriptSrc: [
           "'self'",
           "'unsafe-inline'",
+          "'unsafe-eval'",
           "https://maps.googleapis.com",
           "https://accounts.google.com",
           "https://gsi.client-web.google.com",
+          "https://*.google.com",
+          "https://*.googleapis.com",
         ],
         imgSrc: [
           "'self'",
@@ -53,21 +72,28 @@ app.use(
           "blob:",
           "https://maps.googleapis.com",
           "https://maps.gstatic.com",
-          "https://lh3.googleusercontent.com",
+          "https://*.googleusercontent.com",
         ],
         connectSrc: [
           "'self'",
+          "ws:",
+          "wss:",
           "https://maps.googleapis.com",
           "https://accounts.google.com",
           "https://gsi.client-web.google.com",
+          "https://*.google.com",
+          "https://*.googleapis.com",
         ],
         frameSrc: [
           "https://maps.googleapis.com",
           "https://accounts.google.com",
           "https://gsi.client-web.google.com",
+          "https://*.google.com",
         ],
       },
     },
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+    crossOriginEmbedderPolicy: false,
   })
 );
 
@@ -1274,13 +1300,18 @@ app.post(
 
     // Determine sender type based on booking role
     // If user is both client and provider (self-booking), prefer the one specified in body if available
-    let senderType: "client" | "provider" = req.user!.userType as "client" | "provider";
-    
-    if (booking.providerId === req.user!.id && booking.clientId === req.user!.id) {
-       // Self booking: check explicit intent from body
-       if (req.body.senderType === "provider") senderType = "provider";
-       else if (req.body.senderType === "client") senderType = "client";
-       // else fallback to token userType (which is usually client)
+    let senderType: "client" | "provider" = req.user!.userType as
+      | "client"
+      | "provider";
+
+    if (
+      booking.providerId === req.user!.id &&
+      booking.clientId === req.user!.id
+    ) {
+      // Self booking: check explicit intent from body
+      if (req.body.senderType === "provider") senderType = "provider";
+      else if (req.body.senderType === "client") senderType = "client";
+      // else fallback to token userType (which is usually client)
     } else if (booking.providerId === req.user!.id) {
       senderType = "provider";
     } else if (booking.clientId === req.user!.id) {
@@ -1556,13 +1587,52 @@ app.get("*splat", pageLimiter, (req: Request, res: Response) => {
   serveSpa(req, res);
 });
 
+// Socket.IO Logic
+io.on("connection", (socket) => {
+  console.log("New client connected:", socket.id);
+
+  socket.on("join_booking", (bookingId) => {
+    socket.join(bookingId);
+    console.log(`User ${socket.id} joined booking room: ${bookingId}`);
+  });
+
+  socket.on("send_message", (data) => {
+    const { bookingId, message, senderId, senderEmail, senderType } = data;
+
+    // Create message object
+    const chatMessage: ChatMessage = {
+      id:
+        Date.now().toString() +
+        "-" +
+        Math.random().toString(36).substring(2, 11),
+      bookingId,
+      senderId,
+      senderEmail,
+      senderType,
+      message,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Save to database
+    chatMessages.push(chatMessage);
+    saveData();
+
+    // Broadcast to room (including sender)
+    io.to(bookingId).emit("receive_message", chatMessage);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected:", socket.id);
+  });
+});
+
 // Error handling middleware
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error("Error:", err);
   res.status(500).json({ error: "Internal server error" });
 });
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
 });

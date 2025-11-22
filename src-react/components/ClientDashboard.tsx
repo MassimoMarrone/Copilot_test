@@ -52,6 +52,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isProvider, setIsProvider] = useState(false);
   const [userEmail, setUserEmail] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -81,6 +82,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
       }
       const user = await response.json();
       setUserEmail(user.email);
+      setUserId(user.id);
       // Check if user is a provider (has isProvider flag)
       if (user.isProvider !== undefined) {
         setIsProvider(user.isProvider);
@@ -488,6 +490,8 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
           }}
           currentUserType="client"
           otherPartyEmail={selectedBooking.providerEmail}
+          userId={userId}
+          userEmail={userEmail}
         />
       )}
 

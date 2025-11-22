@@ -40,6 +40,7 @@ const ProviderDashboard: React.FC = () => {
   const [showChatModal, setShowChatModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [userEmail, setUserEmail] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
 
   // New Service Form State
   const [newService, setNewService] = useState({
@@ -71,6 +72,7 @@ const ProviderDashboard: React.FC = () => {
       }
       const user = await response.json();
       setUserEmail(user.email);
+      setUserId(user.id);
       // Check if user is a provider (has isProvider flag or userType is provider)
       const isProviderUser = user.isProvider || user.userType === "provider";
       if (!isProviderUser) {
@@ -554,6 +556,8 @@ const ProviderDashboard: React.FC = () => {
           }}
           currentUserType="provider"
           otherPartyEmail={selectedBooking.clientEmail}
+          userId={userId}
+          userEmail={userEmail}
         />
       )}
     </div>

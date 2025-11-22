@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { io, Socket } from "socket.io-client";
 import "../styles/ChatModal.css";
 
 interface ChatMessage {
@@ -17,6 +18,8 @@ interface ChatModalProps {
   onClose: () => void;
   currentUserType: "client" | "provider";
   otherPartyEmail: string;
+  userId: string;
+  userEmail: string;
 }
 
 const ChatModal: React.FC<ChatModalProps> = ({
@@ -25,12 +28,15 @@ const ChatModal: React.FC<ChatModalProps> = ({
   onClose,
   currentUserType,
   otherPartyEmail,
+  userId,
+  userEmail,
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const socketRef = useRef<Socket | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -38,13 +44,28 @@ const ChatModal: React.FC<ChatModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      loadMessages();
-      // Poll for new messages every 3 seconds
-      const intervalId = setInterval(() => {
-        loadMessages(true);
-      }, 3000);
+      // Initialize Socket.IO connection
+      socketRef.current = io("http://localhost:3000");
 
-      return () => clearInterval(intervalId);
+      socketRef.current.on("connect", () => {
+        console.log("Connected to socket server");
+        // Join the booking room
+        socketRef.current?.emit("join_booking", bookingId);
+      });
+
+      socketRef.current.on("receive_message", (message: ChatMessage) => {
+        setMessages((prevMessages) => [...prevMessages, message]);
+        scrollToBottom();
+      });
+
+      // Load initial messages via API
+      loadMessages();
+
+      return () => {
+        if (socketRef.current) {
+          socketRef.current.disconnect();
+        }
+      };
     }
   }, [isOpen, bookingId]);
 
@@ -52,34 +73,22 @@ const ChatModal: React.FC<ChatModalProps> = ({
     scrollToBottom();
   }, [messages]);
 
-  const loadMessages = async (isPolling = false) => {
+  const loadMessages = async () => {
     try {
-      if (!isPolling) {
-        setLoading(true);
-        setError(null);
-      }
+      setLoading(true);
+      setError(null);
 
       const response = await fetch(`/api/bookings/${bookingId}/messages`);
 
       if (response.ok) {
         const data = await response.json();
-        // Only update if we have new messages or it's the first load to avoid re-renders
-        setMessages((prevMessages) => {
-          if (JSON.stringify(prevMessages) !== JSON.stringify(data)) {
-            return data;
-          }
-          return prevMessages;
-        });
+        setMessages(data);
       } else {
-        if (!isPolling) {
-          const errorData = await response.json();
-          setError(errorData.error || "Errore nel caricamento dei messaggi");
-        }
+        const errorData = await response.json();
+        setError(errorData.error || "Errore nel caricamento dei messaggi");
       }
     } catch (err) {
-      if (!isPolling) {
-        setError("Errore di connessione");
-      }
+      setError("Errore di connessione");
     } finally {
       setLoading(false);
     }
@@ -92,29 +101,19 @@ const ChatModal: React.FC<ChatModalProps> = ({
       return;
     }
 
-    try {
-      setError(null);
-      const response = await fetch(`/api/bookings/${bookingId}/messages`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: newMessage.trim(),
-          senderType: currentUserType,
-        }),
-      });
+    if (socketRef.current) {
+      const messageData = {
+        bookingId,
+        message: newMessage.trim(),
+        senderId: userId,
+        senderEmail: userEmail,
+        senderType: currentUserType,
+      };
 
-      if (response.ok) {
-        const sentMessage = await response.json();
-        setMessages([...messages, sentMessage]);
-        setNewMessage("");
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Errore nell'invio del messaggio");
-      }
-    } catch (err) {
-      setError("Errore di connessione");
+      socketRef.current.emit("send_message", messageData);
+      setNewMessage("");
+    } else {
+      setError("Errore di connessione al server chat");
     }
   };
 
