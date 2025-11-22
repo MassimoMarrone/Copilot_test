@@ -57,10 +57,13 @@ const ToastNotification: React.FC<ToastNotificationProps> = ({
         <div className="toast-title">{notification.title}</div>
         <div className="toast-message">{notification.message}</div>
       </div>
-      <button className="toast-close" onClick={(e) => {
-        e.stopPropagation();
-        handleClose();
-      }}>
+      <button
+        className="toast-close"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleClose();
+        }}
+      >
         &times;
       </button>
     </div>

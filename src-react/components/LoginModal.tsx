@@ -45,7 +45,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
         if (data.userType === "admin") {
           navigate("/admin-dashboard");
         } else if (data.userType === "client") {
-          window.location.reload();
+          window.location.href = "/services";
         } else {
           navigate("/provider-dashboard");
         }
@@ -95,7 +95,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
         if (data.userType === "admin") {
           navigate("/admin-dashboard");
         } else if (data.userType === "client") {
-          window.location.reload();
+          window.location.href = "/services";
         } else {
           navigate("/provider-dashboard");
         }
@@ -133,7 +133,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
         } else if (data.userType === "client") {
           // Stay on the current page (Home/Search) for clients
           // navigate("/client-dashboard");
-          window.location.reload(); // Reload to update auth state
+          window.location.href = "/services"; // Reload to update auth state
         } else {
           navigate("/provider-dashboard");
         }

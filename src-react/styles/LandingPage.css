@@ -1,10 +1,20 @@
 /* Hero Section */
 .hero-section {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 100px 20px 120px;
-  min-height: 500px;
+  padding: 0;
+  height: 500px; /* Altezza fissa per desktop per evitare l'effetto "gigante" */
   display: flex;
   align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    height: auto; /* Su mobile lasciamo che si adatti al contenuto */
+    min-height: 400px; /* Ma manteniamo un'altezza minima */
+    padding: 60px 20px;
+  }
 }
 
 .hero-content-centered {

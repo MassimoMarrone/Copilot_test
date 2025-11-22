@@ -11,7 +11,14 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { body, validationResult } from "express-validator";
 import dotenv from "dotenv";
-import { User, Service, Booking, JWTPayload, ChatMessage, Notification } from "./types";
+import {
+  User,
+  Service,
+  Booking,
+  JWTPayload,
+  ChatMessage,
+  Notification,
+} from "./types";
 import Stripe from "stripe";
 import { OAuth2Client } from "google-auth-library";
 
@@ -243,7 +250,8 @@ const sendNotification = (
   link?: string
 ) => {
   const notification: Notification = {
-    id: Date.now().toString() + "-" + Math.random().toString(36).substring(2, 11),
+    id:
+      Date.now().toString() + "-" + Math.random().toString(36).substring(2, 11),
     userId,
     title,
     message,
@@ -258,7 +266,7 @@ const sendNotification = (
 
   // Emit real-time event
   io.to(`user_${userId}`).emit("new_notification", notification);
-  
+
   return notification;
 };
 
@@ -1025,7 +1033,7 @@ app.post(
       `La prenotazione per "${booking.serviceTitle}" è stata cancellata.`,
       "warning"
     );
-    
+
     // Also emit update event for dashboard refresh
     io.to(`user_${booking.clientId}`).emit("booking_updated", booking);
     io.to(`user_${booking.providerId}`).emit("booking_updated", booking);
@@ -1146,7 +1154,7 @@ app.post(
       `Il servizio "${booking.serviceTitle}" è stato completato!`,
       "success"
     );
-    
+
     // Also emit update event for dashboard refresh
     io.to(`user_${booking.clientId}`).emit("booking_updated", booking);
 
@@ -1450,6 +1458,46 @@ app.get(
     res.json(messages);
   }
 );
+
+// Get all conversations for the current user
+app.get("/api/my-conversations", authenticate, (req: Request, res: Response) => {
+  const userId = req.user!.id;
+
+  // Find all bookings where user is client or provider
+  const userBookings = bookings.filter(
+    (b) => b.clientId === userId || b.providerId === userId
+  );
+
+  const conversations = userBookings.map((booking) => {
+    // Get messages for this booking
+    const bookingMessages = chatMessages
+      .filter((m) => m.bookingId === booking.id)
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      ); // Newest first
+
+    const lastMessage = bookingMessages.length > 0 ? bookingMessages[0] : null;
+
+    return {
+      bookingId: booking.id,
+      serviceTitle: booking.serviceTitle,
+      otherPartyEmail:
+        booking.clientId === userId
+          ? booking.providerEmail
+          : booking.clientEmail,
+      lastMessage: lastMessage,
+      updatedAt: lastMessage ? lastMessage.createdAt : booking.createdAt,
+    };
+  });
+
+  // Sort by last activity
+  conversations.sort(
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  );
+
+  res.json(conversations);
+});
 
 // Admin Routes
 app.get(

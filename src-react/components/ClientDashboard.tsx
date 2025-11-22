@@ -58,7 +58,9 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
   const [userEmail, setUserEmail] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [lastNotification, setLastNotification] = useState<Notification | null>(null);
+  const [lastNotification, setLastNotification] = useState<Notification | null>(
+    null
+  );
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -97,7 +99,9 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
 
     socket.on("booking_updated", (updatedBooking: Booking) => {
       setBookings((prevBookings) =>
-        prevBookings.map((b) => (b.id === updatedBooking.id ? updatedBooking : b))
+        prevBookings.map((b) =>
+          b.id === updatedBooking.id ? updatedBooking : b
+        )
       );
     });
 
@@ -324,7 +328,10 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
       <div className="dashboard-header">
         <h1>🏠 Dashboard Cliente</h1>
         <div className="header-actions">
-          <NotificationCenter userId={userId} newIncomingNotification={lastNotification} />
+          <NotificationCenter
+            userId={userId}
+            newIncomingNotification={lastNotification}
+          />
           <UserMenu
             userEmail={userEmail}
             userType="client"

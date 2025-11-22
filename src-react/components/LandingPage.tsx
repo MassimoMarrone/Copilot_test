@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import SearchBar from "./SearchBar";
+import heroImage from "../assets/hero.jpg";
 import "../styles/LandingPage.css";
 
 interface LandingPageProps {
@@ -172,15 +173,22 @@ const LandingPage: React.FC<LandingPageProps> = ({
   return (
     <>
       {/* Hero Section with Search */}
-      <div className="hero-section">
+      <div 
+        className="hero-section"
+        style={{
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${heroImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
         <div className="container">
           <div className="hero-content-centered">
             <h1 className="hero-title">
-              Trova Servizi di Pulizia Professionali
+              domy
             </h1>
             <p className="hero-subtitle">
-              Cerca e prenota i migliori servizi di pulizia per la tua casa o
-              AirBnB
+              Il modo più semplice per prenotare servizi di pulizia professionali
             </p>
             <div className="search-container">
               <SearchBar onSearch={handleSearch} />
@@ -244,7 +252,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
       {/* Footer */}
       <footer className="footer">
         <div className="container">
-          <p>&copy; 2024 Servizi di Pulizia. Tutti i diritti riservati.</p>
+          <p>&copy; 2024 domy. Tutti i diritti riservati.</p>
         </div>
       </footer>
 

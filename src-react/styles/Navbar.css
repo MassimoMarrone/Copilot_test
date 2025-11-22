@@ -1,87 +1,130 @@
 .navbar {
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 0 20px;
+  height: 70px;
+  display: flex;
+  align-items: center;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
 }
 
 .navbar-container {
   max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
-  padding: 16px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.navbar-brand h1 {
-  font-size: 1.5rem;
-  color: #667eea;
+.navbar-brand {
+  display: flex;
+  align-items: center;
+}
+
+.brand-link {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  align-items: center;
+}
+
+.brand-text {
+  font-family: 'Inter', sans-serif;
   font-weight: 700;
-  margin: 0;
+  font-size: 32px;
+  color: #000000;
+  letter-spacing: -1px;
+}
+
+.navbar-logo {
+  height: 40px;
+  width: auto;
+  max-width: 180px;
+  object-fit: contain;
+  display: block;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 30px;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #666;
+  font-weight: 500;
+  font-size: 15px;
+  transition: color 0.2s;
+  padding: 5px 0;
+  position: relative;
+}
+
+.nav-link:hover {
+  color: #000;
+}
+
+.nav-link.active {
+  color: #000;
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #000;
 }
 
 .navbar-buttons {
   display: flex;
-  gap: 12px;
   align-items: center;
+  gap: 15px;
+}
+
+.user-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
 .btn-navbar {
-  padding: 10px 24px;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.95rem;
+  padding: 10px 20px;
+  border-radius: 30px;
   font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
+  transition: all 0.2s;
 }
 
 .btn-login {
   background: transparent;
-  color: #667eea;
-  border: 2px solid #667eea;
+  border: 1px solid #e0e0e0;
+  color: #333;
 }
 
 .btn-login:hover {
-  background: #f0f3ff;
+  border-color: #000;
+  color: #000;
 }
 
 .btn-register {
-  background: #667eea;
+  background-color: #000;
   color: white;
+  border: 1px solid #000;
 }
 
 .btn-register:hover {
-  background: #5568d3;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  background-color: #333;
+  border-color: #333;
 }
 
 @media (max-width: 768px) {
-  .navbar-container {
-    padding: 12px 16px;
-  }
-
-  .navbar-brand h1 {
-    font-size: 1.2rem;
-  }
-
-  .btn-navbar {
-    padding: 8px 16px;
-    font-size: 0.875rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .navbar-buttons {
-    gap: 8px;
-  }
-
-  .btn-navbar {
-    padding: 6px 12px;
-    font-size: 0.8rem;
+  .navbar-links {
+    display: none; /* Mobile menu to be implemented */
   }
 }

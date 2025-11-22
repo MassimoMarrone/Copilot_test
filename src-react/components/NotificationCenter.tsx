@@ -68,7 +68,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
       await fetch(`/api/notifications/${notification.id}/read`, {
         method: "PUT",
       });
-      
+
       setNotifications((prev) =>
         prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n))
       );
@@ -82,7 +82,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
       await fetch("/api/notifications/read-all", {
         method: "PUT",
       });
-      
+
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     } catch (error) {
       console.error("Error marking all as read:", error);
@@ -135,9 +135,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
           <div className="notification-list">
             {notifications.length === 0 ? (
-              <div className="notification-empty">
-                Nessuna notifica
-              </div>
+              <div className="notification-empty">Nessuna notifica</div>
             ) : (
               notifications.map((notification) => (
                 <div
