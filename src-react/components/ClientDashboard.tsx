@@ -85,7 +85,12 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
   useEffect(() => {
     if (!userId) return;
 
-    const socket = io("http://localhost:3000");
+    // Use relative path so it works both on localhost and via tunnel
+    // Force websocket transport to avoid polling issues with tunnels
+    const socket = io({
+      transports: ["websocket"],
+      path: "/socket.io/",
+    });
 
     socket.on("connect", () => {
       console.log("Connected to socket server for updates");
@@ -325,22 +330,6 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
 
   return (
     <div className="client-dashboard">
-      <div className="dashboard-header">
-        <h1>🏠 Dashboard Cliente</h1>
-        <div className="header-actions">
-          <NotificationCenter
-            userId={userId}
-            newIncomingNotification={lastNotification}
-          />
-          <UserMenu
-            userEmail={userEmail}
-            userType="client"
-            isProvider={isProvider}
-            onBecomeProvider={() => setShowBecomeProviderModal(true)}
-          />
-        </div>
-      </div>
-
       <div className="dashboard-section">
         <h2>📋 Le Mie Prenotazioni</h2>
         <div className="bookings-list">

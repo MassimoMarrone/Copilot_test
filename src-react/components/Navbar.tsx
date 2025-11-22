@@ -71,6 +71,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 userEmail={user.email}
                 userType={user.userType}
                 isProvider={user.isProvider}
+                unreadMessagesCount={unreadMessagesCount}
                 onLogout={onLogout}
               />
             </div>

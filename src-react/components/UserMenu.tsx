@@ -6,6 +6,7 @@ interface UserMenuProps {
   userEmail?: string;
   userType?: "client" | "provider" | "admin";
   isProvider?: boolean;
+  unreadMessagesCount?: number;
   onBecomeProvider?: () => void;
   onLogout?: () => void;
 }
@@ -14,6 +15,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
   userEmail,
   userType,
   isProvider,
+  unreadMessagesCount = 0,
   onBecomeProvider,
   onLogout,
 }) => {
@@ -45,31 +47,6 @@ const UserMenu: React.FC<UserMenuProps> = ({
       window.location.reload(); // Ensure state is cleared
     } catch (error) {
       console.error("Logout error:", error);
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    if (
-      !window.confirm(
-        "Sei sicuro di voler eliminare il tuo account? Questa azione è irreversibile e cancellerà tutti i tuoi dati e le prenotazioni pendenti."
-      )
-    ) {
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/me", { method: "DELETE" });
-      if (response.ok) {
-        alert("Account eliminato con successo.");
-        navigate("/");
-        window.location.reload();
-      } else {
-        const data = await response.json();
-        alert(data.error || "Errore durante l'eliminazione dell'account");
-      }
-    } catch (error) {
-      console.error("Delete account error:", error);
-      alert("Errore di connessione");
     }
   };
 
@@ -105,9 +82,8 @@ const UserMenu: React.FC<UserMenuProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Menu utente"
       >
-        <span className="user-icon">👤</span>
+        <span className="user-icon">☰</span>
         <span className="user-email">{userEmail || "Utente"}</span>
-        <span className={`dropdown-arrow ${isOpen ? "open" : ""}`}>▼</span>
       </button>
 
       {isOpen && (
@@ -136,12 +112,63 @@ const UserMenu: React.FC<UserMenuProps> = ({
             }}
           >
             <span className="menu-icon">🏠</span>
-            <span>Home / Cerca</span>
+            <span>Home</span>
+          </button>
+
+          <button
+            className="user-menu-item"
+            onClick={() => {
+              navigate("/services");
+              setIsOpen(false);
+            }}
+          >
+            <span className="menu-icon">🔍</span>
+            <span>Esplora</span>
+          </button>
+
+          <button
+            className="user-menu-item"
+            onClick={() => {
+              navigate("/bookings");
+              setIsOpen(false);
+            }}
+          >
+            <span className="menu-icon">📅</span>
+            <span>Prenotazioni</span>
           </button>
 
           <button className="user-menu-item" onClick={goToDashboard}>
             <span className="menu-icon">📊</span>
             <span>Dashboard</span>
+          </button>
+
+          <button
+            className="user-menu-item"
+            onClick={() => {
+              navigate("/messages");
+              setIsOpen(false);
+            }}
+          >
+            <span className="menu-icon">💬</span>
+            <span>
+              Messaggi
+              {unreadMessagesCount > 0 && (
+                <span
+                  style={{
+                    backgroundColor: "#ff3b30",
+                    color: "white",
+                    fontSize: "11px",
+                    fontWeight: "700",
+                    padding: "2px 6px",
+                    borderRadius: "10px",
+                    marginLeft: "8px",
+                    verticalAlign: "middle",
+                  }}
+                >
+                  {unreadMessagesCount}
+                </span>
+              )}
+            </span>
           </button>
 
           <button className="user-menu-item" onClick={goToProfile}>
@@ -177,14 +204,6 @@ const UserMenu: React.FC<UserMenuProps> = ({
           )}
 
           <div className="user-menu-divider"></div>
-
-          <button
-            className="user-menu-item delete-account"
-            onClick={handleDeleteAccount}
-          >
-            <span className="menu-icon">🗑️</span>
-            <span>Elimina Account</span>
-          </button>
 
           <button className="user-menu-item logout" onClick={handleLogout}>
             <span className="menu-icon">🚪</span>

@@ -36,6 +36,31 @@ const UserProfile: React.FC = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (
+      !window.confirm(
+        "Sei sicuro di voler eliminare il tuo account? Questa azione è irreversibile e cancellerà tutti i tuoi dati e le prenotazioni pendenti."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/me", { method: "DELETE" });
+      if (response.ok) {
+        alert("Account eliminato con successo.");
+        navigate("/");
+        window.location.reload();
+      } else {
+        const data = await response.json();
+        alert(data.error || "Errore durante l'eliminazione dell'account");
+      }
+    } catch (error) {
+      console.error("Delete account error:", error);
+      alert("Errore di connessione");
+    }
+  };
+
   if (loading) {
     return (
       <div className="profile-page">
@@ -109,6 +134,20 @@ const UserProfile: React.FC = () => {
                 onClick={() => navigate(user.userType === 'provider' ? '/provider-dashboard' : '/client-dashboard')}
               >
                 Torna alla Dashboard
+              </button>
+            </div>
+
+            <div className="profile-danger-zone" style={{ marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
+              <h3 style={{ color: '#dc3545', fontSize: '1.1rem', marginBottom: '10px' }}>Zona Pericolo</h3>
+              <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '15px' }}>
+                Una volta eliminato l'account, non è possibile tornare indietro. Per favore, sii certo.
+              </p>
+              <button 
+                className="btn"
+                style={{ backgroundColor: '#dc3545', color: 'white', border: 'none' }}
+                onClick={handleDeleteAccount}
+              >
+                Elimina Account
               </button>
             </div>
           </div>

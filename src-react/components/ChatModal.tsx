@@ -46,7 +46,12 @@ const ChatModal: React.FC<ChatModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       // Initialize Socket.IO connection
-      socketRef.current = io("http://localhost:3000");
+      // Use relative path so it works both on localhost and via tunnel
+      // Force websocket transport to avoid polling issues with tunnels
+      socketRef.current = io({
+        transports: ["websocket"],
+        path: "/socket.io/",
+      });
 
       socketRef.current.on("connect", () => {
         console.log("Connected to socket server");
