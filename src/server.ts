@@ -1460,44 +1460,50 @@ app.get(
 );
 
 // Get all conversations for the current user
-app.get("/api/my-conversations", authenticate, (req: Request, res: Response) => {
-  const userId = req.user!.id;
+app.get(
+  "/api/my-conversations",
+  authenticate,
+  (req: Request, res: Response) => {
+    const userId = req.user!.id;
 
-  // Find all bookings where user is client or provider
-  const userBookings = bookings.filter(
-    (b) => b.clientId === userId || b.providerId === userId
-  );
+    // Find all bookings where user is client or provider
+    const userBookings = bookings.filter(
+      (b) => b.clientId === userId || b.providerId === userId
+    );
 
-  const conversations = userBookings.map((booking) => {
-    // Get messages for this booking
-    const bookingMessages = chatMessages
-      .filter((m) => m.bookingId === booking.id)
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      ); // Newest first
+    const conversations = userBookings.map((booking) => {
+      // Get messages for this booking
+      const bookingMessages = chatMessages
+        .filter((m) => m.bookingId === booking.id)
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ); // Newest first
 
-    const lastMessage = bookingMessages.length > 0 ? bookingMessages[0] : null;
+      const lastMessage =
+        bookingMessages.length > 0 ? bookingMessages[0] : null;
 
-    return {
-      bookingId: booking.id,
-      serviceTitle: booking.serviceTitle,
-      otherPartyEmail:
-        booking.clientId === userId
-          ? booking.providerEmail
-          : booking.clientEmail,
-      lastMessage: lastMessage,
-      updatedAt: lastMessage ? lastMessage.createdAt : booking.createdAt,
-    };
-  });
+      return {
+        bookingId: booking.id,
+        serviceTitle: booking.serviceTitle,
+        otherPartyEmail:
+          booking.clientId === userId
+            ? booking.providerEmail
+            : booking.clientEmail,
+        lastMessage: lastMessage,
+        updatedAt: lastMessage ? lastMessage.createdAt : booking.createdAt,
+      };
+    });
 
-  // Sort by last activity
-  conversations.sort(
-    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-  );
+    // Sort by last activity
+    conversations.sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
 
-  res.json(conversations);
-});
+    res.json(conversations);
+  }
+);
 
 // Admin Routes
 app.get(

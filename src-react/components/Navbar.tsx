@@ -31,21 +31,27 @@ const Navbar: React.FC<NavbarProps> = ({
 
         {user && (
           <div className="navbar-links">
-            <Link 
-              to="/services" 
-              className={`nav-link ${location.pathname === '/services' ? 'active' : ''}`}
+            <Link
+              to="/services"
+              className={`nav-link ${
+                location.pathname === "/services" ? "active" : ""
+              }`}
             >
               Esplora
             </Link>
-            <Link 
-              to="/bookings" 
-              className={`nav-link ${location.pathname === '/bookings' ? 'active' : ''}`}
+            <Link
+              to="/bookings"
+              className={`nav-link ${
+                location.pathname === "/bookings" ? "active" : ""
+              }`}
             >
               Prenotazioni
             </Link>
-            <Link 
-              to="/messages" 
-              className={`nav-link ${location.pathname === '/messages' ? 'active' : ''}`}
+            <Link
+              to="/messages"
+              className={`nav-link ${
+                location.pathname === "/messages" ? "active" : ""
+              }`}
             >
               Messaggi
             </Link>

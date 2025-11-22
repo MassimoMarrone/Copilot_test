@@ -43,21 +43,31 @@ const BookingsPage: React.FC = () => {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case "pending": return "In Attesa";
-      case "completed": return "Completato";
-      case "cancelled": return "Cancellato";
-      default: return status;
+      case "pending":
+        return "In Attesa";
+      case "completed":
+        return "Completato";
+      case "cancelled":
+        return "Cancellato";
+      default:
+        return status;
     }
   };
 
   const getPaymentStatusLabel = (status: string) => {
     switch (status) {
-      case "held_in_escrow": return "Trattenuto in Escrow";
-      case "authorized": return "Autorizzato";
-      case "released": return "Pagato";
-      case "refunded": return "Rimborsato";
-      case "unpaid": return "Non Pagato";
-      default: return status;
+      case "held_in_escrow":
+        return "Trattenuto in Escrow";
+      case "authorized":
+        return "Autorizzato";
+      case "released":
+        return "Pagato";
+      case "refunded":
+        return "Rimborsato";
+      case "unpaid":
+        return "Non Pagato";
+      default:
+        return status;
     }
   };
 
@@ -74,7 +84,9 @@ const BookingsPage: React.FC = () => {
           {bookings.length === 0 ? (
             <div className="empty-state">
               <p>Non hai ancora effettuato prenotazioni.</p>
-              <a href="/services" className="btn-browse">Esplora Servizi</a>
+              <a href="/services" className="btn-browse">
+                Esplora Servizi
+              </a>
             </div>
           ) : (
             bookings.map((booking) => (
@@ -85,11 +97,13 @@ const BookingsPage: React.FC = () => {
                     {getStatusLabel(booking.status)}
                   </span>
                 </div>
-                
+
                 <div className="booking-details">
                   <div className="detail-row">
                     <span className="label">Data:</span>
-                    <span className="value">{new Date(booking.date).toLocaleDateString("it-IT")}</span>
+                    <span className="value">
+                      {new Date(booking.date).toLocaleDateString("it-IT")}
+                    </span>
                   </div>
                   {booking.preferredTime && (
                     <div className="detail-row">
@@ -107,7 +121,9 @@ const BookingsPage: React.FC = () => {
                   </div>
                   <div className="detail-row">
                     <span className="label">Pagamento:</span>
-                    <span className="value payment-status">{getPaymentStatusLabel(booking.paymentStatus)}</span>
+                    <span className="value payment-status">
+                      {getPaymentStatusLabel(booking.paymentStatus)}
+                    </span>
                   </div>
                 </div>
 

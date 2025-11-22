@@ -18,8 +18,12 @@ const MessagesPage: React.FC = () => {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
-  const [selectedOtherPartyEmail, setSelectedOtherPartyEmail] = useState<string | null>(null);
+  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(
+    null
+  );
+  const [selectedOtherPartyEmail, setSelectedOtherPartyEmail] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     loadConversations();
@@ -54,7 +58,7 @@ const MessagesPage: React.FC = () => {
       day: "2-digit",
       month: "short",
       hour: "2-digit",
-      minute: "2-digit"
+      minute: "2-digit",
     });
   };
 
@@ -75,10 +79,12 @@ const MessagesPage: React.FC = () => {
             </div>
           ) : (
             conversations.map((conv) => (
-              <div 
-                key={conv.bookingId} 
+              <div
+                key={conv.bookingId}
                 className="conversation-card"
-                onClick={() => handleOpenChat(conv.bookingId, conv.otherPartyEmail)}
+                onClick={() =>
+                  handleOpenChat(conv.bookingId, conv.otherPartyEmail)
+                }
               >
                 <div className="conversation-avatar">
                   {conv.otherPartyEmail.charAt(0).toUpperCase()}
@@ -86,11 +92,19 @@ const MessagesPage: React.FC = () => {
                 <div className="conversation-content">
                   <div className="conversation-header">
                     <h3>{conv.serviceTitle}</h3>
-                    <span className="conversation-time">{formatTime(conv.updatedAt)}</span>
+                    <span className="conversation-time">
+                      {formatTime(conv.updatedAt)}
+                    </span>
                   </div>
-                  <p className="conversation-with">Con: {conv.otherPartyEmail}</p>
+                  <p className="conversation-with">
+                    Con: {conv.otherPartyEmail}
+                  </p>
                   <p className="conversation-preview">
-                    {conv.lastMessage ? conv.lastMessage.message : <em>Nessun messaggio</em>}
+                    {conv.lastMessage ? (
+                      conv.lastMessage.message
+                    ) : (
+                      <em>Nessun messaggio</em>
+                    )}
                   </p>
                 </div>
               </div>

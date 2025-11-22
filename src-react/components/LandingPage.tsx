@@ -173,22 +173,21 @@ const LandingPage: React.FC<LandingPageProps> = ({
   return (
     <>
       {/* Hero Section with Search */}
-      <div 
+      <div
         className="hero-section"
         style={{
           backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${heroImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
         }}
       >
         <div className="container">
           <div className="hero-content-centered">
-            <h1 className="hero-title">
-              domy
-            </h1>
+            <h1 className="hero-title">domy</h1>
             <p className="hero-subtitle">
-              Il modo più semplice per prenotare servizi di pulizia professionali
+              Il modo più semplice per prenotare servizi di pulizia
+              professionali
             </p>
             <div className="search-container">
               <SearchBar onSearch={handleSearch} />

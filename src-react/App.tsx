@@ -22,7 +22,7 @@ function App() {
             <Route path="/bookings" element={<BookingsPage />} />
             <Route path="/messages" element={<MessagesPage />} />
             <Route path="/profile" element={<UserProfile />} />
-            
+
             {/* Legacy Dashboards - eventually refactor these too */}
             <Route path="/provider-dashboard" element={<ProviderDashboard />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />

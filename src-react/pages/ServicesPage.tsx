@@ -18,7 +18,7 @@ const ServicesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
-  
+
   // Booking form state
   const [bookingDate, setBookingDate] = useState("");
   const [clientPhone, setClientPhone] = useState("");
@@ -102,7 +102,9 @@ const ServicesPage: React.FC = () => {
       ) : (
         <div className="services-grid">
           {services.length === 0 ? (
-            <div className="empty-state">Nessun servizio disponibile al momento.</div>
+            <div className="empty-state">
+              Nessun servizio disponibile al momento.
+            </div>
           ) : (
             services.map((service) => (
               <div key={service.id} className="service-card">
@@ -117,7 +119,7 @@ const ServicesPage: React.FC = () => {
                   {service.address && (
                     <p className="service-location">📍 {service.address}</p>
                   )}
-                  <button 
+                  <button
                     className="btn-book"
                     onClick={() => openBookingModal(service)}
                   >
