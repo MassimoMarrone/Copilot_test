@@ -59,7 +59,7 @@ const ServicesPage: React.FC = () => {
   const generateTimeSlots = () => {
     const slots = [];
     const startHour = 8; // 8:00 AM
-    const endHour = 20; // 8:00 PM
+    const endHour = 20; // Last slot at 7:30 PM (19:30)
     
     for (let hour = startHour; hour < endHour; hour++) {
       for (let minute of [0, 30]) {
@@ -75,6 +75,7 @@ const ServicesPage: React.FC = () => {
   // Generate calendar days (current month view)
   const generateCalendarDays = () => {
     const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
     
@@ -88,7 +89,7 @@ const ServicesPage: React.FC = () => {
         date: date,
         dateString: date.toISOString().split("T")[0],
         day: d,
-        isPast: date < new Date(today.getFullYear(), today.getMonth(), today.getDate())
+        isPast: date < todayStart
       });
     }
     return days;
@@ -218,12 +219,15 @@ const ServicesPage: React.FC = () => {
                 </div>
                 {bookingDate && (
                   <div className="selected-date-display">
-                    Data selezionata: <strong>{new Date(bookingDate + 'T00:00:00').toLocaleDateString("it-IT", { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}</strong>
+                    Data selezionata: <strong>{(() => {
+                      const [year, month, day] = bookingDate.split('-').map(Number);
+                      return new Date(year, month - 1, day).toLocaleDateString("it-IT", { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      });
+                    })()}</strong>
                   </div>
                 )}
               </div>
