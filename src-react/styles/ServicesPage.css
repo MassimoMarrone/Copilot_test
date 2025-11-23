@@ -73,9 +73,28 @@
 }
 
 .service-rating {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+  padding: 6px 12px;
+  background-color: #f8f9fa;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  width: fit-content;
+}
+
+.service-rating:hover {
+  background-color: #e9ecef;
+  transform: translateY(-1px);
+  border-color: #dee2e6;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.service-rating:hover .review-count {
+  color: #333;
+  text-decoration: underline;
 }
 
 .rating-stars {
@@ -121,6 +140,25 @@
 
 .btn-book:hover {
   background-color: #333;
+}
+
+.btn-reviews {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  background-color: transparent;
+  color: #555;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-reviews:hover {
+  background-color: #f8f9fa;
+  border-color: #ccc;
+  color: #333;
 }
 
 .loading-spinner {

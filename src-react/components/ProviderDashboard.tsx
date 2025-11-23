@@ -19,6 +19,7 @@ interface Service {
   latitude?: number;
   longitude?: number;
   createdAt: string;
+  imageUrl?: string;
 }
 
 interface Booking {
@@ -70,6 +71,7 @@ const ProviderDashboard: React.FC = () => {
     latitude: 0,
     longitude: 0,
   });
+  const [serviceImage, setServiceImage] = useState<File | null>(null);
 
   // Complete Booking Form State
   const [photoProof, setPhotoProof] = useState<File | null>(null);
@@ -178,27 +180,27 @@ const ProviderDashboard: React.FC = () => {
   const handleCreateService = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const serviceData: any = {
-      title: newService.title,
-      description: newService.description,
-      price: parseFloat(newService.price),
-    };
+    const formData = new FormData();
+    formData.append("title", newService.title);
+    formData.append("description", newService.description);
+    formData.append("price", newService.price);
 
     if (newService.address) {
-      serviceData.address = newService.address;
+      formData.append("address", newService.address);
       if (newService.latitude && newService.longitude) {
-        serviceData.latitude = newService.latitude;
-        serviceData.longitude = newService.longitude;
+        formData.append("latitude", newService.latitude.toString());
+        formData.append("longitude", newService.longitude.toString());
       }
+    }
+
+    if (serviceImage) {
+      formData.append("image", serviceImage);
     }
 
     try {
       const response = await fetch("/api/services", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(serviceData),
+        body: formData,
       });
 
       if (response.ok) {
@@ -212,6 +214,7 @@ const ProviderDashboard: React.FC = () => {
           latitude: 0,
           longitude: 0,
         });
+        setServiceImage(null);
         loadServices();
       } else {
         const data = await response.json();
@@ -283,6 +286,20 @@ const ProviderDashboard: React.FC = () => {
           ) : (
             services.map((service) => (
               <div key={service.id} className="service-card">
+                {service.imageUrl && (
+                  <img
+                    src={service.imageUrl}
+                    alt={service.title}
+                    className="service-image"
+                    style={{
+                      width: "100%",
+                      height: "150px",
+                      objectFit: "cover",
+                      borderRadius: "8px 8px 0 0",
+                      marginBottom: "10px",
+                    }}
+                  />
+                )}
                 <h3>{service.title}</h3>
                 <p className="service-description">{service.description}</p>
                 {service.address && (
@@ -560,6 +577,18 @@ const ProviderDashboard: React.FC = () => {
                     setNewService({ ...newService, price: e.target.value })
                   }
                   required
+                />
+              </div>
+              <div className="form-group">
+                <label>Immagine Servizio (Opzionale)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setServiceImage(e.target.files[0]);
+                    }
+                  }}
                 />
               </div>
               <div className="form-group">

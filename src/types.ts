@@ -28,6 +28,7 @@ export interface Service {
   address?: string;
   latitude?: number;
   longitude?: number;
+  imageUrl?: string;
   createdAt: string;
   averageRating?: number;
   reviewCount?: number;
@@ -71,8 +72,9 @@ export interface Review {
   rating: number;
   comment: string;
   createdAt: string;
+  providerReply?: string;
+  providerReplyCreatedAt?: string;
 }
-
 
 export interface ChatMessage {
   id: string;

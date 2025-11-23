@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
+import ServiceReviewsModal from "../components/ServiceReviewsModal";
 import "../styles/ServicesPage.css";
 
 interface Service {
@@ -13,6 +14,7 @@ interface Service {
   longitude?: number;
   averageRating?: number;
   reviewCount?: number;
+  imageUrl?: string;
 }
 
 const ServicesPage: React.FC = () => {
@@ -20,6 +22,10 @@ const ServicesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+
+  // Reviews modal state
+  const [showReviewsModal, setShowReviewsModal] = useState(false);
+  const [reviewsService, setReviewsService] = useState<Service | null>(null);
 
   // Booking form state
   const [bookingDate, setBookingDate] = useState("");
@@ -187,6 +193,16 @@ const ServicesPage: React.FC = () => {
     setSelectedService(null);
   };
 
+  const openReviewsModal = (service: Service) => {
+    setReviewsService(service);
+    setShowReviewsModal(true);
+  };
+
+  const closeReviewsModal = () => {
+    setShowReviewsModal(false);
+    setReviewsService(null);
+  };
+
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedService) return;
@@ -240,14 +256,31 @@ const ServicesPage: React.FC = () => {
           ) : (
             services.map((service) => (
               <div key={service.id} className="service-card">
-                <div className="service-image-placeholder">
-                  {/* Placeholder for service image */}
-                  <span>{service.title.charAt(0)}</span>
-                </div>
+                {service.imageUrl ? (
+                  <img
+                    src={service.imageUrl}
+                    alt={service.title}
+                    className="service-image"
+                    style={{
+                      height: "200px",
+                      objectFit: "cover",
+                      width: "100%",
+                    }}
+                  />
+                ) : (
+                  <div className="service-image-placeholder">
+                    {/* Placeholder for service image */}
+                    <span>{service.title.charAt(0)}</span>
+                  </div>
+                )}
                 <div className="service-content">
                   <h3>{service.title}</h3>
                   <p className="service-price">€{service.price.toFixed(2)}</p>
-                  <div className="service-rating">
+                  <div
+                    className="service-rating"
+                    onClick={() => openReviewsModal(service)}
+                    title="Clicca per vedere le recensioni"
+                  >
                     <span className="rating-stars">
                       {"⭐".repeat(Math.round(service.averageRating || 0))}
                       {"☆".repeat(5 - Math.round(service.averageRating || 0))}
@@ -265,6 +298,12 @@ const ServicesPage: React.FC = () => {
                     onClick={() => openBookingModal(service)}
                   >
                     Prenota Ora
+                  </button>
+                  <button
+                    className="btn-reviews"
+                    onClick={() => openReviewsModal(service)}
+                  >
+                    Leggi Recensioni
                   </button>
                 </div>
               </div>
@@ -364,7 +403,7 @@ const ServicesPage: React.FC = () => {
                                 bookingDate === day.dateString ? "selected" : ""
                               } ${day.isToday ? "today" : ""}`}
                               onClick={() => {
-                                if (!day.isPast) {
+                                if (!day.isPast && day.dateString) {
                                   setBookingDate(day.dateString);
                                   setIsCalendarOpen(false);
                                 }
@@ -505,6 +544,15 @@ const ServicesPage: React.FC = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Reviews Modal */}
+      {showReviewsModal && reviewsService && (
+        <ServiceReviewsModal
+          serviceId={reviewsService.id}
+          serviceTitle={reviewsService.title}
+          onClose={closeReviewsModal}
+        />
       )}
     </div>
   );

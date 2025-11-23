@@ -74,7 +74,7 @@ const ALLOWED_FILE_TYPES = (
   process.env.ALLOWED_FILE_TYPES || "image/jpeg,image/jpg,image/png,image/gif"
 ).split(",");
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_dummy", {
   apiVersion: "2025-11-17.clover",
 });
 
@@ -278,58 +278,7 @@ const saveData = (): void => {
   }
 };
 
-loadData();
-
-// Helper to create and send notification
-const sendNotification = (
-  userId: string,
-  title: string,
-  message: string,
-  type: "info" | "success" | "warning" | "error" = "info",
-  link?: string
-) => {
-  const notification: Notification = {
-    id:
-      Date.now().toString() + "-" + Math.random().toString(36).substring(2, 11),
-    userId,
-    title,
-    message,
-    type,
-    read: false,
-    createdAt: new Date().toISOString(),
-    link,
-  };
-
-  notifications.push(notification);
-  saveData();
-
-  // Emit real-time event
-  io.to(`user_${userId}`).emit("new_notification", notification);
-
-  return notification;
-};
-
-// Authentication middleware
-const authenticate = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  const token = req.cookies.token;
-  if (!token) {
-    res.status(401).json({ error: "Authentication required" });
-    return;
-  }
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
-    req.user = decoded;
-    next();
-  } catch (error) {
-    res.status(401).json({ error: "Invalid token" });
-  }
-};
-
-// Validation middleware helper
+// Basic validation middleware wrapper for express-validator
 const validate = (req: Request, res: Response, next: NextFunction): void => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -339,32 +288,82 @@ const validate = (req: Request, res: Response, next: NextFunction): void => {
   next();
 };
 
-// Helper function to check if user is a provider (handles backward compatibility)
-const isUserProvider = (user: User): boolean => {
-  return user.isProvider !== undefined
-    ? user.isProvider
-    : user.userType === "provider";
+// Simple authentication middleware using JWT from cookie or Authorization header
+const authenticate = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  try {
+    const token =
+      req.cookies?.token ||
+      (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+
+    if (!token) {
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+
+    const payload = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    req.user = {
+      id: payload.id,
+      email: payload.email,
+      userType: payload.userType,
+      isAdmin: payload.isAdmin,
+    };
+    next();
+  } catch (err) {
+    res.status(401).json({ error: "Invalid or expired token" });
+  }
 };
 
-// Helper function to check if user is a client (handles backward compatibility)
-const isUserClient = (user: User): boolean => {
-  return user.isClient !== undefined
-    ? user.isClient
-    : user.userType === "client";
+// Helpers to check user roles on stored User objects
+const isUserProvider = (user?: User | null): boolean => {
+  return !!user && !!user.isProvider;
 };
 
-// Initialize default admin if not exists
-const initAdmin = async () => {
-  const adminEmail = process.env.ADMIN_EMAIL || "admin@example.com";
-  const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+const isUserClient = (user?: User | null): boolean => {
+  return !!user && !!user.isClient;
+};
 
-  const adminExists = users.find((u) => u.email === adminEmail);
-  if (!adminExists) {
-    const hashedPassword = await bcrypt.hash(adminPassword, 12);
+// Notification helper: store notification and emit via socket.io
+const sendNotification = (
+  userId: string,
+  title: string,
+  message: string,
+  type: Notification["type"] = "info",
+  link?: string
+): void => {
+  const notification: Notification = {
+    id: Date.now().toString() + "-" + Math.random().toString(36).slice(2, 9),
+    userId,
+    title,
+    message,
+    type,
+    read: false,
+    createdAt: new Date().toISOString(),
+    link,
+  };
+  notifications.push(notification);
+  saveData();
+  try {
+    io.to(`user_${userId}`).emit("new_notification", notification);
+  } catch (err) {
+    console.error("Failed to emit notification via socket.io", err);
+  }
+};
+
+// Ensure there is at least one admin user (used in non-test environments)
+const initAdmin = (): void => {
+  const hasAdmin = users.some((u) => u.userType === "admin" || u.isAdmin);
+  if (!hasAdmin) {
+    const adminEmail = process.env.ADMIN_EMAIL || "admin@example.com";
+    const adminPassword = process.env.ADMIN_PASSWORD || "admin";
+    const hashed = bcrypt.hashSync(adminPassword, 10);
     const adminUser: User = {
-      id: "admin-user-id",
+      id: "admin-1",
       email: adminEmail,
-      password: hashedPassword,
+      password: hashed,
       userType: "admin",
       isClient: false,
       isProvider: false,
@@ -374,10 +373,15 @@ const initAdmin = async () => {
     };
     users.push(adminUser);
     saveData();
-    console.log(`Admin user created: ${adminEmail}`);
+    console.log(`Created default admin: ${adminEmail}`);
   }
 };
-initAdmin();
+
+if (process.env.NODE_ENV !== "test") {
+  loadData();
+
+  initAdmin();
+}
 
 // Admin middleware
 const requireAdmin = (
@@ -769,9 +773,7 @@ app.get("/api/services", (_req: Request, res: Response): void => {
       return provider && !provider.isBlocked;
     })
     .map((service) => {
-      const serviceReviews = reviews.filter(
-        (r) => r.serviceId === service.id
-      );
+      const serviceReviews = reviews.filter((r) => r.serviceId === service.id);
       const reviewCount = serviceReviews.length;
       const averageRating =
         reviewCount > 0
@@ -790,6 +792,24 @@ app.get("/api/services", (_req: Request, res: Response): void => {
 app.post(
   "/api/services",
   authenticate,
+  (req: Request, res: Response, next: NextFunction) => {
+    upload.single("image")(req, res, (err) => {
+      if (err instanceof multer.MulterError) {
+        if (err.code === "LIMIT_FILE_SIZE") {
+          res
+            .status(400)
+            .json({ error: "File size too large. Maximum size is 5MB." });
+          return;
+        }
+        res.status(400).json({ error: "File upload error: " + err.message });
+        return;
+      } else if (err) {
+        res.status(400).json({ error: err.message });
+        return;
+      }
+      next();
+    });
+  },
   [
     body("title")
       .trim()
@@ -827,6 +847,24 @@ app.post(
 
     const { title, description, price, address, latitude, longitude } =
       req.body;
+
+    let imageUrl = undefined;
+    if (req.file) {
+      imageUrl = "/uploads/" + req.file.filename;
+    } else {
+      // Default image logic
+      const lowerTitle = title.toLowerCase();
+      const lowerDesc = description.toLowerCase();
+      if (
+        lowerTitle.includes("pulizia") ||
+        lowerDesc.includes("pulizia") ||
+        lowerTitle.includes("cleaning") ||
+        lowerDesc.includes("cleaning")
+      ) {
+        imageUrl = "/assets/cleaning.jpg";
+      }
+    }
+
     const service: Service = {
       id:
         Date.now().toString() +
@@ -840,6 +878,7 @@ app.post(
       address: address || undefined,
       latitude: latitude ? parseFloat(latitude) : undefined,
       longitude: longitude ? parseFloat(longitude) : undefined,
+      imageUrl,
       createdAt: new Date().toISOString(),
     };
 
@@ -1051,9 +1090,7 @@ app.post(
     }
 
     if (booking.status !== "completed") {
-      res
-        .status(400)
-        .json({ error: "You can only review completed bookings" });
+      res.status(400).json({ error: "You can only review completed bookings" });
       return;
     }
 
@@ -1111,6 +1148,139 @@ app.get(
   }
 );
 
+// Get reviews for a specific service (public)
+app.get("/api/services/:serviceId/reviews", (req: Request, res: Response) => {
+  const { serviceId } = req.params;
+  const serviceReviews = reviews.filter((r) => r.serviceId === serviceId);
+
+  // Enrich reviews with client name (first name only for privacy)
+  const enrichedReviews = serviceReviews.map((review) => {
+    const client = users.find((u) => u.id === review.clientId);
+    // Simple privacy: use email prefix or "Client" if not available
+    // In a real app, User would have firstName/lastName
+    const clientName = client ? client.email.split("@")[0] : "Client";
+    return {
+      ...review,
+      clientName,
+    };
+  });
+
+  res.json(enrichedReviews);
+});
+
+// Edit a review (client only)
+app.put(
+  "/api/reviews/:reviewId",
+  authenticate,
+  [
+    body("rating")
+      .optional()
+      .isInt({ min: 1, max: 5 })
+      .withMessage("Rating must be an integer between 1 and 5"),
+    body("comment")
+      .optional()
+      .trim()
+      .isLength({ min: 10, max: 1000 })
+      .withMessage("Comment must be between 10 and 1000 characters"),
+  ],
+  validate,
+  (req: Request, res: Response) => {
+    const { reviewId } = req.params;
+    const { rating, comment } = req.body;
+    const userId = req.user!.id;
+
+    const review = reviews.find((r) => r.id === reviewId);
+
+    if (!review) {
+      res.status(404).json({ error: "Review not found" });
+      return;
+    }
+
+    if (review.clientId !== userId) {
+      res.status(403).json({ error: "You can only edit your own reviews" });
+      return;
+    }
+
+    if (rating) review.rating = rating;
+    if (comment) review.comment = comment;
+
+    saveData();
+    res.json(review);
+  }
+);
+
+// Delete a review (client only)
+app.delete(
+  "/api/reviews/:reviewId",
+  authenticate,
+  (req: Request, res: Response) => {
+    const { reviewId } = req.params;
+    const userId = req.user!.id;
+
+    const reviewIndex = reviews.findIndex((r) => r.id === reviewId);
+
+    if (reviewIndex === -1) {
+      res.status(404).json({ error: "Review not found" });
+      return;
+    }
+
+    if (reviews[reviewIndex].clientId !== userId) {
+      res.status(403).json({ error: "You can only delete your own reviews" });
+      return;
+    }
+
+    reviews.splice(reviewIndex, 1);
+    saveData();
+    res.json({ success: true });
+  }
+);
+
+// Reply to a review (provider only)
+app.post(
+  "/api/reviews/:reviewId/reply",
+  authenticate,
+  [
+    body("reply")
+      .trim()
+      .isLength({ min: 5, max: 1000 })
+      .withMessage("Reply must be between 5 and 1000 characters"),
+  ],
+  validate,
+  (req: Request, res: Response) => {
+    const { reviewId } = req.params;
+    const { reply } = req.body;
+    const userId = req.user!.id;
+
+    const review = reviews.find((r) => r.id === reviewId);
+
+    if (!review) {
+      res.status(404).json({ error: "Review not found" });
+      return;
+    }
+
+    if (review.providerId !== userId) {
+      res
+        .status(403)
+        .json({ error: "You can only reply to reviews of your services" });
+      return;
+    }
+
+    review.providerReply = reply;
+    review.providerReplyCreatedAt = new Date().toISOString();
+
+    saveData();
+
+    // Notify client
+    sendNotification(
+      review.clientId,
+      "Nuova Risposta",
+      `Il provider ha risposto alla tua recensione.`,
+      "info"
+    );
+
+    res.json(review);
+  }
+);
 
 // Get booked dates for a specific service
 app.get(
@@ -1910,54 +2080,6 @@ app.post(
   }
 );
 
-// Rate limiter for page routes
-const pageLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 60, // limit each IP to 60 requests per minute for pages
-  message: "Too many page requests, please try again later.",
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// Serve HTML pages with Google Maps API Key injection
-const serveSpa = (_req: Request, res: Response) => {
-  const htmlPath = path.join(__dirname, "..", "public", "react", "index.html");
-
-  if (fs.existsSync(htmlPath)) {
-    let html = fs.readFileSync(htmlPath, "utf8");
-    const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY || "";
-    // Inject the meta tag into the head
-    html = html.replace(
-      "</head>",
-      `<meta name="google-maps-api-key" content="${googleMapsApiKey}"></head>`
-    );
-    res.send(html);
-  } else {
-    res.status(404).send('Application not built. Run "npm run build" first.');
-  }
-};
-
-// Apply to all frontend routes
-app.get(
-  ["/", "/login", "/register", "/client-dashboard", "/provider-dashboard"],
-  pageLimiter,
-  serveSpa
-);
-
-// Catch-all for other client-side routes (SPA support)
-app.get("*splat", pageLimiter, (req: Request, res: Response) => {
-  // Don't intercept API calls
-  if (
-    req.path.startsWith("/api/") ||
-    req.path.startsWith("/assets/") ||
-    req.path.startsWith("/uploads/")
-  ) {
-    res.status(404).json({ error: "Not found" });
-    return;
-  }
-  serveSpa(req, res);
-});
-
 // Notification routes
 
 // Get user notifications
@@ -2011,6 +2133,54 @@ app.put(
     res.json({ success: true });
   }
 );
+
+// Rate limiter for page routes
+const pageLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60, // limit each IP to 60 requests per minute for pages
+  message: "Too many page requests, please try again later.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Serve HTML pages with Google Maps API Key injection
+const serveSpa = (_req: Request, res: Response) => {
+  const htmlPath = path.join(__dirname, "..", "public", "react", "index.html");
+
+  if (fs.existsSync(htmlPath)) {
+    let html = fs.readFileSync(htmlPath, "utf8");
+    const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY || "";
+    // Inject the meta tag into the head
+    html = html.replace(
+      "</head>",
+      `<meta name="google-maps-api-key" content="${googleMapsApiKey}"></head>`
+    );
+    res.send(html);
+  } else {
+    res.status(404).send('Application not built. Run "npm run build" first.');
+  }
+};
+
+// Apply to all frontend routes
+app.get(
+  ["/", "/login", "/register", "/client-dashboard", "/provider-dashboard"],
+  pageLimiter,
+  serveSpa
+);
+
+// Catch-all for other client-side routes (SPA support)
+app.get("*splat", pageLimiter, (req: Request, res: Response) => {
+  // Don't intercept API calls
+  if (
+    req.path.startsWith("/api/") ||
+    req.path.startsWith("/assets/") ||
+    req.path.startsWith("/uploads/")
+  ) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  serveSpa(req, res);
+});
 
 // Socket.IO Logic
 io.on("connection", (socket) => {
@@ -2085,4 +2255,24 @@ if (process.env.NODE_ENV !== "test") {
   });
 }
 
-export { app, httpServer, io };
+export const resetData = (): void => {
+  users.length = 0;
+  services.length = 0;
+  bookings.length = 0;
+  chatMessages.length = 0;
+  notifications.length = 0;
+  reviews.length = 0;
+};
+
+export {
+  app,
+  httpServer,
+  io,
+  initAdmin,
+  users,
+  services,
+  bookings,
+  chatMessages,
+  notifications,
+  reviews,
+};

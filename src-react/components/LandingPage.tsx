@@ -18,6 +18,7 @@ interface Service {
   address?: string;
   latitude?: number;
   longitude?: number;
+  imageUrl?: string;
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({
@@ -217,6 +218,19 @@ const LandingPage: React.FC<LandingPageProps> = ({
                       className="service-card"
                       onClick={() => handleServiceClick(service)}
                     >
+                      {service.imageUrl && (
+                        <img
+                          src={service.imageUrl}
+                          alt={service.title}
+                          style={{
+                            width: "100%",
+                            height: "150px",
+                            objectFit: "cover",
+                            borderRadius: "8px 8px 0 0",
+                            marginBottom: "10px",
+                          }}
+                        />
+                      )}
                       <h3>{service.title}</h3>
                       <p className="service-description">
                         {service.description}
