@@ -12,6 +12,7 @@ interface NavbarProps {
   onLogout?: () => void;
   onBecomeProvider?: () => void;
   unreadMessagesCount?: number;
+  onBecomeProvider?: () => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
@@ -21,6 +22,7 @@ const Navbar: React.FC<NavbarProps> = ({
   onLogout,
   onBecomeProvider,
   unreadMessagesCount = 0,
+  onBecomeProvider,
 }) => {
   const location = useLocation();
 

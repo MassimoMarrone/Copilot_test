@@ -5,11 +5,13 @@ import "../styles/Modal.css";
 interface BecomeProviderModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
 const BecomeProviderModal: React.FC<BecomeProviderModalProps> = ({
   isOpen,
   onClose,
+  onSuccess,
 }) => {
   const [acceptedProviderTerms, setAcceptedProviderTerms] = useState(false);
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
@@ -53,6 +55,9 @@ const BecomeProviderModal: React.FC<BecomeProviderModalProps> = ({
       const data = await response.json();
 
       if (response.ok) {
+        if (onSuccess) {
+          onSuccess();
+        }
         onClose();
         alert(
           "Congratulazioni! Ora sei anche un fornitore. Puoi pubblicare i tuoi servizi."

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import "../styles/ServicesPage.css";
 
@@ -25,6 +25,38 @@ const ServicesPage: React.FC = () => {
   const [preferredTime, setPreferredTime] = useState("");
   const [bookingNotes, setBookingNotes] = useState("");
   const [bookingAddress, setBookingAddress] = useState("");
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState("");
+
+  // Calendar state
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
+
+  const calendarRef = useRef<HTMLDivElement>(null);
+  const timePickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        calendarRef.current &&
+        !calendarRef.current.contains(event.target as Node)
+      ) {
+        setIsCalendarOpen(false);
+      }
+      if (
+        timePickerRef.current &&
+        !timePickerRef.current.contains(event.target as Node)
+      ) {
+        setIsTimePickerOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     loadServices();
@@ -45,12 +77,107 @@ const ServicesPage: React.FC = () => {
   const openBookingModal = (service: Service) => {
     setSelectedService(service);
     setShowBookingModal(true);
-    const today = new Date().toISOString().split("T")[0];
-    setBookingDate(today);
+    const today = new Date();
+    setBookingDate(today.toISOString().split("T")[0]);
+    setCurrentMonth(today.getMonth());
+    setCurrentYear(today.getFullYear());
+    setIsCalendarOpen(false);
+    setIsTimePickerOpen(false);
     setClientPhone("");
     setPreferredTime("");
     setBookingNotes("");
     setBookingAddress("");
+    setSelectedTimeSlot("");
+  };
+
+  // Generate available time slots
+  const generateTimeSlots = () => {
+    const slots = [];
+    const startHour = 8; // 8:00 AM
+    const endHour = 20; // Last slot at 7:30 PM (19:30)
+
+    for (let hour = startHour; hour < endHour; hour++) {
+      for (let minute of [0, 30]) {
+        const timeString = `${hour.toString().padStart(2, "0")}:${minute
+          .toString()
+          .padStart(2, "0")}`;
+        slots.push(timeString);
+      }
+    }
+    return slots;
+  };
+
+  const timeSlots = generateTimeSlots();
+
+  // Generate calendar days (current month view)
+  const generateCalendarDays = () => {
+    const today = new Date();
+    const todayStart = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+
+    const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+    const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
+
+    // 0 = Sunday, 1 = Monday, ... 6 = Saturday
+    // Adjust to make Monday = 0, Sunday = 6
+    let startDay = firstDayOfMonth.getDay() - 1;
+    if (startDay === -1) startDay = 6;
+
+    const days = [];
+
+    // Add empty slots for days before the first day of the month
+    for (let i = 0; i < startDay; i++) {
+      days.push({ empty: true, key: `empty-${i}` });
+    }
+
+    for (let d = 1; d <= lastDayOfMonth.getDate(); d++) {
+      const date = new Date(currentYear, currentMonth, d);
+      // Fix timezone offset issue for string comparison
+      const dateString = new Date(
+        date.getTime() - date.getTimezoneOffset() * 60000
+      )
+        .toISOString()
+        .split("T")[0];
+
+      days.push({
+        date: date,
+        dateString: dateString,
+        day: d,
+        isPast: date < todayStart,
+        isToday: date.getTime() === todayStart.getTime(),
+        empty: false,
+        key: dateString,
+      });
+    }
+    return days;
+  };
+
+  const calendarDays = generateCalendarDays();
+
+  const handlePrevMonth = () => {
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear(currentYear - 1);
+    } else {
+      setCurrentMonth(currentMonth - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear(currentYear + 1);
+    } else {
+      setCurrentMonth(currentMonth + 1);
+    }
+  };
+
+  const getMonthName = (monthIndex: number) => {
+    const date = new Date(2024, monthIndex, 1);
+    return date.toLocaleString("it-IT", { month: "long" });
   };
 
   const closeBookingModal = () => {
@@ -62,6 +189,9 @@ const ServicesPage: React.FC = () => {
     e.preventDefault();
     if (!selectedService) return;
 
+    // Use selectedTimeSlot if available, otherwise use preferredTime
+    const finalTime = selectedTimeSlot || preferredTime;
+
     try {
       const response = await fetch("/api/bookings", {
         method: "POST",
@@ -72,7 +202,7 @@ const ServicesPage: React.FC = () => {
           serviceId: selectedService.id,
           date: bookingDate,
           clientPhone: clientPhone,
-          preferredTime: preferredTime,
+          preferredTime: finalTime,
           notes: bookingNotes,
           address: bookingAddress,
         }),
@@ -146,75 +276,219 @@ const ServicesPage: React.FC = () => {
                 Prezzo: €{selectedService.price.toFixed(2)}
               </p>
             </div>
-            <form onSubmit={handleBooking}>
-              <div className="form-group">
-                <label htmlFor="bookingDate">Data del Servizio: *</label>
-                <input
-                  type="date"
-                  id="bookingDate"
-                  value={bookingDate}
-                  min={new Date().toISOString().split("T")[0]}
-                  onChange={(e) => setBookingDate(e.target.value)}
-                  required
-                />
+            <form onSubmit={handleBooking} className="booking-form">
+              {/* Calendar Section */}
+              <div className="form-section">
+                <label className="section-label">📅 Seleziona la Data *</label>
+
+                <div className="date-picker-container" ref={calendarRef}>
+                  <div
+                    className="date-input-wrapper"
+                    onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+                  >
+                    <input
+                      type="text"
+                      readOnly
+                      className="date-input"
+                      value={
+                        bookingDate
+                          ? new Date(bookingDate).toLocaleDateString("it-IT", {
+                              weekday: "long",
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })
+                          : "Seleziona una data"
+                      }
+                    />
+                    <span className="calendar-icon">📅</span>
+                  </div>
+
+                  {isCalendarOpen && (
+                    <div className="calendar-popup">
+                      <div className="calendar-header">
+                        <button
+                          type="button"
+                          className="month-nav-btn"
+                          onClick={handlePrevMonth}
+                        >
+                          &lt;
+                        </button>
+                        <h4>
+                          {getMonthName(currentMonth)} {currentYear}
+                        </h4>
+                        <button
+                          type="button"
+                          className="month-nav-btn"
+                          onClick={handleNextMonth}
+                        >
+                          &gt;
+                        </button>
+                      </div>
+
+                      <div className="calendar-weekdays">
+                        <div className="weekday-label">Lun</div>
+                        <div className="weekday-label">Mar</div>
+                        <div className="weekday-label">Mer</div>
+                        <div className="weekday-label">Gio</div>
+                        <div className="weekday-label">Ven</div>
+                        <div className="weekday-label">Sab</div>
+                        <div className="weekday-label">Dom</div>
+                      </div>
+
+                      <div className="calendar-days-grid">
+                        {calendarDays.map((day) =>
+                          day.empty ? (
+                            <div
+                              key={day.key}
+                              className="calendar-day-cell empty"
+                            ></div>
+                          ) : (
+                            <button
+                              key={day.key}
+                              type="button"
+                              className={`calendar-day-cell ${
+                                day.isPast ? "disabled" : ""
+                              } ${
+                                bookingDate === day.dateString ? "selected" : ""
+                              } ${day.isToday ? "today" : ""}`}
+                              onClick={() => {
+                                if (!day.isPast) {
+                                  setBookingDate(day.dateString);
+                                  setIsCalendarOpen(false);
+                                }
+                              }}
+                              disabled={day.isPast}
+                            >
+                              {day.day}
+                            </button>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="form-group">
-                <label htmlFor="clientPhone">Telefono di Contatto:</label>
-                <input
-                  type="tel"
-                  id="clientPhone"
-                  value={clientPhone}
-                  onChange={(e) => setClientPhone(e.target.value)}
-                  placeholder="+39 123 456 7890"
-                  maxLength={50}
-                />
+
+              {/* Time Slots Section */}
+              <div className="form-section">
+                <label className="section-label">🕐 Seleziona l'Orario</label>
+
+                <div className="time-picker-container" ref={timePickerRef}>
+                  <div
+                    className="time-input-wrapper"
+                    onClick={() => setIsTimePickerOpen(!isTimePickerOpen)}
+                  >
+                    <input
+                      type="text"
+                      readOnly
+                      className="time-input"
+                      value={selectedTimeSlot || "Seleziona un orario"}
+                    />
+                    <span className="time-icon">🕐</span>
+                  </div>
+
+                  {isTimePickerOpen && (
+                    <div className="time-popup">
+                      <div className="time-slots-list">
+                        {timeSlots.map((slot) => (
+                          <button
+                            key={slot}
+                            type="button"
+                            className={`time-slot-item ${
+                              selectedTimeSlot === slot ? "selected" : ""
+                            }`}
+                            onClick={() => {
+                              setSelectedTimeSlot(slot);
+                              setPreferredTime(slot);
+                              setIsTimePickerOpen(false);
+                            }}
+                          >
+                            {slot}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="form-group">
-                <label htmlFor="preferredTime">Orario Preferito:</label>
-                <input
-                  type="time"
-                  id="preferredTime"
-                  value={preferredTime}
-                  onChange={(e) => setPreferredTime(e.target.value)}
-                />
+
+              {/* Contact Information */}
+              <div className="form-section">
+                <label className="section-label">
+                  📞 Informazioni di Contatto
+                </label>
+                <div className="form-group">
+                  <label htmlFor="clientPhone">Telefono di Contatto:</label>
+                  <input
+                    type="tel"
+                    id="clientPhone"
+                    value={clientPhone}
+                    onChange={(e) => setClientPhone(e.target.value)}
+                    placeholder="+39 123 456 7890"
+                    maxLength={50}
+                    className="form-input"
+                  />
+                </div>
               </div>
-              <div className="form-group">
-                <label htmlFor="bookingAddress">Indirizzo del Servizio:</label>
-                <input
-                  type="text"
-                  id="bookingAddress"
-                  value={bookingAddress}
-                  onChange={(e) => setBookingAddress(e.target.value)}
-                  placeholder="Via, Città, CAP"
-                  maxLength={500}
-                />
+
+              {/* Service Address */}
+              <div className="form-section">
+                <label className="section-label">
+                  📍 Indirizzo del Servizio
+                </label>
+                <div className="form-group">
+                  <input
+                    type="text"
+                    id="bookingAddress"
+                    value={bookingAddress}
+                    onChange={(e) => setBookingAddress(e.target.value)}
+                    placeholder="Via, Città, CAP"
+                    maxLength={500}
+                    className="form-input"
+                  />
+                </div>
               </div>
-              <div className="form-group">
-                <label htmlFor="bookingNotes">Note Aggiuntive:</label>
-                <textarea
-                  id="bookingNotes"
-                  value={bookingNotes}
-                  onChange={(e) => setBookingNotes(e.target.value)}
-                  placeholder="Aggiungi qualsiasi informazione utile per il fornitore..."
-                  rows={4}
-                  maxLength={1000}
-                />
+
+              {/* Additional Notes */}
+              <div className="form-section">
+                <label className="section-label">📝 Note Aggiuntive</label>
+                <div className="form-group">
+                  <textarea
+                    id="bookingNotes"
+                    value={bookingNotes}
+                    onChange={(e) => setBookingNotes(e.target.value)}
+                    placeholder="Aggiungi qualsiasi informazione utile per il fornitore..."
+                    rows={4}
+                    maxLength={1000}
+                    className="form-textarea"
+                  />
+                  <div className="char-counter">
+                    {bookingNotes.length} / 1000 caratteri
+                  </div>
+                </div>
               </div>
+
               <div className="info-box">
                 ℹ️ <strong>Pagamento Obbligatorio:</strong> Sarai reindirizzato
                 alla pagina di pagamento. La prenotazione sarà confermata solo
                 dopo il completamento del pagamento.
               </div>
+
               <div className="button-group">
-                <button type="submit" className="btn btn-primary">
-                  Procedi al Pagamento
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={!bookingDate}
+                >
+                  ✓ Procedi al Pagamento
                 </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
                   onClick={closeBookingModal}
                 >
-                  Annulla
+                  ✕ Annulla
                 </button>
               </div>
             </form>

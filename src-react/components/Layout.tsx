@@ -8,7 +8,7 @@ import BecomeProviderModal from "./BecomeProviderModal";
 import { io } from "socket.io-client";
 
 const Layout: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, checkAuth } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showBecomeProviderModal, setShowBecomeProviderModal] = useState(false);
@@ -61,8 +61,8 @@ const Layout: React.FC = () => {
         onLogout={logout}
         onLoginClick={() => setShowLoginModal(true)}
         onRegisterClick={() => setShowRegisterModal(true)}
-        onBecomeProvider={() => setShowBecomeProviderModal(true)}
         unreadMessagesCount={unreadMessagesCount}
+        onBecomeProvider={() => setShowBecomeProviderModal(true)}
       />
       <main className="app-content">
         <Outlet
@@ -96,6 +96,7 @@ const Layout: React.FC = () => {
       <BecomeProviderModal
         isOpen={showBecomeProviderModal}
         onClose={() => setShowBecomeProviderModal(false)}
+        onSuccess={() => checkAuth()}
       />
     </div>
   );
