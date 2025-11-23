@@ -5,8 +5,6 @@ import ToastNotification, { Notification } from "./ToastNotification";
 import NotificationCenter from "./NotificationCenter";
 // import SearchBar from "./SearchBar"; // Removed
 import ChatModal from "./ChatModal";
-import BecomeProviderModal from "./BecomeProviderModal";
-import UserMenu from "./UserMenu";
 import "../styles/ClientDashboard.css";
 import "../styles/ToastNotification.css";
 
@@ -52,7 +50,6 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
   const [bookingAddress, setBookingAddress] = useState("");
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
-  const [showBecomeProviderModal, setShowBecomeProviderModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isProvider, setIsProvider] = useState(false);
   const [userEmail, setUserEmail] = useState<string>("");
@@ -539,12 +536,6 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
           userEmail={userEmail}
         />
       )}
-
-      {/* Become Provider Modal */}
-      <BecomeProviderModal
-        isOpen={showBecomeProviderModal}
-        onClose={() => setShowBecomeProviderModal(false)}
-      />
     </div>
   );
 };

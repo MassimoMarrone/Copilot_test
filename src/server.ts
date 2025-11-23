@@ -27,20 +27,26 @@ dotenv.config();
 
 const app = express();
 // Add trust proxy for tunnels/proxies
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 
 // Manual CORS middleware to allow external access
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   // Allow any origin for development/testing
   if (origin) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader("Access-Control-Allow-Origin", origin);
   }
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  
-  if (req.method === 'OPTIONS') {
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Requested-With"
+  );
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+
+  if (req.method === "OPTIONS") {
     res.sendStatus(200);
   } else {
     next();
@@ -438,7 +444,10 @@ app.post(
 
       res.cookie("token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production" || req.secure || req.headers['x-forwarded-proto'] === 'https',
+        secure:
+          process.env.NODE_ENV === "production" ||
+          req.secure ||
+          req.headers["x-forwarded-proto"] === "https",
         sameSite: "lax",
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
       });
@@ -498,7 +507,10 @@ app.post(
 
       res.cookie("token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production" || req.secure || req.headers['x-forwarded-proto'] === 'https',
+        secure:
+          process.env.NODE_ENV === "production" ||
+          req.secure ||
+          req.headers["x-forwarded-proto"] === "https",
         sameSite: "lax",
         maxAge: 24 * 60 * 60 * 1000,
       });
@@ -583,7 +595,10 @@ app.post(
 
       res.cookie("token", jwtToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production" || req.secure || req.headers['x-forwarded-proto'] === 'https',
+        secure:
+          process.env.NODE_ENV === "production" ||
+          req.secure ||
+          req.headers["x-forwarded-proto"] === "https",
         sameSite: "lax",
         maxAge: 24 * 60 * 60 * 1000,
       });
@@ -720,7 +735,10 @@ app.post(
 
       res.cookie("token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production" || req.secure || req.headers['x-forwarded-proto'] === 'https',
+        secure:
+          process.env.NODE_ENV === "production" ||
+          req.secure ||
+          req.headers["x-forwarded-proto"] === "https",
         sameSite: "lax",
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
       });

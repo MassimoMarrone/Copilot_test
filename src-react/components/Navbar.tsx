@@ -10,6 +10,7 @@ interface NavbarProps {
   onRegisterClick: () => void;
   user?: any;
   onLogout?: () => void;
+  onBecomeProvider?: () => void;
   unreadMessagesCount?: number;
 }
 
@@ -18,6 +19,7 @@ const Navbar: React.FC<NavbarProps> = ({
   onRegisterClick,
   user,
   onLogout,
+  onBecomeProvider,
   unreadMessagesCount = 0,
 }) => {
   const location = useLocation();
@@ -73,6 +75,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 isProvider={user.isProvider}
                 unreadMessagesCount={unreadMessagesCount}
                 onLogout={onLogout}
+                onBecomeProvider={onBecomeProvider}
               />
             </div>
           ) : (

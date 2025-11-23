@@ -4,12 +4,14 @@ import { Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
+import BecomeProviderModal from "./BecomeProviderModal";
 import { io } from "socket.io-client";
 
 const Layout: React.FC = () => {
   const { user, logout } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showBecomeProviderModal, setShowBecomeProviderModal] = useState(false);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const location = useLocation();
 
@@ -59,6 +61,7 @@ const Layout: React.FC = () => {
         onLogout={logout}
         onLoginClick={() => setShowLoginModal(true)}
         onRegisterClick={() => setShowRegisterModal(true)}
+        onBecomeProvider={() => setShowBecomeProviderModal(true)}
         unreadMessagesCount={unreadMessagesCount}
       />
       <main className="app-content">
@@ -66,6 +69,7 @@ const Layout: React.FC = () => {
           context={{
             openLogin: () => setShowLoginModal(true),
             openRegister: () => setShowRegisterModal(true),
+            openBecomeProvider: () => setShowBecomeProviderModal(true),
             refreshUnreadCount: fetchUnreadCount,
           }}
         />
@@ -87,6 +91,11 @@ const Layout: React.FC = () => {
           setShowRegisterModal(false);
           setShowLoginModal(true);
         }}
+      />
+
+      <BecomeProviderModal
+        isOpen={showBecomeProviderModal}
+        onClose={() => setShowBecomeProviderModal(false)}
       />
     </div>
   );
