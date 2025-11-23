@@ -441,6 +441,161 @@
   transform: translateY(-2px);
 }
 
+/* Calendar Popup Styles */
+.date-picker-container {
+  position: relative;
+}
+
+.date-input-wrapper {
+  position: relative;
+  cursor: pointer;
+}
+
+.date-input {
+  width: 100%;
+  padding: 12px 15px;
+  padding-right: 40px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: #000;
+}
+
+.calendar-icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  color: #666;
+  pointer-events: none;
+}
+
+.calendar-popup {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  width: 320px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e0e0e0;
+  z-index: 100;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.calendar-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #333;
+  text-transform: capitalize;
+}
+
+.month-nav-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  color: #666;
+}
+
+.month-nav-btn:hover {
+  background: #f0f0f0;
+  color: #000;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.weekday-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+}
+
+.calendar-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.calendar-day-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s;
+  border: none;
+  background: none;
+  color: #333;
+}
+
+.calendar-day-cell:hover:not(.disabled):not(.selected) {
+  background-color: #f0f0f0;
+}
+
+.calendar-day-cell.selected {
+  background-color: #000;
+  color: white;
+  font-weight: 600;
+}
+
+.calendar-day-cell.today {
+  border: 2px solid #000;
+}
+
+.calendar-day-cell.disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.calendar-day-cell.empty {
+  cursor: default;
+  pointer-events: none;
+}
+
+@media (max-width: 480px) {
+  .calendar-popup {
+    width: 100%;
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    border-radius: 20px 20px 0 0;
+    padding-bottom: 40px;
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .modal-content {
@@ -483,4 +638,108 @@
   .btn {
     width: 100%;
   }
+}
+
+/* Time Picker Styles */
+.time-picker-container {
+  position: relative;
+}
+
+.time-input-wrapper {
+  position: relative;
+  cursor: pointer;
+}
+
+.time-input {
+  width: 100%;
+  padding: 12px 15px;
+  padding-right: 40px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.time-input:focus {
+  outline: none;
+  border-color: #000;
+}
+
+.time-icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  color: #666;
+  pointer-events: none;
+}
+
+.time-popup {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e0e0e0;
+  z-index: 100;
+  padding: 15px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.time-slots-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+}
+
+.time-slot-item {
+  padding: 12px 5px;
+  background: #f8f9fa;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  color: #333;
+}
+
+.time-slot-item:hover {
+  background: #e9ecef;
+  border-color: #ccc;
+  transform: translateY(-2px);
+}
+
+.time-slot-item.selected {
+  background: #000;
+  color: white;
+  border-color: #000;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Scrollbar for time popup */
+.time-popup::-webkit-scrollbar {
+  width: 8px;
+}
+
+.time-popup::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.time-popup::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.time-popup::-webkit-scrollbar-thumb:hover {
+  background: #999;
 }

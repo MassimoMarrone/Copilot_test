@@ -142,6 +142,10 @@
   background: #fee;
 }
 
+.user-menu-item.mobile-only {
+  display: none;
+}
+
 .user-menu-item.delete-account {
   color: #dc3545;
 }
@@ -165,5 +169,9 @@
   .user-menu-dropdown {
     right: -8px;
     min-width: 260px;
+  }
+
+  .user-menu-item.mobile-only {
+    display: flex;
   }
 }

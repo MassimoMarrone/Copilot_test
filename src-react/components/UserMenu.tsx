@@ -116,7 +116,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
           </button>
 
           <button
-            className="user-menu-item"
+            className="user-menu-item mobile-only"
             onClick={() => {
               navigate("/services");
               setIsOpen(false);
@@ -127,7 +127,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
           </button>
 
           <button
-            className="user-menu-item"
+            className="user-menu-item mobile-only"
             onClick={() => {
               navigate("/bookings");
               setIsOpen(false);
@@ -143,7 +143,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
           </button>
 
           <button
-            className="user-menu-item"
+            className="user-menu-item mobile-only"
             onClick={() => {
               navigate("/messages");
               setIsOpen(false);
