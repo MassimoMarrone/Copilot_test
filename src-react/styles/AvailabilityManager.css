@@ -1,0 +1,142 @@
+.availability-manager {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+.availability-manager h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.weekly-schedule {
+  margin-bottom: 30px;
+}
+
+.day-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.day-row:last-child {
+  border-bottom: none;
+}
+
+.day-label {
+  width: 150px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+}
+
+.time-slots {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.time-slot {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.time-slot input[type="time"] {
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.closed-label {
+  color: #888;
+  font-style: italic;
+}
+
+.blocked-dates {
+  margin-bottom: 30px;
+}
+
+.add-date-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  align-items: center;
+}
+
+.date-input {
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+  flex: 1;
+  max-width: 300px;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.blocked-dates-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.blocked-dates-list li {
+  background-color: #f8f9fa;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.remove-date-btn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+.remove-date-btn:hover {
+  color: #bd2130;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.save-btn {
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.save-btn:disabled {
+  background-color: #94d3a2;
+  cursor: not-allowed;
+}

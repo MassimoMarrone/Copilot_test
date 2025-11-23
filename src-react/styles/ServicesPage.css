@@ -632,6 +632,8 @@
 .calendar-day-cell.disabled {
   color: #ccc;
   cursor: not-allowed;
+  text-decoration: line-through;
+  opacity: 0.6;
 }
 
 .calendar-day-cell.empty {

@@ -865,6 +865,21 @@ app.post(
       }
     }
 
+    const defaultDaySchedule = {
+      enabled: true,
+      slots: [{ start: "09:00", end: "17:00" }],
+    };
+
+    const defaultWeeklySchedule = {
+      monday: { ...defaultDaySchedule },
+      tuesday: { ...defaultDaySchedule },
+      wednesday: { ...defaultDaySchedule },
+      thursday: { ...defaultDaySchedule },
+      friday: { ...defaultDaySchedule },
+      saturday: { ...defaultDaySchedule, enabled: false },
+      sunday: { ...defaultDaySchedule, enabled: false },
+    };
+
     const service: Service = {
       id:
         Date.now().toString() +
@@ -880,9 +895,120 @@ app.post(
       longitude: longitude ? parseFloat(longitude) : undefined,
       imageUrl,
       createdAt: new Date().toISOString(),
+      availability: {
+        weekly: defaultWeeklySchedule,
+        blockedDates: [],
+      },
     };
 
     services.push(service);
+    saveData();
+    res.json(service);
+  }
+);
+
+// Update a service
+app.put(
+  "/api/services/:id",
+  authenticate,
+  upload.single("image"),
+  [
+    body("title")
+      .optional()
+      .trim()
+      .isLength({ min: 3, max: 200 })
+      .withMessage("Title must be between 3 and 200 characters"),
+    body("description")
+      .optional()
+      .trim()
+      .isLength({ min: 10, max: 2000 })
+      .withMessage("Description must be between 10 and 2000 characters"),
+    body("price")
+      .optional()
+      .isFloat({ min: 0.01 })
+      .withMessage("Price must be a positive number"),
+    body("address")
+      .optional()
+      .trim()
+      .isLength({ max: 500 })
+      .withMessage("Address must be less than 500 characters"),
+    body("latitude")
+      .optional()
+      .isFloat({ min: -90, max: 90 })
+      .withMessage("Latitude must be between -90 and 90"),
+    body("longitude")
+      .optional()
+      .isFloat({ min: -180, max: 180 })
+      .withMessage("Longitude must be between -180 and 180"),
+    body("availability")
+      .optional()
+      .custom((value) => {
+        if (typeof value === "string") {
+          try {
+            JSON.parse(value);
+            return true;
+          } catch {
+            throw new Error("Availability must be a valid JSON string");
+          }
+        }
+        return true; // If it's already an object (e.g. from JSON body)
+      }),
+  ],
+  validate,
+  (req: Request, res: Response): void => {
+    const { id } = req.params;
+    const user = users.find((u) => u.id === req.user!.id);
+
+    if (!user || !isUserProvider(user)) {
+      res.status(403).json({ error: "Only providers can update services" });
+      return;
+    }
+
+    const serviceIndex = services.findIndex(
+      (s) => s.id === id && s.providerId === req.user!.id
+    );
+
+    if (serviceIndex === -1) {
+      res.status(404).json({ error: "Service not found or unauthorized" });
+      return;
+    }
+
+    const {
+      title,
+      description,
+      price,
+      address,
+      latitude,
+      longitude,
+      availability,
+    } = req.body;
+
+    const service = services[serviceIndex];
+
+    if (title) service.title = title;
+    if (description) service.description = description;
+    if (price) service.price = parseFloat(price);
+    if (address !== undefined) service.address = address;
+    if (latitude) service.latitude = parseFloat(latitude);
+    if (longitude) service.longitude = parseFloat(longitude);
+
+    if (req.file) {
+      service.imageUrl = "/uploads/" + req.file.filename;
+    }
+
+    if (availability) {
+      try {
+        service.availability =
+          typeof availability === "string"
+            ? JSON.parse(availability)
+            : availability;
+      } catch (e) {
+        // Should be caught by validation but just in case
+        console.error("Error parsing availability", e);
+      }
+    }
+
+    services[serviceIndex] = service;
     saveData();
     res.json(service);
   }
@@ -903,6 +1029,8 @@ app.get(
     res.json(myServices);
   }
 );
+
+// Availability routes - REMOVED (Moved to Service)
 
 // Booking routes
 
@@ -951,6 +1079,41 @@ app.post(
       if (!service) {
         res.status(404).json({ error: "Service not found" });
         return;
+      }
+
+      // Check service availability
+      if (service.availability) {
+        const bookingDateObj = new Date(date);
+        const dateString = bookingDateObj.toISOString().split("T")[0];
+
+        // Check blocked dates
+        if (service.availability.blockedDates.includes(dateString)) {
+          res.status(400).json({
+            error: "The service is not available on this date (blocked).",
+          });
+          return;
+        }
+
+        // Check weekly schedule
+        const days = [
+          "sunday",
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+        ];
+        const dayName = days[bookingDateObj.getDay()];
+        // @ts-ignore
+        const daySchedule = service.availability.weekly[dayName];
+
+        if (daySchedule && !daySchedule.enabled) {
+          res.status(400).json({
+            error: `The service is not available on ${dayName}s.`,
+          });
+          return;
+        }
       }
 
       // Check for overlapping bookings on the same date for the same service

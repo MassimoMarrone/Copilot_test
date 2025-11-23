@@ -16,6 +16,7 @@ export interface User {
   stripeAccountId?: string; // Stripe Connect Account ID for payouts
   googleId?: string; // Google ID for OAuth users
   createdAt: string;
+  // availability?: ProviderAvailability; // Moved to Service
 }
 
 export interface Service {
@@ -32,6 +33,7 @@ export interface Service {
   createdAt: string;
   averageRating?: number;
   reviewCount?: number;
+  availability?: ProviderAvailability; // Availability is now per service
 }
 
 export interface Booking {
@@ -96,6 +98,31 @@ export interface Notification {
   read: boolean;
   createdAt: string;
   link?: string; // Optional link to redirect user (e.g. to booking details)
+}
+
+export interface TimeSlot {
+  start: string; // HH:mm
+  end: string; // HH:mm
+}
+
+export interface DaySchedule {
+  enabled: boolean;
+  slots: TimeSlot[];
+}
+
+export interface WeeklySchedule {
+  monday: DaySchedule;
+  tuesday: DaySchedule;
+  wednesday: DaySchedule;
+  thursday: DaySchedule;
+  friday: DaySchedule;
+  saturday: DaySchedule;
+  sunday: DaySchedule;
+}
+
+export interface ProviderAvailability {
+  weekly: WeeklySchedule;
+  blockedDates: string[]; // ISO date strings YYYY-MM-DD
 }
 
 export interface JWTPayload {

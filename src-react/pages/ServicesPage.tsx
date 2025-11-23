@@ -3,6 +3,31 @@ import { useAuth } from "../context/AuthContext";
 import ServiceReviewsModal from "../components/ServiceReviewsModal";
 import "../styles/ServicesPage.css";
 
+interface TimeSlot {
+  start: string;
+  end: string;
+}
+
+interface DaySchedule {
+  enabled: boolean;
+  slots: TimeSlot[];
+}
+
+interface WeeklySchedule {
+  monday: DaySchedule;
+  tuesday: DaySchedule;
+  wednesday: DaySchedule;
+  thursday: DaySchedule;
+  friday: DaySchedule;
+  saturday: DaySchedule;
+  sunday: DaySchedule;
+}
+
+interface ProviderAvailability {
+  weekly: WeeklySchedule;
+  blockedDates: string[];
+}
+
 interface Service {
   id: string;
   title: string;
@@ -15,6 +40,7 @@ interface Service {
   averageRating?: number;
   reviewCount?: number;
   imageUrl?: string;
+  availability?: ProviderAvailability;
 }
 
 const ServicesPage: React.FC = () => {
@@ -150,12 +176,37 @@ const ServicesPage: React.FC = () => {
         .toISOString()
         .split("T")[0];
 
+      let isUnavailable = false;
+      if (selectedService && selectedService.availability) {
+        // Check blocked dates
+        if (selectedService.availability.blockedDates.includes(dateString)) {
+          isUnavailable = true;
+        } else {
+          // Check weekly schedule
+          const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday...
+          const dayMap: (keyof WeeklySchedule)[] = [
+            "sunday",
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+          ];
+          const dayKey = dayMap[dayOfWeek];
+          if (!selectedService.availability.weekly[dayKey].enabled) {
+            isUnavailable = true;
+          }
+        }
+      }
+
       days.push({
         date: date,
         dateString: dateString,
         day: d,
         isPast: date < todayStart,
         isToday: date.getTime() === todayStart.getTime(),
+        isUnavailable: isUnavailable,
         empty: false,
         key: dateString,
       });
@@ -398,17 +449,23 @@ const ServicesPage: React.FC = () => {
                               key={day.key}
                               type="button"
                               className={`calendar-day-cell ${
-                                day.isPast ? "disabled" : ""
+                                day.isPast || day.isUnavailable
+                                  ? "disabled"
+                                  : ""
                               } ${
                                 bookingDate === day.dateString ? "selected" : ""
                               } ${day.isToday ? "today" : ""}`}
                               onClick={() => {
-                                if (!day.isPast && day.dateString) {
+                                if (
+                                  !day.isPast &&
+                                  !day.isUnavailable &&
+                                  day.dateString
+                                ) {
                                   setBookingDate(day.dateString);
                                   setIsCalendarOpen(false);
                                 }
                               }}
-                              disabled={day.isPast}
+                              disabled={day.isPast || day.isUnavailable}
                             >
                               {day.day}
                             </button>

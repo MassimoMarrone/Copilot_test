@@ -6,6 +6,10 @@ import ToastNotification, { Notification } from "./ToastNotification";
 import NotificationCenter from "./NotificationCenter";
 import ChatModal from "./ChatModal";
 import UserMenu from "./UserMenu";
+import AvailabilityManager, {
+  ProviderAvailability,
+  defaultWeeklySchedule,
+} from "./AvailabilityManager";
 import "../styles/ProviderDashboard.css";
 import "../styles/ToastNotification.css";
 
@@ -20,6 +24,7 @@ interface Service {
   longitude?: number;
   createdAt: string;
   imageUrl?: string;
+  availability?: ProviderAvailability;
 }
 
 interface Booking {
@@ -54,6 +59,16 @@ const ProviderDashboard: React.FC = () => {
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
+  const [editingService, setEditingService] = useState<Service | null>(null);
+  const [editForm, setEditForm] = useState<{
+    title: string;
+    description: string;
+    price: string;
+    address: string;
+    latitude: number;
+    longitude: number;
+    availability: ProviderAvailability;
+  } | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [userEmail, setUserEmail] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
@@ -225,6 +240,49 @@ const ProviderDashboard: React.FC = () => {
     }
   };
 
+  const handleUpdateService = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingService || !editForm) return;
+
+    const formData = new FormData();
+    formData.append("title", editForm.title);
+    formData.append("description", editForm.description);
+    formData.append("price", editForm.price);
+    formData.append("availability", JSON.stringify(editForm.availability));
+
+    if (editForm.address) {
+      formData.append("address", editForm.address);
+      if (editForm.latitude && editForm.longitude) {
+        formData.append("latitude", editForm.latitude.toString());
+        formData.append("longitude", editForm.longitude.toString());
+      }
+    }
+
+    if (serviceImage) {
+      formData.append("image", serviceImage);
+    }
+
+    try {
+      const response = await fetch(`/api/services/${editingService.id}`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (response.ok) {
+        alert("Servizio aggiornato con successo!");
+        setEditingService(null);
+        setEditForm(null);
+        setServiceImage(null);
+        loadServices();
+      } else {
+        const data = await response.json();
+        alert(data.error || "Errore nell'aggiornamento del servizio");
+      }
+    } catch (error) {
+      alert("Errore di connessione");
+    }
+  };
+
   const handleCompleteBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedBooking || !photoProof) {
@@ -265,12 +323,14 @@ const ProviderDashboard: React.FC = () => {
     <div className="provider-dashboard">
       <div className="dashboard-header">
         <h1>🛠️ Dashboard Fornitore</h1>
-        <button
-          className="btn-add-service"
-          onClick={() => setShowServiceModal(true)}
-        >
-          + Nuovo Servizio
-        </button>
+        <div className="header-actions">
+          <button
+            className="btn-add-service"
+            onClick={() => setShowServiceModal(true)}
+          >
+            + Nuovo Servizio
+          </button>
+        </div>
       </div>
 
       <div className="dashboard-section">
@@ -312,6 +372,36 @@ const ProviderDashboard: React.FC = () => {
                     {new Date(service.createdAt).toLocaleDateString("it-IT")}
                   </small>
                 </p>
+                <button
+                  className="btn-edit-service"
+                  onClick={() => {
+                    setEditingService(service);
+                    setEditForm({
+                      title: service.title,
+                      description: service.description,
+                      price: service.price.toString(),
+                      address: service.address || "",
+                      latitude: service.latitude || 0,
+                      longitude: service.longitude || 0,
+                      availability: service.availability || {
+                        weekly: defaultWeeklySchedule,
+                        blockedDates: [],
+                      },
+                    });
+                  }}
+                  style={{
+                    marginTop: "10px",
+                    backgroundColor: "#ffc107",
+                    color: "#000",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    width: "100%",
+                  }}
+                >
+                  ✏️ Modifica Servizio & Disponibilità
+                </button>
               </div>
             ))
           )}
@@ -613,6 +703,133 @@ const ProviderDashboard: React.FC = () => {
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => setShowServiceModal(false)}
+                >
+                  Annulla
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Service Modal */}
+      {editingService && editForm && (
+        <div
+          className="modal-overlay"
+          onClick={() => {
+            setEditingService(null);
+            setEditForm(null);
+          }}
+        >
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: "800px",
+              width: "90%",
+              maxHeight: "90vh",
+              overflowY: "auto",
+            }}
+          >
+            <button
+              className="modal-close"
+              onClick={() => {
+                setEditingService(null);
+                setEditForm(null);
+              }}
+            >
+              &times;
+            </button>
+            <h2>Modifica Servizio</h2>
+            <form onSubmit={handleUpdateService}>
+              <div className="form-group">
+                <label>Titolo</label>
+                <input
+                  type="text"
+                  value={editForm.title}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, title: e.target.value })
+                  }
+                  required
+                  minLength={3}
+                  maxLength={200}
+                />
+              </div>
+              <div className="form-group">
+                <label>Descrizione</label>
+                <textarea
+                  value={editForm.description}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      description: e.target.value,
+                    })
+                  }
+                  required
+                  minLength={10}
+                  maxLength={2000}
+                />
+              </div>
+              <div className="form-group">
+                <label>Prezzo (€)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  value={editForm.price}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, price: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Nuova Immagine (Opzionale)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setServiceImage(e.target.files[0]);
+                    }
+                  }}
+                />
+              </div>
+              <div className="form-group">
+                <label>Indirizzo (Opzionale)</label>
+                <AddressAutocomplete
+                  onSelect={(loc) => {
+                    setEditForm({
+                      ...editForm,
+                      address: loc.address,
+                      latitude: loc.lat,
+                      longitude: loc.lng,
+                    });
+                  }}
+                  initialValue={editForm.address}
+                />
+              </div>
+
+              <hr style={{ margin: "20px 0" }} />
+
+              <AvailabilityManager
+                value={editForm.availability}
+                onChange={(newAvailability) =>
+                  setEditForm({ ...editForm, availability: newAvailability })
+                }
+              />
+
+              <div className="button-group" style={{ marginTop: "20px" }}>
+                <button type="submit" className="btn btn-primary">
+                  Salva Modifiche
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setEditingService(null);
+                    setEditForm(null);
+                  }}
                 >
                   Annulla
                 </button>
