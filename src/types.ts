@@ -29,6 +29,8 @@ export interface Service {
   latitude?: number;
   longitude?: number;
   createdAt: string;
+  averageRating?: number;
+  reviewCount?: number;
 }
 
 export interface Booking {
@@ -59,6 +61,18 @@ export interface Booking {
   notes?: string;
   address?: string;
 }
+
+export interface Review {
+  id: string;
+  bookingId: string;
+  serviceId: string;
+  providerId: string;
+  clientId: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
 
 export interface ChatMessage {
   id: string;

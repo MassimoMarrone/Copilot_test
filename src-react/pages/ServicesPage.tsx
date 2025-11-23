@@ -11,6 +11,8 @@ interface Service {
   address?: string;
   latitude?: number;
   longitude?: number;
+  averageRating?: number;
+  reviewCount?: number;
 }
 
 const ServicesPage: React.FC = () => {
@@ -245,6 +247,15 @@ const ServicesPage: React.FC = () => {
                 <div className="service-content">
                   <h3>{service.title}</h3>
                   <p className="service-price">€{service.price.toFixed(2)}</p>
+                  <div className="service-rating">
+                    <span className="rating-stars">
+                      {"⭐".repeat(Math.round(service.averageRating || 0))}
+                      {"☆".repeat(5 - Math.round(service.averageRating || 0))}
+                    </span>
+                    <span className="review-count">
+                      ({service.reviewCount || 0} recensioni)
+                    </span>
+                  </div>
                   <p className="service-description">{service.description}</p>
                   {service.address && (
                     <p className="service-location">📍 {service.address}</p>

@@ -18,6 +18,7 @@ import {
   JWTPayload,
   ChatMessage,
   Notification,
+  Review,
 } from "./types";
 import Stripe from "stripe";
 import { OAuth2Client } from "google-auth-library";
@@ -214,6 +215,7 @@ let services: Service[] = [];
 let bookings: Booking[] = [];
 let chatMessages: ChatMessage[] = [];
 let notifications: Notification[] = [];
+let reviews: Review[] = [];
 
 // Ensure data directory exists
 const ensureDataDir = (): void => {
@@ -246,6 +248,10 @@ const loadData = (): void => {
       const data = fs.readFileSync("data/notifications.json", "utf8");
       notifications = JSON.parse(data);
     }
+    if (fs.existsSync("data/reviews.json")) {
+      const data = fs.readFileSync("data/reviews.json", "utf8");
+      reviews = JSON.parse(data);
+    }
   } catch (error) {
     console.error("Error loading data:", error);
   }
@@ -266,6 +272,7 @@ const saveData = (): void => {
       "data/notifications.json",
       JSON.stringify(notifications, null, 2)
     );
+    fs.writeFileSync("data/reviews.json", JSON.stringify(reviews, null, 2));
   } catch (error) {
     console.error("Error saving data:", error);
   }
@@ -756,10 +763,26 @@ app.post(
 // Get all services (for clients to browse)
 app.get("/api/services", (_req: Request, res: Response): void => {
   // Filter out services from blocked providers
-  const activeServices = services.filter((service) => {
-    const provider = users.find((u) => u.id === service.providerId);
-    return provider && !provider.isBlocked;
-  });
+  const activeServices = services
+    .filter((service) => {
+      const provider = users.find((u) => u.id === service.providerId);
+      return provider && !provider.isBlocked;
+    })
+    .map((service) => {
+      const serviceReviews = reviews.filter(
+        (r) => r.serviceId === service.id
+      );
+      const reviewCount = serviceReviews.length;
+      const averageRating =
+        reviewCount > 0
+          ? serviceReviews.reduce((acc, r) => acc + r.rating, 0) / reviewCount
+          : 0;
+      return {
+        ...service,
+        reviewCount,
+        averageRating: parseFloat(averageRating.toFixed(1)),
+      };
+    });
   res.json(activeServices);
 });
 
@@ -994,6 +1017,100 @@ app.get(
     res.json(providerBookings);
   }
 );
+
+// Review routes
+
+// Create a review for a completed booking
+app.post(
+  "/api/bookings/:bookingId/review",
+  authenticate,
+  [
+    body("rating")
+      .isInt({ min: 1, max: 5 })
+      .withMessage("Rating must be an integer between 1 and 5"),
+    body("comment")
+      .trim()
+      .isLength({ min: 10, max: 1000 })
+      .withMessage("Comment must be between 10 and 1000 characters"),
+  ],
+  validate,
+  (req: Request, res: Response): void => {
+    const { bookingId } = req.params;
+    const { rating, comment } = req.body;
+    const clientId = req.user!.id;
+
+    const booking = bookings.find(
+      (b) => b.id === bookingId && b.clientId === clientId
+    );
+
+    if (!booking) {
+      res
+        .status(404)
+        .json({ error: "Booking not found or you are not the client" });
+      return;
+    }
+
+    if (booking.status !== "completed") {
+      res
+        .status(400)
+        .json({ error: "You can only review completed bookings" });
+      return;
+    }
+
+    const existingReview = reviews.find(
+      (r) => r.bookingId === bookingId && r.clientId === clientId
+    );
+
+    if (existingReview) {
+      res.status(400).json({ error: "You have already reviewed this booking" });
+      return;
+    }
+
+    const review: Review = {
+      id:
+        Date.now().toString() +
+        "-" +
+        Math.random().toString(36).substring(2, 11),
+      bookingId,
+      serviceId: booking.serviceId,
+      providerId: booking.providerId,
+      clientId,
+      rating,
+      comment,
+      createdAt: new Date().toISOString(),
+    };
+
+    reviews.push(review);
+    saveData();
+
+    sendNotification(
+      booking.providerId,
+      "New Review Received",
+      `You received a new ${rating}-star review for "${booking.serviceTitle}"`,
+      "success"
+    );
+
+    res.status(201).json(review);
+  }
+);
+
+// Get provider's reviews
+app.get(
+  "/api/my-reviews",
+  authenticate,
+  (req: Request, res: Response): void => {
+    const user = users.find((u) => u.id === req.user!.id);
+
+    if (!user || !isUserProvider(user)) {
+      res.status(403).json({ error: "Only providers can access this" });
+      return;
+    }
+
+    const myReviews = reviews.filter((r) => r.providerId === req.user!.id);
+    res.json(myReviews);
+  }
+);
+
 
 // Get booked dates for a specific service
 app.get(
@@ -1960,7 +2077,12 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ error: "Internal server error" });
 });
 
-httpServer.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
-});
+// Start the server only if not in a test environment
+if (process.env.NODE_ENV !== "test") {
+  httpServer.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+  });
+}
+
+export { app, httpServer, io };

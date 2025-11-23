@@ -5,6 +5,7 @@ import ToastNotification, { Notification } from "./ToastNotification";
 import NotificationCenter from "./NotificationCenter";
 // import SearchBar from "./SearchBar"; // Removed
 import ChatModal from "./ChatModal";
+import ReviewModal from "./ReviewModal"; // Will be created next
 import "../styles/ClientDashboard.css";
 import "../styles/ToastNotification.css";
 
@@ -51,6 +52,8 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewBooking, setReviewBooking] = useState<Booking | null>(null);
   const [isProvider, setIsProvider] = useState(false);
   const [userEmail, setUserEmail] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
@@ -372,7 +375,11 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                 <p>
                   <strong>Stato:</strong>{" "}
                   <span className={`status ${booking.status}`}>
-                    {booking.status === "pending" ? "In attesa" : "Completato"}
+                    {booking.status === "pending"
+                      ? "In attesa"
+                      : booking.status === "completed"
+                      ? "Completato"
+                      : "Annullato"}
                   </span>
                 </p>
                 <p>
@@ -387,7 +394,6 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                       : "Non Pagato"}
                   </span>
                 </p>
-                {/* Payment button removed as payment is now required at booking time */}
                 {booking.photoProof && (
                   <div className="photo-proof">
                     <p>
@@ -399,15 +405,28 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                     />
                   </div>
                 )}
-                <button
-                  onClick={() => {
-                    setSelectedBooking(booking);
-                    setShowChatModal(true);
-                  }}
-                  className="btn btn-chat"
-                >
-                  💬 Apri Chat
-                </button>
+                <div className="button-group">
+                  <button
+                    onClick={() => {
+                      setSelectedBooking(booking);
+                      setShowChatModal(true);
+                    }}
+                    className="btn btn-chat"
+                  >
+                    💬 Apri Chat
+                  </button>
+                  {booking.status === "completed" && (
+                    <button
+                      onClick={() => {
+                        setReviewBooking(booking);
+                        setShowReviewModal(true);
+                      }}
+                      className="btn btn-review"
+                    >
+                      ⭐ Lascia una Recensione
+                    </button>
+                  )}
+                </div>
               </div>
             ))
           )}
@@ -534,6 +553,22 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
           otherPartyEmail={selectedBooking.providerEmail}
           userId={userId}
           userEmail={userEmail}
+        />
+      )}
+
+      {/* Review Modal */}
+      {showReviewModal && reviewBooking && (
+        <ReviewModal
+          booking={reviewBooking}
+          onClose={() => {
+            setShowReviewModal(false);
+            setReviewBooking(null);
+          }}
+          onReviewSubmit={() => {
+            setShowReviewModal(false);
+            setReviewBooking(null);
+            loadBookings(); // Refresh bookings to hide the review button if already reviewed
+          }}
         />
       )}
     </div>

@@ -36,9 +36,20 @@ interface Booking {
   address?: string;
 }
 
+interface Review {
+  id: string;
+  bookingId: string;
+  serviceId: string;
+  clientId: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
 const ProviderDashboard: React.FC = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
@@ -69,6 +80,7 @@ const ProviderDashboard: React.FC = () => {
     checkAuth();
     loadServices();
     loadBookings();
+    loadReviews();
   }, []);
 
   // Socket.IO connection for real-time updates
@@ -141,6 +153,16 @@ const ProviderDashboard: React.FC = () => {
       setBookings(data);
     } catch (error) {
       console.error("Error loading bookings:", error);
+    }
+  };
+
+  const loadReviews = async () => {
+    try {
+      const response = await fetch("/api/my-reviews");
+      const data = await response.json();
+      setReviews(data);
+    } catch (error) {
+      console.error("Error loading reviews:", error);
     }
   };
 
@@ -437,6 +459,32 @@ const ProviderDashboard: React.FC = () => {
                 >
                   💬 Apri Chat
                 </button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div className="dashboard-section">
+        <h2>⭐ Le Mie Recensioni</h2>
+        <div className="reviews-list">
+          {reviews.length === 0 ? (
+            <div className="empty-state">
+              <p>Non hai ancora ricevuto recensioni.</p>
+            </div>
+          ) : (
+            reviews.map((review) => (
+              <div key={review.id} className="review-card">
+                <div className="review-header">
+                  <span className="review-rating">
+                    {"⭐".repeat(review.rating)}
+                    {"☆".repeat(5 - review.rating)}
+                  </span>
+                  <span className="review-date">
+                    {new Date(review.createdAt).toLocaleDateString("it-IT")}
+                  </span>
+                </div>
+                <p className="review-comment">{review.comment}</p>
               </div>
             ))
           )}

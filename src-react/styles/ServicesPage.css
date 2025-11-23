@@ -72,6 +72,23 @@
   margin-bottom: 10px;
 }
 
+.service-rating {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.rating-stars {
+  color: #ffc107;
+  font-size: 1.1rem;
+}
+
+.review-count {
+  margin-left: 8px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
 .service-description {
   color: #666;
   font-size: 0.95rem;
