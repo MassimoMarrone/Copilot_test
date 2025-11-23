@@ -240,23 +240,12 @@ const ProviderDashboard: React.FC = () => {
     <div className="provider-dashboard">
       <div className="dashboard-header">
         <h1>🛠️ Dashboard Fornitore</h1>
-        <div className="header-actions">
-          <button
-            className="btn-add-service"
-            onClick={() => setShowServiceModal(true)}
-          >
-            + Nuovo Servizio
-          </button>
-          <NotificationCenter
-            userId={userId}
-            newIncomingNotification={lastNotification}
-          />
-          <UserMenu
-            userEmail={userEmail}
-            userType="provider"
-            isProvider={true}
-          />
-        </div>
+        <button
+          className="btn-add-service"
+          onClick={() => setShowServiceModal(true)}
+        >
+          + Nuovo Servizio
+        </button>
       </div>
 
       <div className="dashboard-section">

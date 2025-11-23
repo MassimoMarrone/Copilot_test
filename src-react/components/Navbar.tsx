@@ -5,6 +5,7 @@ import NotificationCenter from "./NotificationCenter";
 import logo from "../assets/logo.jpg";
 import "../styles/Navbar.css";
 
+
 interface NavbarProps {
   onLoginClick: () => void;
   onRegisterClick: () => void;
@@ -12,7 +13,6 @@ interface NavbarProps {
   onLogout?: () => void;
   onBecomeProvider?: () => void;
   unreadMessagesCount?: number;
-  onBecomeProvider?: () => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
@@ -22,7 +22,6 @@ const Navbar: React.FC<NavbarProps> = ({
   onLogout,
   onBecomeProvider,
   unreadMessagesCount = 0,
-  onBecomeProvider,
 }) => {
   const location = useLocation();
 
