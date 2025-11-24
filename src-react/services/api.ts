@@ -2,6 +2,8 @@
  * Base API configuration and helper methods
  */
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+
 // Helper to handle response errors
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
@@ -21,7 +23,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
 
 // Generic GET request
 export async function get<T>(url: string): Promise<T> {
-  const response = await fetch(url, {
+  const response = await fetch(`${API_BASE_URL}${url}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -32,7 +34,7 @@ export async function get<T>(url: string): Promise<T> {
 
 // Generic POST request
 export async function post<T>(url: string, data: any): Promise<T> {
-  const response = await fetch(url, {
+  const response = await fetch(`${API_BASE_URL}${url}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -44,7 +46,7 @@ export async function post<T>(url: string, data: any): Promise<T> {
 
 // Generic PUT request
 export async function put<T>(url: string, data: any): Promise<T> {
-  const response = await fetch(url, {
+  const response = await fetch(`${API_BASE_URL}${url}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -56,7 +58,7 @@ export async function put<T>(url: string, data: any): Promise<T> {
 
 // Generic DELETE request
 export async function del<T>(url: string): Promise<T> {
-  const response = await fetch(url, {
+  const response = await fetch(`${API_BASE_URL}${url}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
@@ -71,7 +73,7 @@ export async function upload<T>(
   formData: FormData,
   method: "POST" | "PUT" = "POST"
 ): Promise<T> {
-  const response = await fetch(url, {
+  const response = await fetch(`${API_BASE_URL}${url}`, {
     method: method,
     // Content-Type header is automatically set by browser for FormData with boundary
     body: formData,

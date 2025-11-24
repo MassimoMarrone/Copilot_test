@@ -88,10 +88,17 @@ app.use(
 
 // CORS
 app.use((req, res, next) => {
+  const allowedOrigins = [
+    "http://localhost:5173", // Vite dev server
+    "http://localhost:3000", // Local backend (if serving static)
+    process.env.FRONTEND_URL, // Production frontend
+  ].filter(Boolean);
+
   const origin = req.headers.origin;
-  if (origin) {
+  if (origin && allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
+  
   res.setHeader(
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, DELETE, OPTIONS"
@@ -134,8 +141,13 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api", paymentRoutes);
 
-// SPA Fallback
+// SPA Fallback (Only used in development or if FRONTEND_URL is not set)
 const serveSpa = (_req: Request, res: Response) => {
+  if (process.env.NODE_ENV === "production" && process.env.FRONTEND_URL) {
+    res.redirect(process.env.FRONTEND_URL);
+    return;
+  }
+
   const htmlPath = path.join(__dirname, "..", "public", "react", "index.html");
 
   if (fs.existsSync(htmlPath)) {
