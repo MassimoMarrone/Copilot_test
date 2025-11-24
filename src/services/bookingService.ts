@@ -60,7 +60,9 @@ export const bookingService = {
           availability.blockedDates &&
           availability.blockedDates.includes(dateString)
         ) {
-          throw new Error("The service is not available on this date (blocked).");
+          throw new Error(
+            "The service is not available on this date (blocked)."
+          );
         }
 
         const days = [

@@ -52,7 +52,10 @@ export class AuthController {
   async googleAuth(req: Request, res: Response): Promise<void> {
     try {
       const { token, acceptedTerms } = req.body;
-      const { user, token: jwtToken } = await authService.googleLogin(token, acceptedTerms);
+      const { user, token: jwtToken } = await authService.googleLogin(
+        token,
+        acceptedTerms
+      );
 
       res.cookie("token", jwtToken, {
         httpOnly: true,
@@ -68,9 +71,9 @@ export class AuthController {
     } catch (error: any) {
       console.error("Google Auth error:", error);
       const status = error.code === "TERMS_REQUIRED" ? 400 : 401;
-      res.status(status).json({ 
+      res.status(status).json({
         error: error.message || "Google authentication failed",
-        code: error.code 
+        code: error.code,
       });
     }
   }
@@ -95,8 +98,8 @@ export class AuthController {
       });
     } catch (error: any) {
       console.error("Error in /api/me:", error);
-      res.status(error.message === "User not found" ? 404 : 500).json({ 
-        error: error.message || "Internal server error fetching user" 
+      res.status(error.message === "User not found" ? 404 : 500).json({
+        error: error.message || "Internal server error fetching user",
       });
     }
   }
@@ -104,7 +107,10 @@ export class AuthController {
   async becomeProvider(req: Request, res: Response): Promise<void> {
     try {
       const { acceptedProviderTerms } = req.body;
-      const { token } = await authService.becomeProvider(req.user!.id, acceptedProviderTerms);
+      const { token } = await authService.becomeProvider(
+        req.user!.id,
+        acceptedProviderTerms
+      );
 
       res.cookie("token", token, {
         httpOnly: true,
@@ -119,7 +125,9 @@ export class AuthController {
       res.json({ success: true, isProvider: true });
     } catch (error: any) {
       console.error("Become provider error:", error);
-      res.status(400).json({ error: error.message || "Failed to become provider" });
+      res
+        .status(400)
+        .json({ error: error.message || "Failed to become provider" });
     }
   }
 }

@@ -39,11 +39,7 @@ router.post(
 );
 
 // Get client's bookings
-router.get(
-  "/my-bookings",
-  authenticate,
-  bookingController.getMyBookings
-);
+router.get("/my-bookings", authenticate, bookingController.getMyBookings);
 
 // Get provider's bookings
 router.get(

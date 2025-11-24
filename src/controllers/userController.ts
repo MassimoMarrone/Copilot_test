@@ -8,7 +8,11 @@ export class UserController {
       const { displayName, bio } = req.body;
       const avatarUrl = req.file ? "/uploads/" + req.file.filename : undefined;
 
-      const user = await userService.updateProfile(userId, { displayName, bio, avatarUrl });
+      const user = await userService.updateProfile(userId, {
+        displayName,
+        bio,
+        avatarUrl,
+      });
 
       res.json({
         success: true,
@@ -40,7 +44,9 @@ export class UserController {
     } catch (error: any) {
       console.error("Delete account error:", error);
       const status = error.message === "User not found" ? 404 : 400;
-      res.status(status).json({ error: error.message || "Failed to delete account" });
+      res
+        .status(status)
+        .json({ error: error.message || "Failed to delete account" });
     }
   }
 }

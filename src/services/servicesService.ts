@@ -244,7 +244,9 @@ export class ServicesService {
     });
 
     if (activeBookings.length > 0) {
-      throw new Error("Cannot delete service with active bookings. Please cancel them first.");
+      throw new Error(
+        "Cannot delete service with active bookings. Please cancel them first."
+      );
     }
 
     await prisma.service.delete({

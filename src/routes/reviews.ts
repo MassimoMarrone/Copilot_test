@@ -25,16 +25,9 @@ router.post(
 );
 
 // Get reviews for a service
-router.get(
-  "/reviews/service/:serviceId",
-  reviewController.getServiceReviews
-);
+router.get("/reviews/service/:serviceId", reviewController.getServiceReviews);
 
 // Get provider's reviews
-router.get(
-  "/my-reviews",
-  authenticate,
-  reviewController.getMyReviews
-);
+router.get("/my-reviews", authenticate, reviewController.getMyReviews);
 
 export default router;

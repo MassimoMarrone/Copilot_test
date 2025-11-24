@@ -3,7 +3,10 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export class UserService {
-  async updateProfile(userId: string, data: { displayName?: string; bio?: string; avatarUrl?: string }) {
+  async updateProfile(
+    userId: string,
+    data: { displayName?: string; bio?: string; avatarUrl?: string }
+  ) {
     const updateData: any = {};
     if (data.displayName) updateData.displayName = data.displayName;
     if (data.bio) updateData.bio = data.bio;

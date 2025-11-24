@@ -40,27 +40,15 @@ router.post(
 );
 
 // Google Auth
-router.post(
-  "/auth/google",
-  authLimiter,
-  authController.googleAuth
-);
+router.post("/auth/google", authLimiter, authController.googleAuth);
 
 // Logout
 router.post("/logout", authController.logout);
 
 // Get current user
-router.get(
-  "/me",
-  authenticate,
-  authController.getMe
-);
+router.get("/me", authenticate, authController.getMe);
 
 // Become a provider
-router.post(
-  "/become-provider",
-  authenticate,
-  authController.becomeProvider
-);
+router.post("/become-provider", authenticate, authController.becomeProvider);
 
 export default router;

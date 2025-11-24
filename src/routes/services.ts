@@ -153,18 +153,10 @@ router.put(
 );
 
 // Get provider's services
-router.get(
-  "/my-services",
-  authenticate,
-  servicesController.getMyServices
-);
+router.get("/my-services", authenticate, servicesController.getMyServices);
 
 // Delete a service
-router.delete(
-  "/services/:id",
-  authenticate,
-  servicesController.deleteService
-);
+router.delete("/services/:id", authenticate, servicesController.deleteService);
 
 // Get booked dates for a specific service
 router.get(

@@ -29,16 +29,9 @@ router.put(
 );
 
 // Get public provider profile
-router.get(
-  "/providers/:id",
-  userController.getProviderProfile
-);
+router.get("/providers/:id", userController.getProviderProfile);
 
 // Delete own account
-router.delete(
-  "/me",
-  authenticate,
-  userController.deleteAccount
-);
+router.delete("/me", authenticate, userController.deleteAccount);
 
 export default router;

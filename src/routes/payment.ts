@@ -5,11 +5,7 @@ import { paymentController } from "../controllers/paymentController";
 const router = Router();
 
 // Verify payment and create booking
-router.get(
-  "/verify-payment",
-  authenticate,
-  paymentController.verifyPayment
-);
+router.get("/verify-payment", authenticate, paymentController.verifyPayment);
 
 // Legacy Stripe Payment Route
 router.post(

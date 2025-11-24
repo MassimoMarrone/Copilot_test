@@ -5,12 +5,7 @@ import { adminController } from "../controllers/adminController";
 const router = Router();
 
 // Get all users
-router.get(
-  "/users",
-  authenticate,
-  requireAdmin,
-  adminController.getAllUsers
-);
+router.get("/users", authenticate, requireAdmin, adminController.getAllUsers);
 
 // Block user
 router.post(
@@ -77,11 +72,6 @@ router.delete(
 );
 
 // Get stats
-router.get(
-  "/stats",
-  authenticate,
-  requireAdmin,
-  adminController.getStats
-);
+router.get("/stats", authenticate, requireAdmin, adminController.getStats);
 
 export default router;

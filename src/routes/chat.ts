@@ -22,11 +22,7 @@ router.post(
 );
 
 // Get all messages for a booking
-router.get(
-  "/messages",
-  authenticate,
-  chatController.getMessages
-);
+router.get("/messages", authenticate, chatController.getMessages);
 
 // Get unread messages count
 router.get(
@@ -36,17 +32,9 @@ router.get(
 );
 
 // Mark messages as read for a booking
-router.put(
-  "/messages/read",
-  authenticate,
-  chatController.markAsRead
-);
+router.put("/messages/read", authenticate, chatController.markAsRead);
 
 // Get all conversations for the current user
-router.get(
-  "/my-conversations",
-  authenticate,
-  chatController.getConversations
-);
+router.get("/my-conversations", authenticate, chatController.getConversations);
 
 export default router;

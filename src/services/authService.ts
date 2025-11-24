@@ -6,7 +6,8 @@ import { sendEmail, emailTemplates } from "../emailService";
 
 const prisma = new PrismaClient();
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
 export class AuthService {
   async register(data: any) {
@@ -70,7 +71,9 @@ export class AuthService {
 
   async googleLogin(token: string, acceptedTerms?: boolean | string) {
     if (!process.env.GOOGLE_CLIENT_ID) {
-      throw new Error("Server configuration error: GOOGLE_CLIENT_ID is not set");
+      throw new Error(
+        "Server configuration error: GOOGLE_CLIENT_ID is not set"
+      );
     }
 
     const ticket = await googleClient.verifyIdToken({
@@ -96,7 +99,9 @@ export class AuthService {
       }
     } else {
       if (acceptedTerms !== true && acceptedTerms !== "true") {
-        const error = new Error("Devi accettare i Termini e Condizioni per registrarti");
+        const error = new Error(
+          "Devi accettare i Termini e Condizioni per registrarti"
+        );
         (error as any).code = "TERMS_REQUIRED";
         throw error;
       }
@@ -130,7 +135,10 @@ export class AuthService {
     return user;
   }
 
-  async becomeProvider(userId: string, acceptedProviderTerms: boolean | string) {
+  async becomeProvider(
+    userId: string,
+    acceptedProviderTerms: boolean | string
+  ) {
     if (acceptedProviderTerms !== true && acceptedProviderTerms !== "true") {
       throw new Error("You must accept the Provider Terms & Conditions");
     }
