@@ -16,10 +16,16 @@ interface Service {
 interface Review {
   id: string;
   rating: number;
+  ratingDetails?: {
+    punctuality: number;
+    communication: number;
+    quality: number;
+  };
   comment: string;
   clientName: string;
   createdAt: string;
   providerReply?: string;
+  helpfulCount?: number;
 }
 
 interface ProviderProfile {
@@ -42,6 +48,8 @@ const ProviderProfilePage: React.FC = () => {
   const [provider, setProvider] = useState<ProviderProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<"newest" | "highest" | "lowest" | "helpful">("newest");
+  const [helpfulVotes, setHelpfulVotes] = useState<Record<string, boolean>>({}); // Track local votes
 
   useEffect(() => {
     if (providerId) {
@@ -62,6 +70,56 @@ const ProviderProfilePage: React.FC = () => {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleHelpfulVote = async (reviewId: string) => {
+    if (!user) {
+      alert("Devi effettuare il login per votare.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/reviews/${reviewId}/helpful`, {
+        method: "POST",
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Update local state
+        setProvider((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            reviews: prev.reviews.map((r) => 
+              r.id === reviewId ? { ...r, helpfulCount: data.helpfulCount } : r
+            )
+          };
+        });
+        setHelpfulVotes((prev) => ({
+          ...prev,
+          [reviewId]: data.isHelpful
+        }));
+      }
+    } catch (error) {
+      console.error("Error voting helpful:", error);
+    }
+  };
+
+  const getSortedReviews = () => {
+    if (!provider) return [];
+    const reviews = [...provider.reviews];
+    
+    switch (sortBy) {
+      case "highest":
+        return reviews.sort((a, b) => b.rating - a.rating);
+      case "lowest":
+        return reviews.sort((a, b) => a.rating - b.rating);
+      case "helpful":
+        return reviews.sort((a, b) => (b.helpfulCount || 0) - (a.helpfulCount || 0));
+      case "newest":
+      default:
+        return reviews.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
   };
 
@@ -88,6 +146,8 @@ const ProviderProfilePage: React.FC = () => {
   if (loading) return <div className="loading">Caricamento profilo...</div>;
   if (error) return <div className="error">Errore: {error}</div>;
   if (!provider) return <div className="error">Profilo non trovato</div>;
+
+  const sortedReviews = getSortedReviews();
 
   return (
     <div className="provider-profile-page">
@@ -144,12 +204,27 @@ const ProviderProfilePage: React.FC = () => {
         </div>
 
         <div className="reviews-section">
-          <h2>Recensioni</h2>
+          <div className="reviews-header-row">
+            <h2>Recensioni</h2>
+            <div className="sort-controls">
+              <label>Ordina per:</label>
+              <select 
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value as any)}
+              >
+                <option value="newest">Più recenti</option>
+                <option value="highest">Voto più alto</option>
+                <option value="lowest">Voto più basso</option>
+                <option value="helpful">Più utili</option>
+              </select>
+            </div>
+          </div>
+          
           <div className="reviews-list">
-            {provider.reviews.length === 0 ? (
+            {sortedReviews.length === 0 ? (
               <p>Nessuna recensione ancora.</p>
             ) : (
-              provider.reviews.map((review) => (
+              sortedReviews.map((review) => (
                 <div key={review.id} className="review-card">
                   <div className="review-header">
                     <span className="review-author">{review.clientName}</span>
@@ -158,7 +233,26 @@ const ProviderProfilePage: React.FC = () => {
                       {new Date(review.createdAt).toLocaleDateString()}
                     </span>
                   </div>
+                  
+                  {review.ratingDetails && (
+                    <div className="review-details">
+                      <span title="Puntualità">🕒 {review.ratingDetails.punctuality}</span>
+                      <span title="Comunicazione">💬 {review.ratingDetails.communication}</span>
+                      <span title="Qualità">✨ {review.ratingDetails.quality}</span>
+                    </div>
+                  )}
+
                   <p className="review-comment">{review.comment}</p>
+                  
+                  <div className="review-footer">
+                    <button 
+                      className={`btn-helpful ${helpfulVotes[review.id] ? 'voted' : ''}`}
+                      onClick={() => handleHelpfulVote(review.id)}
+                    >
+                      👍 Utile ({review.helpfulCount || 0})
+                    </button>
+                  </div>
+
                   {review.providerReply && (
                     <div className="provider-reply">
                       <strong>Risposta del fornitore:</strong>

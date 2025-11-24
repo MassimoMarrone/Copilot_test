@@ -78,10 +78,17 @@ export interface Review {
   providerId: string;
   clientId: string;
   rating: number;
+  ratingDetails?: {
+    punctuality: number;
+    communication: number;
+    quality: number;
+  };
   comment: string;
   createdAt: string;
   providerReply?: string;
   providerReplyCreatedAt?: string;
+  helpfulCount?: number;
+  helpfulVoters?: string[]; // Array of user IDs
 }
 
 export interface ChatMessage {

@@ -154,7 +154,7 @@ app.use(
 // Rate limiting
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || "900000", 10), // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || "100", 10),
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || "2000", 10),
   message: "Too many requests from this IP, please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
@@ -165,7 +165,7 @@ app.use("/api/", limiter);
 // Stricter rate limiting for authentication endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs (increased for testing)
+  max: 500, // limit each IP to 500 requests per windowMs (increased for testing)
   message: "Too many authentication attempts, please try again later.",
   skipSuccessfulRequests: true,
 });
@@ -719,12 +719,18 @@ app.get("/api/providers/:id", (req: Request, res: Response): void => {
   const providerServices = services.filter((s) => s.providerId === id);
 
   // Get provider's reviews
-  const providerReviews = reviews.filter((r) => r.providerId === id);
+  const providerReviews = reviews
+    .filter((r) => r.providerId === id)
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
 
   // Calculate average rating
   const averageRating =
     providerReviews.length > 0
-      ? providerReviews.reduce((acc, r) => acc + r.rating, 0) / providerReviews.length
+      ? providerReviews.reduce((acc, r) => acc + r.rating, 0) /
+        providerReviews.length
       : 0;
 
   res.json({
@@ -734,7 +740,12 @@ app.get("/api/providers/:id", (req: Request, res: Response): void => {
     avatarUrl: provider.avatarUrl,
     createdAt: provider.createdAt,
     services: providerServices,
-    reviews: providerReviews,
+    reviews: providerReviews.map((r) => ({
+      ...r,
+      clientName:
+        users.find((u) => u.id === r.clientId)?.email.split("@")[0] || "Client",
+      helpfulCount: r.helpfulCount || 0,
+    })),
     averageRating: parseFloat(averageRating.toFixed(1)),
     reviewCount: providerReviews.length,
   });
@@ -1437,11 +1448,29 @@ app.post(
       .trim()
       .isLength({ min: 10, max: 1000 })
       .withMessage("Comment must be between 10 and 1000 characters"),
+    body("ratingDetails")
+      .optional()
+      .custom((value) => {
+        if (
+          !value.punctuality ||
+          !value.communication ||
+          !value.quality ||
+          value.punctuality < 1 ||
+          value.punctuality > 5 ||
+          value.communication < 1 ||
+          value.communication > 5 ||
+          value.quality < 1 ||
+          value.quality > 5
+        ) {
+          throw new Error("Invalid rating details");
+        }
+        return true;
+      }),
   ],
   validate,
   (req: Request, res: Response): void => {
     const { bookingId } = req.params;
-    const { rating, comment } = req.body;
+    const { rating, comment, ratingDetails } = req.body;
     const clientId = req.user!.id;
 
     const booking = bookings.find(
@@ -1479,8 +1508,11 @@ app.post(
       providerId: booking.providerId,
       clientId,
       rating,
+      ratingDetails,
       comment,
       createdAt: new Date().toISOString(),
+      helpfulCount: 0,
+      helpfulVoters: [],
     };
 
     reviews.push(review);
@@ -1514,10 +1546,67 @@ app.get(
   }
 );
 
+// Mark review as helpful
+app.post(
+  "/api/reviews/:reviewId/helpful",
+  authenticate,
+  (req: Request, res: Response): void => {
+    const { reviewId } = req.params;
+    const userId = req.user!.id;
+
+    const review = reviews.find((r) => r.id === reviewId);
+
+    if (!review) {
+      res.status(404).json({ error: "Review not found" });
+      return;
+    }
+
+    // Initialize if undefined (for old reviews)
+    if (!review.helpfulVoters) review.helpfulVoters = [];
+    if (typeof review.helpfulCount !== "number") review.helpfulCount = 0;
+
+    const voterIndex = review.helpfulVoters.indexOf(userId);
+
+    if (voterIndex === -1) {
+      // Add vote
+      review.helpfulVoters.push(userId);
+      review.helpfulCount++;
+    } else {
+      // Remove vote (toggle)
+      review.helpfulVoters.splice(voterIndex, 1);
+      review.helpfulCount--;
+    }
+
+    saveData();
+    res.json({
+      success: true,
+      helpfulCount: review.helpfulCount,
+      isHelpful: voterIndex === -1, // Returns true if we just added it
+    });
+  }
+);
+
 // Get reviews for a specific service (public)
 app.get("/api/services/:serviceId/reviews", (req: Request, res: Response) => {
   const { serviceId } = req.params;
-  const serviceReviews = reviews.filter((r) => r.serviceId === serviceId);
+  const { sort } = req.query; // newest, highest, lowest, helpful
+
+  let serviceReviews = reviews.filter((r) => r.serviceId === serviceId);
+
+  // Sort reviews
+  if (sort === "highest") {
+    serviceReviews.sort((a, b) => b.rating - a.rating);
+  } else if (sort === "lowest") {
+    serviceReviews.sort((a, b) => a.rating - b.rating);
+  } else if (sort === "helpful") {
+    serviceReviews.sort((a, b) => (b.helpfulCount || 0) - (a.helpfulCount || 0));
+  } else {
+    // Default: newest
+    serviceReviews.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
 
   // Enrich reviews with client name (first name only for privacy)
   const enrichedReviews = serviceReviews.map((review) => {
@@ -1528,6 +1617,7 @@ app.get("/api/services/:serviceId/reviews", (req: Request, res: Response) => {
     return {
       ...review,
       clientName,
+      helpfulCount: review.helpfulCount || 0,
     };
   });
 

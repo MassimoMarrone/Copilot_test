@@ -217,3 +217,60 @@
     font-size: 1.75rem;
   }
 }
+
+/* Star Rating Styles */
+.star-rating {
+  display: flex;
+  gap: 5px;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.star {
+  color: #ddd;
+  transition: color 0.2s;
+}
+
+.star.filled {
+  color: #f1c40f;
+}
+
+.star:hover {
+  color: #f39c12;
+}
+
+/* Review Modal Specifics */
+.ratings-container {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.rating-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.rating-group label {
+  margin-bottom: 0;
+  font-weight: 500;
+}
+
+.rating-group .star-rating {
+  font-size: 20px;
+}
+
+.overall-rating-preview {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.overall-rating-preview strong {
+  color: #f1c40f;
+  font-size: 1.3rem;
+}

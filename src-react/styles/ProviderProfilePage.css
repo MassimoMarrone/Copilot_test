@@ -222,3 +222,70 @@
   border-left: 3px solid #007bff;
   font-size: 0.9rem;
 }
+
+.reviews-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #f0f2f5;
+  padding-bottom: 10px;
+}
+
+.reviews-header-row h2 {
+  margin-bottom: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+.sort-controls select {
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.review-details {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  color: #666;
+  background: #f8f9fa;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.review-footer {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-helpful {
+  background: none;
+  border: 1px solid #ddd;
+  padding: 5px 10px;
+  border-radius: 15px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.btn-helpful:hover {
+  background: #f0f2f5;
+  border-color: #ccc;
+}
+
+.btn-helpful.voted {
+  background: #e3f2fd;
+  border-color: #2196f3;
+  color: #1976d2;
+}

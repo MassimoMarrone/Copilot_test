@@ -17,7 +17,9 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
   onClose,
   onReviewSubmit,
 }) => {
-  const [rating, setRating] = useState(5);
+  const [punctuality, setPunctuality] = useState(5);
+  const [communication, setCommunication] = useState(5);
+  const [quality, setQuality] = useState(5);
   const [comment, setComment] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,13 +35,26 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
       return;
     }
 
+    // Calculate overall rating
+    const overallRating = Math.round(
+      (punctuality + communication + quality) / 3
+    );
+
     try {
       const response = await fetch(`/api/bookings/${booking.id}/review`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ rating, comment }),
+        body: JSON.stringify({
+          rating: overallRating,
+          ratingDetails: {
+            punctuality,
+            communication,
+            quality,
+          },
+          comment,
+        }),
       });
 
       if (response.ok) {
@@ -56,6 +71,28 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
     }
   };
 
+  const renderStars = (
+    value: number,
+    setValue: (val: number) => void,
+    label: string
+  ) => (
+    <div className="form-group rating-group">
+      <label>{label}:</label>
+      <div className="star-rating">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <span
+            key={star}
+            className={star <= value ? "star filled" : "star"}
+            onClick={() => setValue(star)}
+            title={`${star} stelle`}
+          >
+            &#9733;
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -67,20 +104,21 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
           Stai recensendo il servizio: <strong>{booking.serviceTitle}</strong>
         </p>
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Valutazione (da 1 a 5 stelle):</label>
-            <div className="star-rating">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <span
-                  key={star}
-                  className={star <= rating ? "star filled" : "star"}
-                  onClick={() => setRating(star)}
-                >
-                  &#9733;
-                </span>
-              ))}
-            </div>
+          <div className="ratings-container">
+            {renderStars(punctuality, setPunctuality, "Puntualità")}
+            {renderStars(communication, setCommunication, "Comunicazione")}
+            {renderStars(quality, setQuality, "Qualità del servizio")}
           </div>
+          
+          <div className="overall-rating-preview">
+            <p>
+              Valutazione Complessiva:{" "}
+              <strong>
+                {Math.round((punctuality + communication + quality) / 3)}/5
+              </strong>
+            </p>
+          </div>
+
           <div className="form-group">
             <label htmlFor="comment">Commento:</label>
             <textarea
