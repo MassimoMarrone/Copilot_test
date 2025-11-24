@@ -51,7 +51,10 @@ const ProviderDashboard: React.FC = () => {
   useEffect(() => {
     if (!userId) return;
 
-    const socket = io("http://localhost:3000");
+    const socket = io({
+      transports: ["websocket"],
+      path: "/socket.io/",
+    });
 
     socket.on("connect", () => {
       console.log("Connected to socket server for updates");

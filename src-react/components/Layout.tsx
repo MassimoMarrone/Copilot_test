@@ -32,8 +32,14 @@ const Layout: React.FC = () => {
     if (user) {
       fetchUnreadCount();
 
-      const socket = io();
-      socket.emit("join_user_room", user.id);
+      const socket = io({
+        transports: ["websocket"],
+        path: "/socket.io/",
+      });
+
+      socket.on("connect", () => {
+        socket.emit("join_user_room", user.id);
+      });
 
       socket.on("message_received_notification", () => {
         fetchUnreadCount(); // Re-fetch to get accurate count

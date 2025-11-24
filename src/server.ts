@@ -150,7 +150,7 @@ app.use(
 // Rate limiting
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || "900000", 10), // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || "2000", 10),
+  max: 100000, // Increased for testing
   message: "Too many requests from this IP, please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
@@ -161,7 +161,7 @@ app.use("/api/", limiter);
 // Stricter rate limiting for authentication endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // limit each IP to 500 requests per windowMs (increased for testing)
+  max: 100000, // Increased for testing
   message: "Too many authentication attempts, please try again later.",
   skipSuccessfulRequests: true,
 });
@@ -853,8 +853,10 @@ app.get(
         const reviewCount = service.reviews.length;
         const averageRating =
           reviewCount > 0
-            ? service.reviews.reduce((acc: number, r: any) => acc + r.rating, 0) /
-              reviewCount
+            ? service.reviews.reduce(
+                (acc: number, r: any) => acc + r.rating,
+                0
+              ) / reviewCount
             : 0;
 
         // Parse JSON fields
@@ -1338,39 +1340,49 @@ app.post(
         const bookingDateObj = new Date(date);
         const dateString = bookingDateObj.toISOString().split("T")[0];
 
-        // Cast availability to any to access properties since it's JsonValue
-        const availability: any = service.availability;
-
-        // Check blocked dates
-        if (
-          availability.blockedDates &&
-          availability.blockedDates.includes(dateString)
-        ) {
-          res.status(400).json({
-            error: "The service is not available on this date (blocked).",
-          });
-          return;
+        // Parse availability if it's a string
+        let availability: any = service.availability;
+        if (typeof availability === "string") {
+          try {
+            availability = JSON.parse(availability);
+          } catch (e) {
+            console.error("Error parsing availability for booking:", e);
+            availability = null;
+          }
         }
 
-        // Check weekly schedule
-        const days = [
-          "sunday",
-          "monday",
-          "tuesday",
-          "wednesday",
-          "thursday",
-          "friday",
-          "saturday",
-        ];
-        const dayName = days[bookingDateObj.getDay()];
-
-        if (availability.weekly) {
-          const daySchedule = availability.weekly[dayName];
-          if (daySchedule && !daySchedule.enabled) {
+        if (availability) {
+          // Check blocked dates
+          if (
+            availability.blockedDates &&
+            availability.blockedDates.includes(dateString)
+          ) {
             res.status(400).json({
-              error: `The service is not available on ${dayName}s.`,
+              error: "The service is not available on this date (blocked).",
             });
             return;
+          }
+
+          // Check weekly schedule
+          const days = [
+            "sunday",
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+          ];
+          const dayName = days[bookingDateObj.getDay()];
+
+          if (availability.weekly) {
+            const daySchedule = availability.weekly[dayName];
+            if (daySchedule && !daySchedule.enabled) {
+              res.status(400).json({
+                error: `The service is not available on ${dayName}s.`,
+              });
+              return;
+            }
           }
         }
       }
@@ -2415,6 +2427,22 @@ app.post(
       },
     });
 
+    // Real-time updates: Emit socket events
+    // 1. Broadcast to the booking room (for anyone currently viewing this chat)
+    io.to(bookingId).emit("receive_message", chatMessage);
+
+    // 2. Notify the recipient specifically (in case they are online but not in the booking room)
+    const recipientId =
+      booking.clientId === req.user!.id ? booking.providerId : booking.clientId;
+
+    io.to(`user_${recipientId}`).emit("receive_message", chatMessage);
+
+    // 3. Send notification for unread count update
+    io.to(`user_${recipientId}`).emit("message_received_notification", {
+      bookingId,
+      senderId: req.user!.id,
+    });
+
     res.json(chatMessage);
   }
 );
@@ -2914,19 +2942,24 @@ app.get("*splat", pageLimiter, (req: Request, res: Response) => {
 io.on("connection", (socket) => {
   console.log("New client connected:", socket.id);
 
-  socket.on("join_booking", (bookingId) => {
-    socket.join(bookingId);
+  socket.on("join_booking", async (bookingId) => {
+    await socket.join(bookingId);
     console.log(`User ${socket.id} joined booking room: ${bookingId}`);
   });
 
   // NEW: Join user specific room for notifications
-  socket.on("join_user_room", (userId) => {
-    socket.join(`user_${userId}`);
+  socket.on("join_user_room", async (userId) => {
+    await socket.join(`user_${userId}`);
     console.log(`User ${socket.id} joined user room: user_${userId}`);
   });
 
   socket.on("send_message", async (data) => {
     const { bookingId, message, senderId, senderEmail, senderType } = data;
+
+    const roomSize = io.sockets.adapter.rooms.get(bookingId)?.size || 0;
+    console.log(
+      `Sending message to room ${bookingId} with ${roomSize} clients`
+    );
 
     try {
       // Create message object
@@ -2954,6 +2987,8 @@ io.on("connection", (socket) => {
           booking.clientId === senderId ? booking.providerId : booking.clientId;
 
         // Emit event to recipient's personal room
+        io.to(`user_${recipientId}`).emit("receive_message", chatMessage);
+
         io.to(`user_${recipientId}`).emit("message_received_notification", {
           bookingId,
           senderId,

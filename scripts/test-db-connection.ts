@@ -1,4 +1,3 @@
-
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -16,7 +15,6 @@ async function main() {
     console.log("Fetching services...");
     const services = await prisma.service.findMany({ take: 1 });
     console.log("Services found:", services.length);
-
   } catch (error) {
     console.error("Database error:", error);
   } finally {

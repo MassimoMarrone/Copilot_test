@@ -44,22 +44,28 @@ const ChatModal: React.FC<ChatModalProps> = ({
   };
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && bookingId) {
       // Initialize Socket.IO connection
       // Use relative path so it works both on localhost and via tunnel
       // Force websocket transport to avoid polling issues with tunnels
       socketRef.current = io({
         transports: ["websocket"],
         path: "/socket.io/",
+        reconnectionAttempts: 5,
       });
 
       socketRef.current.on("connect", () => {
-        console.log("Connected to socket server");
+        console.log("Connected to socket server:", socketRef.current?.id);
         // Join the booking room
         socketRef.current?.emit("join_booking", bookingId);
       });
 
+      socketRef.current.on("connect_error", (err) => {
+        console.error("Socket connection error:", err);
+      });
+
       socketRef.current.on("receive_message", (message: ChatMessage) => {
+        console.log("Received message:", message);
         setMessages((prevMessages) => [...prevMessages, message]);
         scrollToBottom();
       });
