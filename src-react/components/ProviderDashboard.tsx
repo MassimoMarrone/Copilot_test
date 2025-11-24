@@ -17,6 +17,7 @@ interface Service {
   id: string;
   title: string;
   description: string;
+  category?: string;
   price: number;
   providerEmail: string;
   address?: string;
@@ -26,6 +27,16 @@ interface Service {
   imageUrl?: string;
   availability?: ProviderAvailability;
 }
+
+const CATEGORIES = [
+  "Pulizia",
+  "Giardinaggio",
+  "Manutenzione",
+  "Idraulica",
+  "Elettricista",
+  "Traslochi",
+  "Altro",
+];
 
 interface Booking {
   id: string;
@@ -64,6 +75,7 @@ const ProviderDashboard: React.FC = () => {
   const [editForm, setEditForm] = useState<{
     title: string;
     description: string;
+    category: string;
     price: string;
     address: string;
     latitude: number;
@@ -87,6 +99,7 @@ const ProviderDashboard: React.FC = () => {
   const [newService, setNewService] = useState({
     title: "",
     description: "",
+    category: "Altro",
     price: "",
     address: "",
     latitude: 0,
@@ -204,6 +217,7 @@ const ProviderDashboard: React.FC = () => {
     const formData = new FormData();
     formData.append("title", newService.title);
     formData.append("description", newService.description);
+    formData.append("category", newService.category);
     formData.append("price", newService.price);
 
     if (newService.address) {
@@ -230,6 +244,7 @@ const ProviderDashboard: React.FC = () => {
         setNewService({
           title: "",
           description: "",
+          category: "Altro",
           price: "",
           address: "",
           latitude: 0,
@@ -253,6 +268,7 @@ const ProviderDashboard: React.FC = () => {
     const formData = new FormData();
     formData.append("title", editForm.title);
     formData.append("description", editForm.description);
+    formData.append("category", editForm.category);
     formData.append("price", editForm.price);
     formData.append("availability", JSON.stringify(editForm.availability));
 
@@ -436,6 +452,7 @@ const ProviderDashboard: React.FC = () => {
                       setEditForm({
                         title: service.title,
                         description: service.description,
+                        category: service.category || "Altro",
                         price: service.price.toString(),
                         address: service.address || "",
                         latitude: service.latitude || 0,
@@ -699,6 +716,28 @@ const ProviderDashboard: React.FC = () => {
                 />
               </div>
               <div className="form-group">
+                <label>Categoria</label>
+                <select
+                  value={newService.category}
+                  onChange={(e) =>
+                    setNewService({ ...newService, category: e.target.value })
+                  }
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: "4px",
+                    border: "1px solid #ccc",
+                  }}
+                >
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Descrizione</label>
                 <textarea
                   value={newService.description}
@@ -879,6 +918,28 @@ const ProviderDashboard: React.FC = () => {
                   minLength={3}
                   maxLength={200}
                 />
+              </div>
+              <div className="form-group">
+                <label>Categoria</label>
+                <select
+                  value={editForm.category}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, category: e.target.value })
+                  }
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: "4px",
+                    border: "1px solid #ccc",
+                  }}
+                >
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="form-group">
                 <label>Descrizione</label>

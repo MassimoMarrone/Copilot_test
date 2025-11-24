@@ -4,10 +4,23 @@ import "../styles/SearchBar.css";
 interface SearchBarProps {
   onSearch: (
     query: string,
-    location?: { lat: number; lng: number; address: string }
+    location?: { lat: number; lng: number; address: string },
+    priceRange?: { min: number; max: number },
+    category?: string
   ) => void;
   // googleMapsApiKey removed as we use OpenStreetMap
 }
+
+const CATEGORIES = [
+  "Tutte",
+  "Pulizia",
+  "Giardinaggio",
+  "Manutenzione",
+  "Idraulica",
+  "Elettricista",
+  "Traslochi",
+  "Altro",
+];
 
 interface NominatimResult {
   place_id: number;
@@ -27,7 +40,30 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     lng: number;
     address: string;
   } | null>(null);
+  const [minPrice, setMinPrice] = useState<number>(0);
+  const [maxPrice, setMaxPrice] = useState<number>(200);
+  const [selectedCategory, setSelectedCategory] = useState<string>("Tutte");
+  const [showFilters, setShowFilters] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const filterRef = useRef<HTMLDivElement>(null);
+  const locationWrapperRef = useRef<HTMLDivElement>(null);
+
+  // Close filters and location results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+        setShowFilters(false);
+      }
+      if (locationWrapperRef.current && !locationWrapperRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Handle location input change with debounce
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,11 +166,26 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    const priceRange = {
+      min: minPrice,
+      max: maxPrice === 200 ? Infinity : maxPrice, // Treat max value as Infinity if it's at the limit
+    };
+
     if (locationEnabled && currentLocation) {
-      onSearch(searchQuery, currentLocation);
+      onSearch(searchQuery, currentLocation, priceRange, selectedCategory);
     } else {
-      onSearch(searchQuery);
+      onSearch(searchQuery, undefined, priceRange, selectedCategory);
     }
+  };
+
+  const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Math.min(Number(e.target.value), maxPrice - 1);
+    setMinPrice(value);
+  };
+
+  const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Math.max(Number(e.target.value), minPrice + 1);
+    setMaxPrice(value);
   };
 
   const handleClearLocation = () => {
@@ -147,71 +198,135 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   return (
     <div className="search-bar-container">
       <form onSubmit={handleSearch} className="search-form">
-        <div className="search-input-group">
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Cerca servizi di pulizia..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <button type="submit" className="search-button">
-            🔍 Cerca
-          </button>
-        </div>
-
-        <div className="location-controls">
-          <div
-            className="location-input-wrapper"
-            style={{ position: "relative" }}
-          >
+        <div className="search-main-row">
+          <div className="search-input-group">
             <input
               type="text"
-              className="location-input"
-              placeholder="Inserisci indirizzo o città..."
-              value={locationQuery}
-              onChange={handleLocationChange}
-              onFocus={() => locationResults.length > 0 && setShowResults(true)}
+              className="search-input"
+              placeholder="Cerca servizi..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
-
-            {/* Dropdown results */}
-            {showResults && locationResults.length > 0 && (
-              <ul className="location-results-dropdown">
-                {locationResults.map((result) => (
-                  <li
-                    key={result.place_id}
-                    onClick={() => selectLocation(result)}
-                    className="location-result-item"
-                  >
-                    📍 {result.display_name}
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            <button
-              type="button"
-              className="location-button"
-              onClick={handleGetCurrentLocation}
-              title="Usa la mia posizione"
-            >
-              📍 Posizione attuale
-            </button>
           </div>
 
-          {locationEnabled && currentLocation && (
-            <div className="location-active">
+          <div className="location-group">
+            <div className="location-input-wrapper" ref={locationWrapperRef}>
+              <input
+                type="text"
+                className="location-input"
+                placeholder="Dove?"
+                value={locationQuery}
+                onChange={handleLocationChange}
+                onFocus={() => setShowResults(true)}
+              />
+              {showResults && (
+                <ul className="location-results-dropdown">
+                  <li
+                    className="location-result-item current-location-item"
+                    onClick={() => {
+                      handleGetCurrentLocation();
+                      setShowResults(false);
+                    }}
+                    style={{ fontWeight: "bold", color: "#28a745" }}
+                  >
+                    📍 Usa la mia posizione attuale
+                  </li>
+                  {locationResults.map((result) => (
+                    <li
+                      key={result.place_id}
+                      onClick={() => selectLocation(result)}
+                      className="location-result-item"
+                    >
+                      📍 {result.display_name}
+                    </li>
+                  ))}
+                </ul>
+              )}
               <button
                 type="button"
-                className="clear-location-button"
+                className="location-icon-btn"
+                onClick={handleGetCurrentLocation}
+                title="Usa la mia posizione"
+              >
+                📍
+              </button>
+            </div>
+            {locationEnabled && currentLocation && (
+              <button
+                type="button"
+                className="clear-location-btn"
                 onClick={handleClearLocation}
-                title="Rimuovi posizione"
               >
                 ✕
               </button>
-            </div>
-          )}
+            )}
+          </div>
+
+          <button
+            type="button"
+            className={`filter-toggle-btn ${showFilters ? "active" : ""}`}
+            onClick={() => setShowFilters(!showFilters)}
+            title="Filtri avanzati"
+          >
+            ⚙️ Filtri
+          </button>
+
+          <button type="submit" className="search-button">
+            🔍
+          </button>
         </div>
+
+        {showFilters && (
+          <div className="filters-dropdown" ref={filterRef}>
+            <div className="filter-section">
+              <label className="filter-label">Categoria</label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="category-select"
+              >
+                {CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filter-section">
+              <label className="filter-label">
+                Prezzo: €{minPrice} - €{maxPrice}
+                {maxPrice === 200 ? "+" : ""}
+              </label>
+              <div className="range-slider-container">
+                <input
+                  type="range"
+                  min="0"
+                  max="200"
+                  value={minPrice}
+                  onChange={handleMinChange}
+                  className="thumb thumb-left"
+                />
+                <input
+                  type="range"
+                  min="0"
+                  max="200"
+                  value={maxPrice}
+                  onChange={handleMaxChange}
+                  className="thumb thumb-right"
+                />
+                <div className="slider-track"></div>
+                <div
+                  className="slider-range"
+                  style={{
+                    left: `${(minPrice / 200) * 100}%`,
+                    right: `${100 - (maxPrice / 200) * 100}%`,
+                  }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        )}
       </form>
     </div>
   );

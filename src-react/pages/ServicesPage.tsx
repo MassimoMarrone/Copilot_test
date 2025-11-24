@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import ServiceReviewsModal from "../components/ServiceReviewsModal";
+import SearchBar from "../components/SearchBar";
 import "../styles/ServicesPage.css";
 
 interface TimeSlot {
@@ -33,6 +34,7 @@ interface Service {
   title: string;
   description: string;
   price: number;
+  category?: string;
   providerEmail: string;
   address?: string;
   latitude?: number;
@@ -45,6 +47,7 @@ interface Service {
 
 const ServicesPage: React.FC = () => {
   const [services, setServices] = useState<Service[]>([]);
+  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
@@ -101,11 +104,85 @@ const ServicesPage: React.FC = () => {
       const response = await fetch("/api/services");
       const data = await response.json();
       setServices(data);
+      setFilteredServices(data);
     } catch (error) {
       console.error("Error loading services:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Haversine formula to calculate distance between two coordinates
+  const calculateDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number => {
+    const R = 6371; // Radius of Earth in kilometers
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const handleSearch = (
+    query: string,
+    location?: { lat: number; lng: number; address: string },
+    priceRange?: { min: number; max: number },
+    category?: string
+  ) => {
+    let filtered = services;
+
+    // Filter by category
+    if (category && category !== "Tutte") {
+      filtered = filtered.filter((service) => service.category === category);
+    }
+
+    // Filter by search query
+    if (query.trim()) {
+      filtered = filtered.filter(
+        (service) =>
+          service.title.toLowerCase().includes(query.toLowerCase()) ||
+          service.description.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+
+    // Filter by location (if provided)
+    if (location && location.lat && location.lng) {
+      filtered = filtered.filter((service) => {
+        if (!service.latitude || !service.longitude) return false;
+
+        // Calculate distance using Haversine formula
+        const distance = calculateDistance(
+          location.lat,
+          location.lng,
+          service.latitude,
+          service.longitude
+        );
+
+        // Filter services within 50km
+        return distance <= 50;
+      });
+    }
+
+    // Filter by price range
+    if (priceRange) {
+      if (priceRange.min > 0) {
+        filtered = filtered.filter((service) => service.price >= priceRange.min);
+      }
+      if (priceRange.max < Infinity) {
+        filtered = filtered.filter((service) => service.price <= priceRange.max);
+      }
+    }
+
+    setFilteredServices(filtered);
   };
 
   const openBookingModal = (service: Service) => {
@@ -296,16 +373,18 @@ const ServicesPage: React.FC = () => {
         <p>Trova il professionista giusto per le tue esigenze</p>
       </div>
 
+      <SearchBar onSearch={handleSearch} />
+
       {loading ? (
         <div className="loading-spinner">Caricamento...</div>
       ) : (
         <div className="services-grid">
-          {services.length === 0 ? (
+          {filteredServices.length === 0 ? (
             <div className="empty-state">
               Nessun servizio disponibile al momento.
             </div>
           ) : (
-            services.map((service) => (
+            filteredServices.map((service) => (
               <div key={service.id} className="service-card">
                 {service.imageUrl ? (
                   <img

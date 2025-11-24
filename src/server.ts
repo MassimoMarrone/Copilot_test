@@ -825,6 +825,11 @@ app.post(
       .trim()
       .isLength({ min: 10, max: 2000 })
       .withMessage("Description must be between 10 and 2000 characters"),
+    body("category")
+      .optional()
+      .trim()
+      .isLength({ min: 3, max: 50 })
+      .withMessage("Category must be between 3 and 50 characters"),
     body("price")
       .isFloat({ min: 0.50 })
       .withMessage("Price must be at least €0.50"),
@@ -851,7 +856,7 @@ app.post(
       return;
     }
 
-    const { title, description, price, address, latitude, longitude } =
+    const { title, description, category, price, address, latitude, longitude } =
       req.body;
 
     let imageUrl = undefined;
@@ -895,6 +900,7 @@ app.post(
       providerEmail: req.user!.email,
       title,
       description,
+      category: category || "Altro",
       price: parseFloat(price),
       address: address || undefined,
       latitude: latitude ? parseFloat(latitude) : undefined,
@@ -929,6 +935,11 @@ app.put(
       .trim()
       .isLength({ min: 10, max: 2000 })
       .withMessage("Description must be between 10 and 2000 characters"),
+    body("category")
+      .optional()
+      .trim()
+      .isLength({ min: 3, max: 50 })
+      .withMessage("Category must be between 3 and 50 characters"),
     body("price")
       .optional()
       .isFloat({ min: 0.50 })
@@ -982,6 +993,7 @@ app.put(
     const {
       title,
       description,
+      category,
       price,
       address,
       latitude,
@@ -993,6 +1005,7 @@ app.put(
 
     if (title) service.title = title;
     if (description) service.description = description;
+    if (category) service.category = category;
     if (price) service.price = parseFloat(price);
     if (address !== undefined) service.address = address;
     if (latitude) service.latitude = parseFloat(latitude);

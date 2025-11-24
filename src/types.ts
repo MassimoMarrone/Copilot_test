@@ -25,6 +25,7 @@ export interface Service {
   providerEmail: string;
   title: string;
   description: string;
+  category?: string;
   price: number;
   address?: string;
   latitude?: number;
