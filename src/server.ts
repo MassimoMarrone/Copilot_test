@@ -22,6 +22,7 @@ import {
 } from "./types";
 import Stripe from "stripe";
 import { OAuth2Client } from "google-auth-library";
+import { sendEmail, emailTemplates } from "./emailService";
 
 // Load environment variables
 dotenv.config();
@@ -452,6 +453,13 @@ app.post(
 
       users.push(user);
       saveData();
+
+      // Send welcome email
+      sendEmail(
+        user.email,
+        "Benvenuto in Domy!",
+        emailTemplates.welcome(user.email.split("@")[0])
+      );
 
       const token = jwt.sign(
         { id: user.id, email: user.email, userType: "client" },
@@ -1532,6 +1540,20 @@ app.post(
       "success"
     );
 
+    // Send email notification to provider
+    sendEmail(
+      booking.providerEmail,
+      "Nuova Recensione Ricevuta",
+      `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #28a745;">Nuova Recensione!</h2>
+          <p>Hai ricevuto una recensione a ${rating} stelle per il servizio <strong>${booking.serviceTitle}</strong>.</p>
+          <p><strong>Commento:</strong> "${comment}"</p>
+          <p>Accedi alla dashboard per rispondere.</p>
+        </div>
+      `
+    );
+
     res.status(201).json(review);
   }
 );
@@ -1830,6 +1852,27 @@ app.post(
       "warning"
     );
 
+    // Send cancellation emails
+    sendEmail(
+      booking.clientEmail,
+      "Prenotazione Cancellata",
+      emailTemplates.bookingCancelled(
+        booking.clientEmail.split("@")[0],
+        booking.serviceTitle,
+        "Cancellata dal fornitore"
+      )
+    );
+
+    sendEmail(
+      booking.providerEmail,
+      "Prenotazione Cancellata",
+      emailTemplates.bookingCancelled(
+        booking.providerEmail.split("@")[0],
+        booking.serviceTitle,
+        "Hai cancellato questa prenotazione"
+      )
+    );
+
     // Also emit update event for dashboard refresh
     io.to(`user_${booking.clientId}`).emit("booking_updated", booking);
     io.to(`user_${booking.providerId}`).emit("booking_updated", booking);
@@ -1964,6 +2007,16 @@ app.post(
       "Servizio Completato",
       `Il servizio "${booking.serviceTitle}" è stato completato!`,
       "success"
+    );
+
+    // Send completion email
+    sendEmail(
+      booking.clientEmail,
+      "Servizio Completato - Lascia una recensione",
+      emailTemplates.bookingCompleted(
+        booking.clientEmail.split("@")[0],
+        booking.serviceTitle
+      )
     );
 
     // Also emit update event for dashboard refresh
@@ -2146,6 +2199,29 @@ app.get(
             `Hai ricevuto una nuova prenotazione per "${booking.serviceTitle}"`,
             "success"
           );
+          
+          // Send emails
+          sendEmail(
+            booking.providerEmail,
+            "Nuova Prenotazione Ricevuta",
+            emailTemplates.newBookingProvider(
+              booking.providerEmail.split("@")[0],
+              booking.clientEmail.split("@")[0],
+              booking.serviceTitle,
+              new Date(booking.date).toLocaleDateString("it-IT")
+            )
+          );
+
+          sendEmail(
+            booking.clientEmail,
+            "Prenotazione Confermata",
+            emailTemplates.newBookingClient(
+              booking.clientEmail.split("@")[0],
+              booking.serviceTitle,
+              new Date(booking.date).toLocaleDateString("it-IT")
+            )
+          );
+
           // io.to(`user_${booking.providerId}`).emit("booking_created", booking); // Replaced by sendNotification which emits new_notification
 
           res.json({ success: true, booking });
