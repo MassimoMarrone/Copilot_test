@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { io } from "socket.io-client";
-import ToastNotification, { Notification } from "./ToastNotification";
-import NotificationCenter from "./NotificationCenter";
-// import SearchBar from "./SearchBar"; // Removed
-import ReviewModal from "./ReviewModal"; // Will be created next
+import SearchBar from "./SearchBar";
+import ChatModal from "./ChatModal";
+import BecomeProviderModal from "./BecomeProviderModal";
 import "../styles/ClientDashboard.css";
-import "../styles/ToastNotification.css";
 
 interface Service {
   id: string;
@@ -32,7 +29,6 @@ interface Booking {
   preferredTime?: string;
   notes?: string;
   address?: string;
-  hasReview?: boolean;
 }
 
 interface ClientDashboardProps {
@@ -41,7 +37,7 @@ interface ClientDashboardProps {
 
 const ClientDashboard: React.FC<ClientDashboardProps> = () => {
   const [services, setServices] = useState<Service[]>([]);
-  /* const [filteredServices, setFilteredServices] = useState<Service[]>([]); */
+  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [bookingDate, setBookingDate] = useState("");
@@ -50,16 +46,10 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
   const [bookingNotes, setBookingNotes] = useState("");
   const [bookingAddress, setBookingAddress] = useState("");
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [showBecomeProviderModal, setShowBecomeProviderModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-  const [showReviewModal, setShowReviewModal] = useState(false);
-  const [reviewBooking, setReviewBooking] = useState<Booking | null>(null);
   const [isProvider, setIsProvider] = useState(false);
-  const [userEmail, setUserEmail] = useState<string>("");
-  const [userId, setUserId] = useState<string>("");
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [lastNotification, setLastNotification] = useState<Notification | null>(
-    null
-  );
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -80,40 +70,6 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
     }
   }, [searchParams]);
 
-  // Socket.IO connection for real-time updates
-  useEffect(() => {
-    if (!userId) return;
-
-    // Use relative path so it works both on localhost and via tunnel
-    // Force websocket transport to avoid polling issues with tunnels
-    const socket = io({
-      transports: ["websocket"],
-      path: "/socket.io/",
-    });
-
-    socket.on("connect", () => {
-      console.log("Connected to socket server for updates");
-      socket.emit("join_user_room", userId);
-    });
-
-    socket.on("new_notification", (notification: Notification) => {
-      setNotifications((prev) => [...prev, notification]);
-      setLastNotification(notification);
-    });
-
-    socket.on("booking_updated", (updatedBooking: Booking) => {
-      setBookings((prevBookings) =>
-        prevBookings.map((b) =>
-          b.id === updatedBooking.id ? updatedBooking : b
-        )
-      );
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [userId]);
-
   const checkAuth = async () => {
     try {
       const response = await fetch("/api/me");
@@ -122,8 +78,6 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
         return;
       }
       const user = await response.json();
-      setUserEmail(user.email);
-      setUserId(user.id);
       // Check if user is a provider (has isProvider flag)
       if (user.isProvider !== undefined) {
         setIsProvider(user.isProvider);
@@ -142,7 +96,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
       const response = await fetch("/api/services");
       const data = await response.json();
       setServices(data);
-      // setFilteredServices(data);
+      setFilteredServices(data);
     } catch (error) {
       console.error("Error loading services:", error);
     }
@@ -158,7 +112,6 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
     }
   };
 
-  /*
   const handleSearch = (
     query: string,
     location?: { lat: number; lng: number; address: string }
@@ -194,10 +147,8 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
 
     setFilteredServices(filtered);
   };
-  */
 
   // Haversine formula to calculate distance between two coordinates
-  /*
   const calculateDistance = (
     lat1: number,
     lon1: number,
@@ -216,7 +167,6 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
-  */
 
   const openBookingModal = (service: Service) => {
     setSelectedService(service);
@@ -280,7 +230,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
       const data = await response.json();
       if (response.ok) {
         alert(
-          "Pagamento autorizzato! La prenotazione è confermata. I fondi saranno prelevati solo al completamento del servizio."
+          "Pagamento confermato! La prenotazione è stata creata con successo ed è ora in escrow."
         );
         loadBookings();
         navigate("/client-dashboard");
@@ -293,7 +243,6 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
     }
   };
 
-  /*
   const handlePayment = async (bookingId: string) => {
     try {
       const response = await fetch("/api/create-checkout-session", {
@@ -316,7 +265,6 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
       alert("Errore di connessione");
     }
   };
-  */
 
   const handleLogout = async () => {
     try {
@@ -329,6 +277,64 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
 
   return (
     <div className="client-dashboard">
+      <div className="dashboard-header">
+        <h1>🏠 Dashboard Cliente</h1>
+        <div className="header-actions">
+          {!isProvider && (
+            <button
+              onClick={() => setShowBecomeProviderModal(true)}
+              className="btn btn-provider"
+            >
+              🎯 Diventa Fornitore
+            </button>
+          )}
+          {isProvider && (
+            <button
+              onClick={() => navigate("/provider-dashboard")}
+              className="btn btn-secondary"
+            >
+              📊 Dashboard Fornitore
+            </button>
+          )}
+          <button onClick={handleLogout} className="btn btn-logout">
+            Logout
+          </button>
+        </div>
+      </div>
+
+      <div className="dashboard-section">
+        <h2>🔍 Ricerca Servizi</h2>
+        <SearchBar onSearch={handleSearch} />
+
+        <div className="services-grid">
+          {filteredServices.length === 0 ? (
+            <div className="empty-state">
+              <p>Nessun servizio disponibile.</p>
+            </div>
+          ) : (
+            filteredServices.map((service) => (
+              <div key={service.id} className="service-card">
+                <h3>{service.title}</h3>
+                <p className="service-description">{service.description}</p>
+                {service.address && (
+                  <p className="service-location">📍 {service.address}</p>
+                )}
+                <p className="service-price">€{service.price.toFixed(2)}</p>
+                <p className="service-provider">
+                  <small>Fornitore: {service.providerEmail}</small>
+                </p>
+                <button
+                  onClick={() => openBookingModal(service)}
+                  className="btn btn-book"
+                >
+                  Prenota
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
       <div className="dashboard-section">
         <h2>📋 Le Mie Prenotazioni</h2>
         <div className="bookings-list">
@@ -374,11 +380,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                 <p>
                   <strong>Stato:</strong>{" "}
                   <span className={`status ${booking.status}`}>
-                    {booking.status === "pending"
-                      ? "In attesa"
-                      : booking.status === "completed"
-                      ? "Completato"
-                      : "Annullato"}
+                    {booking.status === "pending" ? "In attesa" : "Completato"}
                   </span>
                 </p>
                 <p>
@@ -386,13 +388,20 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                   <span className={`status ${booking.paymentStatus}`}>
                     {booking.paymentStatus === "held_in_escrow"
                       ? "Trattenuto in Escrow"
-                      : booking.paymentStatus === "authorized"
-                      ? "Autorizzato (In attesa)"
                       : booking.paymentStatus === "released"
                       ? "Rilasciato al Fornitore"
                       : "Non Pagato"}
                   </span>
                 </p>
+                {booking.paymentStatus === "unpaid" && (
+                  <button
+                    onClick={() => handlePayment(booking.id)}
+                    className="btn btn-primary"
+                    style={{ marginRight: "10px", marginBottom: "10px" }}
+                  >
+                    💳 Paga Ora
+                  </button>
+                )}
                 {booking.photoProof && (
                   <div className="photo-proof">
                     <p>
@@ -404,49 +413,19 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                     />
                   </div>
                 )}
-                <div className="button-group">
-                  <button
-                    onClick={() => {
-                      navigate(`/messages?bookingId=${booking.id}`);
-                    }}
-                    className="btn btn-chat"
-                  >
-                    💬 Apri Chat
-                  </button>
-                  {booking.status === "completed" && !booking.hasReview && (
-                    <button
-                      onClick={() => {
-                        setReviewBooking(booking);
-                        setShowReviewModal(true);
-                      }}
-                      className="btn btn-review"
-                    >
-                      ⭐ Lascia una Recensione
-                    </button>
-                  )}
-                  {booking.status === "completed" && booking.hasReview && (
-                    <span className="badge-reviewed">✅ Recensito</span>
-                  )}
-                </div>
+                <button
+                  onClick={() => {
+                    setSelectedBooking(booking);
+                    setShowChatModal(true);
+                  }}
+                  className="btn btn-chat"
+                >
+                  💬 Apri Chat
+                </button>
               </div>
             ))
           )}
         </div>
-      </div>
-
-      {/* Toast Notifications Container */}
-      <div className="toast-container">
-        {notifications.map((notification) => (
-          <ToastNotification
-            key={notification.id}
-            notification={notification}
-            onClose={() =>
-              setNotifications((prev) =>
-                prev.filter((n) => n.id !== notification.id)
-              )
-            }
-          />
-        ))}
       </div>
 
       {/* Booking Modal */}
@@ -541,21 +520,25 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
         </div>
       )}
 
-      {/* Review Modal */}
-      {showReviewModal && reviewBooking && (
-        <ReviewModal
-          booking={reviewBooking}
+      {/* Chat Modal */}
+      {showChatModal && selectedBooking && (
+        <ChatModal
+          bookingId={selectedBooking.id}
+          isOpen={showChatModal}
           onClose={() => {
-            setShowReviewModal(false);
-            setReviewBooking(null);
+            setShowChatModal(false);
+            setSelectedBooking(null);
           }}
-          onReviewSubmit={() => {
-            setShowReviewModal(false);
-            setReviewBooking(null);
-            loadBookings(); // Refresh bookings to hide the review button if already reviewed
-          }}
+          currentUserType="client"
+          otherPartyEmail={selectedBooking.providerEmail}
         />
       )}
+
+      {/* Become Provider Modal */}
+      <BecomeProviderModal
+        isOpen={showBecomeProviderModal}
+        onClose={() => setShowBecomeProviderModal(false)}
+      />
     </div>
   );
 };
