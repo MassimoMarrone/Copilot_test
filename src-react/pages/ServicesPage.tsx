@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import ServiceReviewsModal from "../components/ServiceReviewsModal";
 import SearchBar from "../components/SearchBar";
+import ServiceMap from "../components/ServiceMap";
 import "../styles/ServicesPage.css";
 
 interface TimeSlot {
@@ -52,6 +53,7 @@ const ServicesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
   // Reviews modal state
   const [showReviewsModal, setShowReviewsModal] = useState(false);
@@ -390,8 +392,49 @@ const ServicesPage: React.FC = () => {
 
       <SearchBar onSearch={handleSearch} />
 
+      <div className="view-toggle-container" style={{ display: "flex", justifyContent: "flex-end", marginBottom: "20px", gap: "10px" }}>
+        <button
+          className={`view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
+          onClick={() => setViewMode("list")}
+          style={{
+            padding: "8px 16px",
+            borderRadius: "20px",
+            border: "1px solid #ddd",
+            background: viewMode === "list" ? "#000" : "white",
+            color: viewMode === "list" ? "white" : "#333",
+            cursor: "pointer",
+            fontWeight: "600",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px"
+          }}
+        >
+          📋 Lista
+        </button>
+        <button
+          className={`view-toggle-btn ${viewMode === "map" ? "active" : ""}`}
+          onClick={() => setViewMode("map")}
+          style={{
+            padding: "8px 16px",
+            borderRadius: "20px",
+            border: "1px solid #ddd",
+            background: viewMode === "map" ? "#000" : "white",
+            color: viewMode === "map" ? "white" : "#333",
+            cursor: "pointer",
+            fontWeight: "600",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px"
+          }}
+        >
+          🗺️ Mappa
+        </button>
+      </div>
+
       {loading ? (
         <div className="loading-spinner">Caricamento...</div>
+      ) : viewMode === "map" ? (
+        <ServiceMap services={filteredServices} onBook={openBookingModal} />
       ) : (
         <div className="services-grid">
           {filteredServices.length === 0 ? (
