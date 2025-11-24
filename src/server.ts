@@ -644,9 +644,99 @@ app.get("/api/me", authenticate, (req: Request, res: Response): void => {
   res.json({
     id: user.id,
     email: user.email,
+    displayName: user.displayName,
+    bio: user.bio,
+    avatarUrl: user.avatarUrl,
     userType: user.userType,
     isClient: isUserClient(user),
     isProvider: isUserProvider(user),
+  });
+});
+
+// Update profile
+app.put(
+  "/api/me/profile",
+  authenticate,
+  upload.single("avatar"),
+  [
+    body("displayName")
+      .optional()
+      .trim()
+      .isLength({ min: 2, max: 50 })
+      .withMessage("Display name must be between 2 and 50 characters"),
+    body("bio")
+      .optional()
+      .trim()
+      .isLength({ max: 500 })
+      .withMessage("Bio must be less than 500 characters"),
+  ],
+  validate,
+  (req: Request, res: Response): void => {
+    const userIndex = users.findIndex((u) => u.id === req.user!.id);
+    if (userIndex === -1) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    const { displayName, bio } = req.body;
+    const user = users[userIndex];
+
+    if (displayName) user.displayName = displayName;
+    if (bio) user.bio = bio;
+
+    if (req.file) {
+      user.avatarUrl = "/uploads/" + req.file.filename;
+    }
+
+    users[userIndex] = user;
+    saveData();
+
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        bio: user.bio,
+        avatarUrl: user.avatarUrl,
+        isProvider: isUserProvider(user),
+      },
+    });
+  }
+);
+
+// Get public provider profile
+app.get("/api/providers/:id", (req: Request, res: Response): void => {
+  const { id } = req.params;
+  const provider = users.find((u) => u.id === id && isUserProvider(u));
+
+  if (!provider) {
+    res.status(404).json({ error: "Provider not found" });
+    return;
+  }
+
+  // Get provider's services
+  const providerServices = services.filter((s) => s.providerId === id);
+
+  // Get provider's reviews
+  const providerReviews = reviews.filter((r) => r.providerId === id);
+
+  // Calculate average rating
+  const averageRating =
+    providerReviews.length > 0
+      ? providerReviews.reduce((acc, r) => acc + r.rating, 0) / providerReviews.length
+      : 0;
+
+  res.json({
+    id: provider.id,
+    displayName: provider.displayName || provider.email.split("@")[0],
+    bio: provider.bio,
+    avatarUrl: provider.avatarUrl,
+    createdAt: provider.createdAt,
+    services: providerServices,
+    reviews: providerReviews,
+    averageRating: parseFloat(averageRating.toFixed(1)),
+    reviewCount: providerReviews.length,
   });
 });
 

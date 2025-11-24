@@ -18,6 +18,7 @@ L.Marker.prototype.options.icon = DefaultIcon;
 
 interface Service {
   id: string;
+  providerId: string;
   title: string;
   description: string;
   price: number;

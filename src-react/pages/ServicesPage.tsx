@@ -32,6 +32,7 @@ interface ProviderAvailability {
 
 interface Service {
   id: string;
+  providerId: string;
   title: string;
   description: string;
   price: number;
@@ -490,6 +491,18 @@ const ServicesPage: React.FC = () => {
                       ({service.reviewCount || 0} recensioni)
                     </span>
                   </div>
+                  
+                  <div style={{ marginBottom: "10px" }}>
+                    <a 
+                      href={`/provider/${service.providerId}`}
+                      className="provider-profile-link"
+                      style={{ color: "#007bff", textDecoration: "none", fontSize: "0.9rem" }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      👤 Vedi Profilo Fornitore
+                    </a>
+                  </div>
+
                   <p className="service-description">{service.description}</p>
 
                   {service.productsUsed && service.productsUsed.length > 0 && (

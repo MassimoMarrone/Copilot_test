@@ -10,6 +10,7 @@ import ClientDashboard from "./components/ClientDashboard";
 import ProviderDashboard from "./components/ProviderDashboard";
 import AdminDashboard from "./components/AdminDashboard";
 import UserProfile from "./components/UserProfile";
+import ProviderProfilePage from "./pages/ProviderProfilePage";
 import "./styles/App.css";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
             <Route path="/messages" element={<MessagesPage />} />
             <Route path="/client-dashboard" element={<ClientDashboard />} />
             <Route path="/profile" element={<UserProfile />} />
+            <Route path="/provider/:providerId" element={<ProviderProfilePage />} />
 
             {/* Legacy Dashboards - eventually refactor these too */}
             <Route path="/provider-dashboard" element={<ProviderDashboard />} />

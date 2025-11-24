@@ -1,19 +1,32 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import UserMenu from "./UserMenu";
 import "../styles/UserProfile.css";
 
 interface User {
+  id: string;
   email: string;
   userType: "client" | "provider";
   isProvider?: boolean;
   isClient?: boolean;
   createdAt?: string;
+  displayName?: string;
+  bio?: string;
+  avatarUrl?: string;
 }
 
 const UserProfile: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  
+  // Form states
+  const [displayName, setDisplayName] = useState("");
+  const [bio, setBio] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,10 +42,51 @@ const UserProfile: React.FC = () => {
       }
       const userData = await response.json();
       setUser(userData);
+      setDisplayName(userData.displayName || "");
+      setBio(userData.bio || "");
       setLoading(false);
     } catch (error) {
       console.error("Error loading user data:", error);
       navigate("/");
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setAvatarFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    formData.append("displayName", displayName);
+    formData.append("bio", bio);
+    if (avatarFile) {
+      formData.append("avatar", avatarFile);
+    }
+
+    try {
+      const response = await fetch("/api/me/profile", {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        setEditing(false);
+        alert("Profilo aggiornato con successo!");
+      } else {
+        const data = await response.json();
+        alert(data.error || "Errore durante l'aggiornamento del profilo");
+      }
+    } catch (error) {
+      console.error("Update profile error:", error);
+      alert("Errore di connessione");
     }
   };
 
@@ -90,58 +144,142 @@ const UserProfile: React.FC = () => {
         <div className="container">
           <div className="profile-card">
             <div className="profile-avatar-section">
-              <div className="profile-avatar-large">👤</div>
-              <h2>Profilo Utente</h2>
-            </div>
-
-            <div className="profile-info-section">
-              <div className="profile-info-row">
-                <span className="info-label">Email:</span>
-                <span className="info-value">{user.email}</span>
+              <div 
+                className="profile-avatar-large"
+                style={{ 
+                  backgroundImage: previewUrl || user.avatarUrl ? `url(${previewUrl || user.avatarUrl})` : 'none',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+              >
+                {!(previewUrl || user.avatarUrl) && "👤"}
               </div>
-
-              <div className="profile-info-row">
-                <span className="info-label">Tipo Account:</span>
-                <span className="info-value">
-                  {user.userType === "provider" ? "Fornitore" : "Cliente"}
-                </span>
-              </div>
-
-              {user.isProvider && user.userType === "client" && (
-                <div className="profile-info-row">
-                  <span className="info-label">Account Aggiuntivo:</span>
-                  <span className="info-value">Anche Fornitore</span>
+              {editing && (
+                <div className="avatar-upload">
+                  <button 
+                    type="button" 
+                    className="btn-upload"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    Cambia Foto
+                  </button>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleFileChange} 
+                    style={{ display: 'none' }} 
+                    accept="image/*"
+                  />
                 </div>
               )}
+              <h2>{user.displayName || "Utente"}</h2>
+              {user.isProvider && (
+                <a href={`/provider/${user.id}`} className="view-public-profile">
+                  Vedi Profilo Pubblico
+                </a>
+              )}
+            </div>
 
-              {user.createdAt && (
+            {editing ? (
+              <form onSubmit={handleUpdateProfile} className="profile-edit-form">
+                <div className="form-group">
+                  <label>Nome Visualizzato</label>
+                  <input
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Il tuo nome pubblico"
+                    maxLength={50}
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Biografia</label>
+                  <textarea
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder="Racconta qualcosa di te..."
+                    maxLength={500}
+                    rows={4}
+                  />
+                </div>
+
+                <div className="form-actions">
+                  <button type="submit" className="btn btn-primary">Salva Modifiche</button>
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setEditing(false);
+                      setDisplayName(user.displayName || "");
+                      setBio(user.bio || "");
+                      setPreviewUrl(null);
+                      setAvatarFile(null);
+                    }}
+                  >
+                    Annulla
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="profile-info-section">
                 <div className="profile-info-row">
-                  <span className="info-label">Membro dal:</span>
+                  <span className="info-label">Email:</span>
+                  <span className="info-value">{user.email}</span>
+                </div>
+
+                <div className="profile-info-row">
+                  <span className="info-label">Nome:</span>
+                  <span className="info-value">{user.displayName || "-"}</span>
+                </div>
+
+                <div className="profile-info-row">
+                  <span className="info-label">Bio:</span>
+                  <span className="info-value bio-text">{user.bio || "-"}</span>
+                </div>
+
+                <div className="profile-info-row">
+                  <span className="info-label">Tipo Account:</span>
                   <span className="info-value">
-                    {new Date(user.createdAt).toLocaleDateString("it-IT", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
+                    {user.userType === "provider" ? "Fornitore" : "Cliente"}
                   </span>
                 </div>
-              )}
-            </div>
 
-            <div className="profile-actions">
-              <button
-                className="btn btn-primary"
-                onClick={() =>
-                  navigate(
-                    user.userType === "provider"
-                      ? "/provider-dashboard"
-                      : "/client-dashboard"
-                  )
-                }
-              >
-                Torna alla Dashboard
-              </button>
-            </div>
+                {user.createdAt && (
+                  <div className="profile-info-row">
+                    <span className="info-label">Membro dal:</span>
+                    <span className="info-value">
+                      {new Date(user.createdAt).toLocaleDateString("it-IT", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </div>
+                )}
+                
+                <div className="profile-actions">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setEditing(true)}
+                  >
+                    Modifica Profilo
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() =>
+                      navigate(
+                        user.userType === "provider"
+                          ? "/provider-dashboard"
+                          : "/client-dashboard"
+                      )
+                    }
+                  >
+                    Torna alla Dashboard
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div
               className="profile-danger-zone"
@@ -182,15 +320,6 @@ const UserProfile: React.FC = () => {
                 Elimina Account
               </button>
             </div>
-          </div>
-
-          <div className="profile-additional-info">
-            <h3>Informazioni Account</h3>
-            <p>
-              Questo profilo mostra le informazioni di base del tuo account. Per
-              modificare le tue preferenze o aggiornare i tuoi dati, contatta il
-              supporto.
-            </p>
           </div>
         </div>
       </div>

@@ -134,29 +134,81 @@
   line-height: 1.6;
 }
 
-/* Responsive */
+/* Edit Profile Styles */
+.avatar-upload {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-upload {
+  background: #f0f2f5;
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.view-public-profile {
+  display: inline-block;
+  margin-top: 10px;
+  color: #007bff;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.view-public-profile:hover {
+  text-decoration: underline;
+}
+
+.profile-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #444;
+}
+
+.form-group input,
+.form-group textarea {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.form-group textarea {
+  resize: vertical;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.bio-text {
+  max-width: 60%;
+  text-align: right;
+  line-height: 1.4;
+}
+
 @media (max-width: 768px) {
-  .profile-card {
-    padding: 24px;
-  }
-
-  .profile-avatar-large {
-    font-size: 60px;
-    width: 100px;
-    height: 100px;
-  }
-
-  .profile-avatar-section h2 {
-    font-size: 24px;
-  }
-
-  .profile-info-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .info-value {
+  .bio-text {
+    max-width: 100%;
     text-align: left;
   }
 }

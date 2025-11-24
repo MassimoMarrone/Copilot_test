@@ -16,6 +16,10 @@ export interface User {
   stripeAccountId?: string; // Stripe Connect Account ID for payouts
   googleId?: string; // Google ID for OAuth users
   createdAt: string;
+  // Profile fields
+  displayName?: string;
+  bio?: string;
+  avatarUrl?: string;
   // availability?: ProviderAvailability; // Moved to Service
 }
 
