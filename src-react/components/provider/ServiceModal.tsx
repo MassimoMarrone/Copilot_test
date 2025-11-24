@@ -42,6 +42,21 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
 
   useEffect(() => {
     if (initialData && mode === "edit") {
+      // Ensure availability has a valid structure
+      const availability = initialData.availability || {
+        weekly: defaultWeeklySchedule,
+        blockedDates: [],
+      };
+
+      // If weekly is missing (e.g. old data), add default
+      if (!availability.weekly) {
+        availability.weekly = defaultWeeklySchedule;
+      }
+      // If blockedDates is missing
+      if (!availability.blockedDates) {
+        availability.blockedDates = [];
+      }
+
       setFormData({
         title: initialData.title,
         description: initialData.description,
@@ -51,10 +66,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
         address: initialData.address || "",
         latitude: initialData.latitude || 0,
         longitude: initialData.longitude || 0,
-        availability: initialData.availability || {
-          weekly: defaultWeeklySchedule,
-          blockedDates: [],
-        },
+        availability: availability,
       });
     } else {
       // Reset for create mode
