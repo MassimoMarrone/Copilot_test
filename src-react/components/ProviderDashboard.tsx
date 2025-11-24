@@ -1,126 +1,45 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-import AddressAutocomplete from "./AddressAutocomplete";
 import ToastNotification, { Notification } from "./ToastNotification";
-import NotificationCenter from "./NotificationCenter";
 import ChatModal from "./ChatModal";
-import UserMenu from "./UserMenu";
-import AvailabilityManager, {
-  ProviderAvailability,
-  defaultWeeklySchedule,
-} from "./AvailabilityManager";
+import ServiceList from "./provider/ServiceList";
+import BookingList from "./provider/BookingList";
+import ReviewList from "./provider/ReviewList";
+import ServiceModal from "./provider/ServiceModal";
+import CompleteBookingModal from "./provider/CompleteBookingModal";
+import AvailabilityModal from "./provider/AvailabilityModal";
+import { Service, Booking, Review } from "../types/provider";
+import { ProviderAvailability } from "./AvailabilityManager";
 import "../styles/ProviderDashboard.css";
 import "../styles/ToastNotification.css";
-
-interface Service {
-  id: string;
-  title: string;
-  description: string;
-  category?: string;
-  price: number;
-  productsUsed?: string[];
-  providerEmail: string;
-  address?: string;
-  latitude?: number;
-  longitude?: number;
-  createdAt: string;
-  imageUrl?: string;
-  availability?: ProviderAvailability;
-}
-
-const CATEGORIES = [
-  "Pulizia",
-  "Giardinaggio",
-  "Manutenzione",
-  "Idraulica",
-  "Elettricista",
-  "Traslochi",
-  "Altro",
-];
-
-const AVAILABLE_PRODUCTS = [
-  "Prodotti Ecologici",
-  "Prodotti Ipoallergenici",
-  "Attrezzatura Professionale",
-  "Prodotti Sanificanti",
-  "Prodotti Pet-Friendly",
-  "Prodotti Senza Profumo",
-];
-
-interface Booking {
-  id: string;
-  serviceId: string;
-  serviceTitle: string;
-  date: string;
-  amount: number;
-  clientEmail: string;
-  status: string;
-  paymentStatus: string;
-  photoProof?: string;
-  clientPhone?: string;
-  preferredTime?: string;
-  notes?: string;
-  address?: string;
-}
-
-interface Review {
-  id: string;
-  bookingId: string;
-  serviceId: string;
-  clientId: string;
-  rating: number;
-  comment: string;
-  createdAt: string;
-}
 
 const ProviderDashboard: React.FC = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+
+  // Modal States
   const [showServiceModal, setShowServiceModal] = useState(false);
-  const [showCompleteModal, setShowCompleteModal] = useState(false);
-  const [showChatModal, setShowChatModal] = useState(false);
-  const [editingService, setEditingService] = useState<Service | null>(null);
-  const [editForm, setEditForm] = useState<{
-    title: string;
-    description: string;
-    category: string;
-    price: string;
-    productsUsed: string[];
-    address: string;
-    latitude: number;
-    longitude: number;
-    availability: ProviderAvailability;
-  } | null>(null);
-  const [availabilityService, setAvailabilityService] = useState<Service | null>(
-    null
+  const [serviceModalMode, setServiceModalMode] = useState<"create" | "edit">(
+    "create"
   );
-  const [availabilityForm, setAvailabilityForm] =
-    useState<ProviderAvailability | null>(null);
+  const [editingService, setEditingService] = useState<Service | null>(null);
+
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+
+  const [showChatModal, setShowChatModal] = useState(false);
+
+  const [availabilityService, setAvailabilityService] =
+    useState<Service | null>(null);
+
   const [userEmail, setUserEmail] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [lastNotification, setLastNotification] = useState<Notification | null>(
     null
   );
-
-  // New Service Form State
-  const [newService, setNewService] = useState({
-    title: "",
-    description: "",
-    category: "Altro",
-    price: "",
-    productsUsed: [] as string[],
-    address: "",
-    latitude: 0,
-    longitude: 0,
-  });
-  const [serviceImage, setServiceImage] = useState<File | null>(null);
-
-  // Complete Booking Form State
-  const [photoProof, setPhotoProof] = useState<File | null>(null);
 
   const navigate = useNavigate();
 
@@ -174,7 +93,6 @@ const ProviderDashboard: React.FC = () => {
       const user = await response.json();
       setUserEmail(user.email);
       setUserId(user.id);
-      // Check if user is a provider (has isProvider flag or userType is provider)
       const isProviderUser = user.isProvider || user.userType === "provider";
       if (!isProviderUser) {
         navigate("/client-dashboard");
@@ -214,37 +132,7 @@ const ProviderDashboard: React.FC = () => {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/logout", { method: "POST" });
-      navigate("/");
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-  };
-
-  const handleCreateService = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const formData = new FormData();
-    formData.append("title", newService.title);
-    formData.append("description", newService.description);
-    formData.append("category", newService.category);
-    formData.append("price", newService.price);
-    formData.append("productsUsed", JSON.stringify(newService.productsUsed));
-
-    if (newService.address) {
-      formData.append("address", newService.address);
-      if (newService.latitude && newService.longitude) {
-        formData.append("latitude", newService.latitude.toString());
-        formData.append("longitude", newService.longitude.toString());
-      }
-    }
-
-    if (serviceImage) {
-      formData.append("image", serviceImage);
-    }
-
+  const handleCreateService = async (formData: FormData) => {
     try {
       const response = await fetch("/api/services", {
         method: "POST",
@@ -254,17 +142,6 @@ const ProviderDashboard: React.FC = () => {
       if (response.ok) {
         alert("Servizio creato con successo!");
         setShowServiceModal(false);
-        setNewService({
-          title: "",
-          description: "",
-          category: "Altro",
-          price: "",
-          productsUsed: [],
-          address: "",
-          latitude: 0,
-          longitude: 0,
-        });
-        setServiceImage(null);
         loadServices();
       } else {
         const data = await response.json();
@@ -275,29 +152,8 @@ const ProviderDashboard: React.FC = () => {
     }
   };
 
-  const handleUpdateService = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingService || !editForm) return;
-
-    const formData = new FormData();
-    formData.append("title", editForm.title);
-    formData.append("description", editForm.description);
-    formData.append("category", editForm.category);
-    formData.append("price", editForm.price);
-    formData.append("productsUsed", JSON.stringify(editForm.productsUsed));
-    formData.append("availability", JSON.stringify(editForm.availability));
-
-    if (editForm.address) {
-      formData.append("address", editForm.address);
-      if (editForm.latitude && editForm.longitude) {
-        formData.append("latitude", editForm.latitude.toString());
-        formData.append("longitude", editForm.longitude.toString());
-      }
-    }
-
-    if (serviceImage) {
-      formData.append("image", serviceImage);
-    }
+  const handleUpdateService = async (formData: FormData) => {
+    if (!editingService) return;
 
     try {
       const response = await fetch(`/api/services/${editingService.id}`, {
@@ -307,9 +163,8 @@ const ProviderDashboard: React.FC = () => {
 
       if (response.ok) {
         alert("Servizio aggiornato con successo!");
+        setShowServiceModal(false);
         setEditingService(null);
-        setEditForm(null);
-        setServiceImage(null);
         loadServices();
       } else {
         const data = await response.json();
@@ -320,12 +175,13 @@ const ProviderDashboard: React.FC = () => {
     }
   };
 
-  const handleUpdateAvailability = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!availabilityService || !availabilityForm) return;
+  const handleUpdateAvailability = async (
+    availability: ProviderAvailability
+  ) => {
+    if (!availabilityService) return;
 
     const formData = new FormData();
-    formData.append("availability", JSON.stringify(availabilityForm));
+    formData.append("availability", JSON.stringify(availability));
 
     try {
       const response = await fetch(`/api/services/${availabilityService.id}`, {
@@ -336,7 +192,6 @@ const ProviderDashboard: React.FC = () => {
       if (response.ok) {
         alert("Disponibilità aggiornata con successo!");
         setAvailabilityService(null);
-        setAvailabilityForm(null);
         loadServices();
       } else {
         const data = await response.json();
@@ -347,15 +202,11 @@ const ProviderDashboard: React.FC = () => {
     }
   };
 
-  const handleCompleteBooking = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedBooking || !photoProof) {
-      alert("Devi caricare una foto prova del servizio completato");
-      return;
-    }
+  const handleCompleteBooking = async (photo: File) => {
+    if (!selectedBooking) return;
 
     const formData = new FormData();
-    formData.append("photo", photoProof);
+    formData.append("photo", photo);
 
     try {
       const response = await fetch(
@@ -371,12 +222,37 @@ const ProviderDashboard: React.FC = () => {
           "Servizio completato! Il pagamento è stato rilasciato dall'escrow."
         );
         setShowCompleteModal(false);
-        setPhotoProof(null);
         setSelectedBooking(null);
         loadBookings();
       } else {
         const data = await response.json();
         alert(data.error || "Errore nel completamento del servizio");
+      }
+    } catch (error) {
+      alert("Errore di connessione");
+    }
+  };
+
+  const handleCancelBooking = async (booking: Booking) => {
+    if (
+      !window.confirm(
+        "Sei sicuro di voler cancellare questa prenotazione? Se il pagamento è stato effettuato, verrà rimborsato."
+      )
+    )
+      return;
+
+    try {
+      const response = await fetch(`/api/bookings/${booking.id}/cancel`, {
+        method: "POST",
+      });
+      if (response.ok) {
+        alert("Prenotazione cancellata con successo");
+        loadBookings();
+      } else {
+        const data = await response.json();
+        alert(
+          data.error || "Errore durante la cancellazione della prenotazione"
+        );
       }
     } catch (error) {
       alert("Errore di connessione");
@@ -390,7 +266,11 @@ const ProviderDashboard: React.FC = () => {
         <div className="header-actions">
           <button
             className="btn-add-service"
-            onClick={() => setShowServiceModal(true)}
+            onClick={() => {
+              setServiceModalMode("create");
+              setEditingService(null);
+              setShowServiceModal(true);
+            }}
           >
             + Nuovo Servizio
           </button>
@@ -399,293 +279,36 @@ const ProviderDashboard: React.FC = () => {
 
       <div className="dashboard-section">
         <h2>📦 I Miei Servizi</h2>
-        <div className="services-grid">
-          {services.length === 0 ? (
-            <div className="empty-state">
-              <p>
-                Non hai ancora creato servizi. Clicca sul pulsante sopra per
-                aggiungerne uno.
-              </p>
-            </div>
-          ) : (
-            services.map((service) => (
-              <div key={service.id} className="service-card">
-                {service.imageUrl && (
-                  <img
-                    src={service.imageUrl}
-                    alt={service.title}
-                    className="service-image"
-                    style={{
-                      width: "100%",
-                      height: "150px",
-                      objectFit: "cover",
-                      borderRadius: "8px 8px 0 0",
-                      marginBottom: "10px",
-                    }}
-                  />
-                )}
-                <h3>{service.title}</h3>
-                <p className="service-description">{service.description}</p>
-                {service.address && (
-                  <p className="service-location">📍 {service.address}</p>
-                )}
-                <p className="service-price">€{service.price.toFixed(2)}</p>
-                <p>
-                  <small>
-                    Creato il:{" "}
-                    {new Date(service.createdAt).toLocaleDateString("it-IT")}
-                  </small>
-                </p>
-                <div className="service-actions" style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                  <button
-                    className="btn-calendar"
-                    onClick={() => {
-                      setAvailabilityService(service);
-                      setAvailabilityForm(
-                        service.availability || {
-                          weekly: defaultWeeklySchedule,
-                          blockedDates: [],
-                        }
-                      );
-                    }}
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#6f42c1",
-                      color: "white",
-                      border: "none",
-                      padding: "8px 16px",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    📅 Calendario
-                  </button>
-                  <button
-                    className="btn-edit-service"
-                    onClick={() => {
-                      setEditingService(service);
-                      setEditForm({
-                        title: service.title,
-                        description: service.description,
-                        category: service.category || "Altro",
-                        price: service.price.toString(),
-                        productsUsed: service.productsUsed || [],
-                        address: service.address || "",
-                        latitude: service.latitude || 0,
-                        longitude: service.longitude || 0,
-                        availability: service.availability || {
-                          weekly: defaultWeeklySchedule,
-                          blockedDates: [],
-                        },
-                      });
-                    }}
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#ffc107",
-                      color: "#000",
-                      border: "none",
-                      padding: "8px 16px",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    ✏️ Modifica
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+        <ServiceList
+          services={services}
+          onEdit={(service) => {
+            setEditingService(service);
+            setServiceModalMode("edit");
+            setShowServiceModal(true);
+          }}
+          onCalendar={(service) => setAvailabilityService(service)}
+        />
       </div>
 
       <div className="dashboard-section">
         <h2>📅 Prenotazioni Ricevute</h2>
-        <div className="bookings-list">
-          {bookings.length === 0 ? (
-            <div className="empty-state">
-              <p>Non hai ancora ricevuto prenotazioni.</p>
-            </div>
-          ) : (
-            bookings.map((booking) => (
-              <div key={booking.id} className="booking-card">
-                <h3>{booking.serviceTitle}</h3>
-                <p>
-                  <strong>Cliente:</strong> {booking.clientEmail}
-                </p>
-                {booking.clientPhone && (
-                  <p>
-                    <strong>Telefono Cliente:</strong> {booking.clientPhone}
-                  </p>
-                )}
-                <p>
-                  <strong>Data:</strong>{" "}
-                  {new Date(booking.date).toLocaleDateString("it-IT")}
-                </p>
-                {booking.preferredTime && (
-                  <p>
-                    <strong>Orario Preferito:</strong> {booking.preferredTime}
-                  </p>
-                )}
-                {booking.address && (
-                  <p>
-                    <strong>Indirizzo:</strong> {booking.address}
-                  </p>
-                )}
-                {booking.notes && (
-                  <p>
-                    <strong>Note del Cliente:</strong> {booking.notes}
-                  </p>
-                )}
-                <p>
-                  <strong>Importo:</strong>{" "}
-                  <span className="price">€{booking.amount.toFixed(2)}</span>
-                </p>
-                <p>
-                  <strong>Stato:</strong>{" "}
-                  <span className={`status ${booking.status}`}>
-                    {booking.status === "pending" ? "In attesa" : "Completato"}
-                  </span>
-                </p>
-                <p>
-                  <strong>Pagamento:</strong>{" "}
-                  <span className={`status ${booking.paymentStatus}`}>
-                    {booking.paymentStatus === "held_in_escrow"
-                      ? "Trattenuto in Escrow"
-                      : booking.paymentStatus === "authorized"
-                      ? "Autorizzato (Congelato)"
-                      : booking.paymentStatus === "released"
-                      ? "Rilasciato"
-                      : booking.paymentStatus === "refunded"
-                      ? "Rimborsato"
-                      : "Non pagato"}
-                  </span>
-                </p>
-
-                {booking.status !== "cancelled" &&
-                  booking.status !== "completed" && (
-                    <div className="booking-actions">
-                      <button
-                        onClick={() => {
-                          setSelectedBooking(booking);
-                          setShowCompleteModal(true);
-                        }}
-                        className="btn btn-success"
-                      >
-                        Completa Servizio & Rilascia Payout
-                      </button>
-                      <button
-                        className="btn-cancel"
-                        style={{
-                          backgroundColor: "#dc3545",
-                          color: "white",
-                          marginLeft: "10px",
-                          padding: "8px 16px",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                        }}
-                        onClick={async () => {
-                          if (
-                            !window.confirm(
-                              "Sei sicuro di voler cancellare questa prenotazione? Se il pagamento è stato effettuato, verrà rimborsato."
-                            )
-                          )
-                            return;
-
-                          try {
-                            const response = await fetch(
-                              `/api/bookings/${booking.id}/cancel`,
-                              {
-                                method: "POST",
-                              }
-                            );
-                            if (response.ok) {
-                              alert("Prenotazione cancellata con successo");
-                              loadBookings();
-                            } else {
-                              const data = await response.json();
-                              alert(
-                                data.error ||
-                                  "Errore durante la cancellazione della prenotazione"
-                              );
-                            }
-                          } catch (error) {
-                            alert("Errore di connessione");
-                          }
-                        }}
-                      >
-                        Cancella
-                      </button>
-                    </div>
-                  )}
-
-                {booking.status === "completed" && (
-                  <div className="completed-badge">✅ Completato</div>
-                )}
-                {booking.status === "cancelled" && (
-                  <div
-                    className="cancelled-badge"
-                    style={{
-                      color: "#dc3545",
-                      fontWeight: "bold",
-                      marginTop: "10px",
-                    }}
-                  >
-                    ❌ Cancellato
-                  </div>
-                )}
-
-                {booking.photoProof && (
-                  <div className="photo-proof">
-                    <p>
-                      <strong>Prova Fotografica Caricata:</strong>
-                    </p>
-                    <img
-                      src={booking.photoProof}
-                      alt="Prova del servizio completato"
-                    />
-                  </div>
-                )}
-
-                <button
-                  onClick={() => {
-                    setSelectedBooking(booking);
-                    setShowChatModal(true);
-                  }}
-                  className="btn btn-chat"
-                >
-                  💬 Apri Chat
-                </button>
-              </div>
-            ))
-          )}
-        </div>
+        <BookingList
+          bookings={bookings}
+          onComplete={(booking) => {
+            setSelectedBooking(booking);
+            setShowCompleteModal(true);
+          }}
+          onCancel={handleCancelBooking}
+          onChat={(booking) => {
+            setSelectedBooking(booking);
+            setShowChatModal(true);
+          }}
+        />
       </div>
 
       <div className="dashboard-section">
         <h2>⭐ Le Mie Recensioni</h2>
-        <div className="reviews-list">
-          {reviews.length === 0 ? (
-            <div className="empty-state">
-              <p>Non hai ancora ricevuto recensioni.</p>
-            </div>
-          ) : (
-            reviews.map((review) => (
-              <div key={review.id} className="review-card">
-                <div className="review-header">
-                  <span className="review-rating">
-                    {"⭐".repeat(review.rating)}
-                    {"☆".repeat(5 - review.rating)}
-                  </span>
-                  <span className="review-date">
-                    {new Date(review.createdAt).toLocaleDateString("it-IT")}
-                  </span>
-                </div>
-                <p className="review-comment">{review.comment}</p>
-              </div>
-            ))
-          )}
-        </div>
+        <ReviewList reviews={reviews} />
       </div>
 
       {/* Toast Notifications Container */}
@@ -703,453 +326,55 @@ const ProviderDashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Create Service Modal */}
-      {showServiceModal && (
-        <div
-          className="modal-overlay"
-          onClick={() => setShowServiceModal(false)}
-        >
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button
-              className="modal-close"
-              onClick={() => setShowServiceModal(false)}
-            >
-              &times;
-            </button>
-            <h2>Crea Nuovo Servizio</h2>
-            <form onSubmit={handleCreateService}>
-              <div className="form-group">
-                <label>Titolo</label>
-                <input
-                  type="text"
-                  value={newService.title}
-                  onChange={(e) =>
-                    setNewService({ ...newService, title: e.target.value })
-                  }
-                  required
-                  minLength={3}
-                  maxLength={200}
-                />
-              </div>
-              <div className="form-group">
-                <label>Categoria</label>
-                <select
-                  value={newService.category}
-                  onChange={(e) =>
-                    setNewService({ ...newService, category: e.target.value })
-                  }
-                  required
-                  style={{
-                    width: "100%",
-                    padding: "8px",
-                    borderRadius: "4px",
-                    border: "1px solid #ccc",
-                  }}
-                >
-                  {CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Descrizione</label>
-                <textarea
-                  value={newService.description}
-                  onChange={(e) =>
-                    setNewService({
-                      ...newService,
-                      description: e.target.value,
-                    })
-                  }
-                  required
-                  minLength={10}
-                  maxLength={2000}
-                />
-              </div>
-              <div className="form-group">
-                <label>Prezzo (€)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  value={newService.price}
-                  onChange={(e) =>
-                    setNewService({ ...newService, price: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Prodotti Utilizzati</label>
-                <div className="products-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                  {AVAILABLE_PRODUCTS.map((product) => (
-                    <label key={product} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                      <input
-                        type="checkbox"
-                        checked={newService.productsUsed.includes(product)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setNewService({
-                              ...newService,
-                              productsUsed: [...newService.productsUsed, product],
-                            });
-                          } else {
-                            setNewService({
-                              ...newService,
-                              productsUsed: newService.productsUsed.filter((p) => p !== product),
-                            });
-                          }
-                        }}
-                      />
-                      {product}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Immagine Servizio (Opzionale)</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      setServiceImage(e.target.files[0]);
-                    }
-                  }}
-                />
-              </div>
-              <div className="form-group">
-                <label>Indirizzo (Opzionale)</label>
-                <AddressAutocomplete
-                  onSelect={(loc) => {
-                    setNewService({
-                      ...newService,
-                      address: loc.address,
-                      latitude: loc.lat,
-                      longitude: loc.lng,
-                    });
-                  }}
-                  initialValue={newService.address}
-                />
-              </div>
-              <div className="button-group">
-                <button type="submit" className="btn btn-primary">
-                  Crea Servizio
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowServiceModal(false)}
-                >
-                  Annulla
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Service Modal (Create/Edit) */}
+      <ServiceModal
+        isOpen={showServiceModal}
+        onClose={() => setShowServiceModal(false)}
+        onSubmit={
+          serviceModalMode === "create"
+            ? handleCreateService
+            : handleUpdateService
+        }
+        initialData={editingService}
+        mode={serviceModalMode}
+        bookings={
+          editingService
+            ? bookings
+                .filter(
+                  (b) =>
+                    b.serviceId === editingService.id &&
+                    b.status !== "cancelled"
+                )
+                .map((b) => new Date(b.date).toISOString().split("T")[0])
+            : []
+        }
+      />
 
       {/* Availability Modal */}
-      {availabilityService && availabilityForm && (
-        <div
-          className="modal-overlay"
-          onClick={() => {
-            setAvailabilityService(null);
-            setAvailabilityForm(null);
-          }}
-        >
-          <div
-            className="modal-content"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              maxWidth: "800px",
-              width: "90%",
-              maxHeight: "90vh",
-              overflowY: "auto",
-            }}
-          >
-            <button
-              className="modal-close"
-              onClick={() => {
-                setAvailabilityService(null);
-                setAvailabilityForm(null);
-              }}
-            >
-              &times;
-            </button>
-            <h2>Gestione Calendario: {availabilityService.title}</h2>
-            <p style={{ color: "#666", marginBottom: "20px" }}>
-              Visualizza le prenotazioni e gestisci i giorni di chiusura.
-            </p>
-
-            <form onSubmit={handleUpdateAvailability}>
-              <AvailabilityManager
-                value={availabilityForm}
-                onChange={(newAvailability) =>
-                  setAvailabilityForm(newAvailability)
-                }
-                bookedDates={bookings
-                  .filter(
-                    (b) =>
-                      b.serviceId === availabilityService.id &&
-                      b.status !== "cancelled"
-                  )
-                  .map((b) => new Date(b.date).toISOString().split("T")[0])}
-              />
-
-              <div className="button-group" style={{ marginTop: "20px" }}>
-                <button type="submit" className="btn btn-primary">
-                  Salva Disponibilità
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setAvailabilityService(null);
-                    setAvailabilityForm(null);
-                  }}
-                >
-                  Chiudi
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Service Modal */}
-      {editingService && editForm && (
-        <div
-          className="modal-overlay"
-          onClick={() => {
-            setEditingService(null);
-            setEditForm(null);
-          }}
-        >
-          <div
-            className="modal-content"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              maxWidth: "800px",
-              width: "90%",
-              maxHeight: "90vh",
-              overflowY: "auto",
-            }}
-          >
-            <button
-              className="modal-close"
-              onClick={() => {
-                setEditingService(null);
-                setEditForm(null);
-              }}
-            >
-              &times;
-            </button>
-            <h2>Modifica Servizio</h2>
-            <form onSubmit={handleUpdateService}>
-              <div className="form-group">
-                <label>Titolo</label>
-                <input
-                  type="text"
-                  value={editForm.title}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, title: e.target.value })
-                  }
-                  required
-                  minLength={3}
-                  maxLength={200}
-                />
-              </div>
-              <div className="form-group">
-                <label>Categoria</label>
-                <select
-                  value={editForm.category}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, category: e.target.value })
-                  }
-                  required
-                  style={{
-                    width: "100%",
-                    padding: "8px",
-                    borderRadius: "4px",
-                    border: "1px solid #ccc",
-                  }}
-                >
-                  {CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Descrizione</label>
-                <textarea
-                  value={editForm.description}
-                  onChange={(e) =>
-                    setEditForm({
-                      ...editForm,
-                      description: e.target.value,
-                    })
-                  }
-                  required
-                  minLength={10}
-                  maxLength={2000}
-                />
-              </div>
-              <div className="form-group">
-                <label>Prezzo (€)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  value={editForm.price}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, price: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Prodotti Utilizzati</label>
-                <div className="products-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                  {AVAILABLE_PRODUCTS.map((product) => (
-                    <label key={product} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                      <input
-                        type="checkbox"
-                        checked={editForm.productsUsed.includes(product)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setEditForm({
-                              ...editForm,
-                              productsUsed: [...editForm.productsUsed, product],
-                            });
-                          } else {
-                            setEditForm({
-                              ...editForm,
-                              productsUsed: editForm.productsUsed.filter((p) => p !== product),
-                            });
-                          }
-                        }}
-                      />
-                      {product}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Nuova Immagine (Opzionale)</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      setServiceImage(e.target.files[0]);
-                    }
-                  }}
-                />
-              </div>
-              <div className="form-group">
-                <label>Indirizzo (Opzionale)</label>
-                <AddressAutocomplete
-                  onSelect={(loc) => {
-                    setEditForm({
-                      ...editForm,
-                      address: loc.address,
-                      latitude: loc.lat,
-                      longitude: loc.lng,
-                    });
-                  }}
-                  initialValue={editForm.address}
-                />
-              </div>
-
-              <hr style={{ margin: "20px 0" }} />
-
-              <AvailabilityManager
-                value={editForm.availability}
-                onChange={(newAvailability) =>
-                  setEditForm({ ...editForm, availability: newAvailability })
-                }
-                bookedDates={bookings
-                  .filter(
-                    (b) =>
-                      b.serviceId === editingService.id &&
-                      b.status !== "cancelled"
-                  )
-                  .map((b) => new Date(b.date).toISOString().split("T")[0])}
-              />
-
-              <div className="button-group" style={{ marginTop: "20px" }}>
-                <button type="submit" className="btn btn-primary">
-                  Salva Modifiche
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setEditingService(null);
-                    setEditForm(null);
-                  }}
-                >
-                  Annulla
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <AvailabilityModal
+        isOpen={!!availabilityService}
+        onClose={() => setAvailabilityService(null)}
+        service={availabilityService}
+        bookings={
+          availabilityService
+            ? bookings
+                .filter(
+                  (b) =>
+                    b.serviceId === availabilityService.id &&
+                    b.status !== "cancelled"
+                )
+                .map((b) => new Date(b.date).toISOString().split("T")[0])
+            : []
+        }
+        onSave={handleUpdateAvailability}
+      />
 
       {/* Complete Booking Modal */}
-      {showCompleteModal && selectedBooking && (
-        <div
-          className="modal-overlay"
-          onClick={() => setShowCompleteModal(false)}
-        >
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button
-              className="modal-close"
-              onClick={() => setShowCompleteModal(false)}
-            >
-              &times;
-            </button>
-            <h2>Completa Servizio</h2>
-            <p>
-              Carica una foto come prova del lavoro completato per sbloccare il
-              pagamento.
-            </p>
-            <form onSubmit={handleCompleteBooking}>
-              <div className="form-group">
-                <label>Foto Prova</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      setPhotoProof(e.target.files[0]);
-                    }
-                  }}
-                  required
-                />
-              </div>
-              <div className="button-group">
-                <button type="submit" className="btn btn-success">
-                  Conferma Completamento
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowCompleteModal(false)}
-                >
-                  Annulla
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <CompleteBookingModal
+        isOpen={showCompleteModal}
+        onClose={() => setShowCompleteModal(false)}
+        onConfirm={handleCompleteBooking}
+      />
 
       {/* Chat Modal */}
       {showChatModal && selectedBooking && (

@@ -152,7 +152,8 @@ const ServicesPage: React.FC = () => {
     // Filter by products
     if (products && products.length > 0) {
       filtered = filtered.filter((service) => {
-        if (!service.productsUsed || service.productsUsed.length === 0) return false;
+        if (!service.productsUsed || service.productsUsed.length === 0)
+          return false;
         // Check if service has ALL selected products (AND logic)
         // Or ANY selected product (OR logic) - usually OR is better for discovery, but AND is more precise.
         // Let's go with OR logic for now (if service has at least one of the selected products)
@@ -192,10 +193,14 @@ const ServicesPage: React.FC = () => {
     // Filter by price range
     if (priceRange) {
       if (priceRange.min > 0) {
-        filtered = filtered.filter((service) => service.price >= priceRange.min);
+        filtered = filtered.filter(
+          (service) => service.price >= priceRange.min
+        );
       }
       if (priceRange.max < Infinity) {
-        filtered = filtered.filter((service) => service.price <= priceRange.max);
+        filtered = filtered.filter(
+          (service) => service.price <= priceRange.max
+        );
       }
     }
 
@@ -392,7 +397,15 @@ const ServicesPage: React.FC = () => {
 
       <SearchBar onSearch={handleSearch} />
 
-      <div className="view-toggle-container" style={{ display: "flex", justifyContent: "flex-end", marginBottom: "20px", gap: "10px" }}>
+      <div
+        className="view-toggle-container"
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          marginBottom: "20px",
+          gap: "10px",
+        }}
+      >
         <button
           className={`view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
           onClick={() => setViewMode("list")}
@@ -406,7 +419,7 @@ const ServicesPage: React.FC = () => {
             fontWeight: "600",
             display: "flex",
             alignItems: "center",
-            gap: "6px"
+            gap: "6px",
           }}
         >
           📋 Lista
@@ -424,7 +437,7 @@ const ServicesPage: React.FC = () => {
             fontWeight: "600",
             display: "flex",
             alignItems: "center",
-            gap: "6px"
+            gap: "6px",
           }}
         >
           🗺️ Mappa
@@ -478,7 +491,7 @@ const ServicesPage: React.FC = () => {
                     </span>
                   </div>
                   <p className="service-description">{service.description}</p>
-                  
+
                   {service.productsUsed && service.productsUsed.length > 0 && (
                     <div className="service-products">
                       {service.productsUsed.map((product) => (

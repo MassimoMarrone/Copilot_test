@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/server.js",
   "scripts": {
-    "build": "tsc && npm run build:react",
+    "build": "tsc && tsc -p src-react/tsconfig.json --noEmit && npm run build:react",
     "build:backend": "tsc",
     "build:react": "vite build",
     "start": "node dist/server.js",

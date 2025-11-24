@@ -124,12 +124,14 @@ const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
     const dateString = `${year}-${month}-${day}`;
 
     if (value.blockedDates.includes(dateString)) {
-        alert("Data già bloccata.");
-        return;
+      alert("Data già bloccata.");
+      return;
     }
 
     if (bookedDates.includes(dateString)) {
-      alert("Impossibile bloccare questa data: ci sono già prenotazioni attive.");
+      alert(
+        "Impossibile bloccare questa data: ci sono già prenotazioni attive."
+      );
       return;
     }
 

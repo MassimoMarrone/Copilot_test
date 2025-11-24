@@ -48,7 +48,7 @@ const MapUpdater: React.FC<{ services: Service[] }> = ({ services }) => {
           .filter((s) => s.latitude && s.longitude)
           .map((s) => [s.latitude!, s.longitude!])
       );
-      
+
       if (bounds.isValid()) {
         map.fitBounds(bounds, { padding: [50, 50] });
       }
@@ -61,13 +61,22 @@ const MapUpdater: React.FC<{ services: Service[] }> = ({ services }) => {
 const ServiceMap: React.FC<ServiceMapProps> = ({ services, onBook }) => {
   // Default center (Rome) if no services
   const defaultCenter: [number, number] = [41.9028, 12.4964];
-  
+
   const servicesWithLocation = services.filter(
     (s) => s.latitude && s.longitude
   );
 
   return (
-    <div className="service-map-container" style={{ height: "600px", width: "100%", borderRadius: "12px", overflow: "hidden", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
+    <div
+      className="service-map-container"
+      style={{
+        height: "600px",
+        width: "100%",
+        borderRadius: "12px",
+        overflow: "hidden",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+      }}
+    >
       <MapContainer
         center={defaultCenter}
         zoom={6}
@@ -77,7 +86,7 @@ const ServiceMap: React.FC<ServiceMapProps> = ({ services, onBook }) => {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
-        
+
         <MapUpdater services={servicesWithLocation} />
 
         {servicesWithLocation.map((service) => (
@@ -87,9 +96,19 @@ const ServiceMap: React.FC<ServiceMapProps> = ({ services, onBook }) => {
           >
             <Popup>
               <div className="map-popup-content" style={{ minWidth: "200px" }}>
-                <h3 style={{ margin: "0 0 5px 0", fontSize: "1rem" }}>{service.title}</h3>
-                <p style={{ margin: "0 0 5px 0", fontWeight: "bold" }}>€{service.price.toFixed(2)}</p>
-                <p style={{ margin: "0 0 10px 0", fontSize: "0.85rem", color: "#666" }}>
+                <h3 style={{ margin: "0 0 5px 0", fontSize: "1rem" }}>
+                  {service.title}
+                </h3>
+                <p style={{ margin: "0 0 5px 0", fontWeight: "bold" }}>
+                  €{service.price.toFixed(2)}
+                </p>
+                <p
+                  style={{
+                    margin: "0 0 10px 0",
+                    fontSize: "0.85rem",
+                    color: "#666",
+                  }}
+                >
                   {service.address}
                 </p>
                 {service.averageRating && (
@@ -110,7 +129,7 @@ const ServiceMap: React.FC<ServiceMapProps> = ({ services, onBook }) => {
                     border: "none",
                     borderRadius: "4px",
                     cursor: "pointer",
-                    fontSize: "0.9rem"
+                    fontSize: "0.9rem",
                   }}
                 >
                   Prenota

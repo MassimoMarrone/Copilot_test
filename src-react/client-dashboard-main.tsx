@@ -14,6 +14,6 @@ const getGoogleMapsApiKey = (): string => {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ClientDashboard googleMapsApiKey={getGoogleMapsApiKey()} />
+    <ClientDashboard />
   </React.StrictMode>
 );

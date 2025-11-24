@@ -55,17 +55,23 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>("Tutte");
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const filterRef = useRef<HTMLDivElement>(null);
   const locationWrapperRef = useRef<HTMLDivElement>(null);
 
   // Close filters and location results when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+      if (
+        filterRef.current &&
+        !filterRef.current.contains(event.target as Node)
+      ) {
         setShowFilters(false);
       }
-      if (locationWrapperRef.current && !locationWrapperRef.current.contains(event.target as Node)) {
+      if (
+        locationWrapperRef.current &&
+        !locationWrapperRef.current.contains(event.target as Node)
+      ) {
         setShowResults(false);
       }
     };
@@ -183,9 +189,21 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     };
 
     if (locationEnabled && currentLocation) {
-      onSearch(searchQuery, currentLocation, priceRange, selectedCategory, selectedProducts);
+      onSearch(
+        searchQuery,
+        currentLocation,
+        priceRange,
+        selectedCategory,
+        selectedProducts
+      );
     } else {
-      onSearch(searchQuery, undefined, priceRange, selectedCategory, selectedProducts);
+      onSearch(
+        searchQuery,
+        undefined,
+        priceRange,
+        selectedCategory,
+        selectedProducts
+      );
     }
   };
 
@@ -306,9 +324,25 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
             <div className="filter-section">
               <label className="filter-label">Prodotti Utilizzati</label>
-              <div className="products-filter-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+              <div
+                className="products-filter-grid"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "8px",
+                }}
+              >
                 {AVAILABLE_PRODUCTS.map((product) => (
-                  <label key={product} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.9rem", cursor: "pointer" }}>
+                  <label
+                    key={product}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      fontSize: "0.9rem",
+                      cursor: "pointer",
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={selectedProducts.includes(product)}
@@ -316,7 +350,9 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
                         if (e.target.checked) {
                           setSelectedProducts([...selectedProducts, product]);
                         } else {
-                          setSelectedProducts(selectedProducts.filter((p) => p !== product));
+                          setSelectedProducts(
+                            selectedProducts.filter((p) => p !== product)
+                          );
                         }
                       }}
                     />

@@ -20,7 +20,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const [query, setQuery] = useState(initialValue);
   const [results, setResults] = useState<LocationResult[]>([]);
   const [showResults, setShowResults] = useState(false);
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;

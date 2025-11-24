@@ -831,7 +831,7 @@ app.post(
       .isLength({ min: 3, max: 50 })
       .withMessage("Category must be between 3 and 50 characters"),
     body("price")
-      .isFloat({ min: 0.50 })
+      .isFloat({ min: 0.5 })
       .withMessage("Price must be at least €0.50"),
     body("address")
       .optional()
@@ -870,8 +870,16 @@ app.post(
       return;
     }
 
-    const { title, description, category, price, address, latitude, longitude, productsUsed } =
-      req.body;
+    const {
+      title,
+      description,
+      category,
+      price,
+      address,
+      latitude,
+      longitude,
+      productsUsed,
+    } = req.body;
 
     let imageUrl = undefined;
     if (req.file) {
@@ -916,7 +924,11 @@ app.post(
       description,
       category: category || "Altro",
       price: parseFloat(price),
-      productsUsed: productsUsed ? (typeof productsUsed === 'string' ? JSON.parse(productsUsed) : productsUsed) : [],
+      productsUsed: productsUsed
+        ? typeof productsUsed === "string"
+          ? JSON.parse(productsUsed)
+          : productsUsed
+        : [],
       address: address || undefined,
       latitude: latitude ? parseFloat(latitude) : undefined,
       longitude: longitude ? parseFloat(longitude) : undefined,
@@ -957,7 +969,7 @@ app.put(
       .withMessage("Category must be between 3 and 50 characters"),
     body("price")
       .optional()
-      .isFloat({ min: 0.50 })
+      .isFloat({ min: 0.5 })
       .withMessage("Price must be at least €0.50"),
     body("address")
       .optional()
@@ -1042,7 +1054,10 @@ app.put(
     if (longitude) service.longitude = parseFloat(longitude);
     if (productsUsed) {
       try {
-        service.productsUsed = typeof productsUsed === 'string' ? JSON.parse(productsUsed) : productsUsed;
+        service.productsUsed =
+          typeof productsUsed === "string"
+            ? JSON.parse(productsUsed)
+            : productsUsed;
       } catch (e) {
         console.error("Error parsing productsUsed", e);
       }
@@ -1191,7 +1206,7 @@ app.post(
       }
 
       // Check minimum price for Stripe
-      if (service.price < 0.50) {
+      if (service.price < 0.5) {
         res.status(400).json({
           error:
             "Il prezzo del servizio è inferiore al minimo consentito per i pagamenti online (€0.50). Contatta il fornitore per aggiornare il prezzo.",
@@ -1277,7 +1292,11 @@ app.post(
       console.error("Booking creation error:", error);
       res
         .status(500)
-        .json({ error: "Failed to create booking checkout session: " + (error.message || "Unknown error") });
+        .json({
+          error:
+            "Failed to create booking checkout session: " +
+            (error.message || "Unknown error"),
+        });
     }
   }
 );
