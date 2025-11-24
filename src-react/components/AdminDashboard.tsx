@@ -53,7 +53,9 @@ const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     "overview" | "users" | "services" | "bookings"
   >("overview");
-  const [serviceViewMode, setServiceViewMode] = useState<"list" | "map">("list");
+  const [serviceViewMode, setServiceViewMode] = useState<"list" | "map">(
+    "list"
+  );
   const navigate = useNavigate();
 
   useEffect(() => {

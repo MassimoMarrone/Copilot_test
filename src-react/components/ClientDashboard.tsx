@@ -62,7 +62,10 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
     email: string;
   } | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
-  const [searchLocation, setSearchLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [searchLocation, setSearchLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 

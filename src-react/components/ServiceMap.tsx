@@ -40,7 +40,10 @@ interface ServiceMapProps {
 }
 
 // Component to update map center when services change
-const MapUpdater: React.FC<{ services: Service[]; center?: { lat: number; lng: number } | null }> = ({ services, center }) => {
+const MapUpdater: React.FC<{
+  services: Service[];
+  center?: { lat: number; lng: number } | null;
+}> = ({ services, center }) => {
   const map = useMap();
 
   useEffect(() => {
@@ -62,7 +65,11 @@ const MapUpdater: React.FC<{ services: Service[]; center?: { lat: number; lng: n
   return null;
 };
 
-const ServiceMap: React.FC<ServiceMapProps> = ({ services, onBook, center }) => {
+const ServiceMap: React.FC<ServiceMapProps> = ({
+  services,
+  onBook,
+  center,
+}) => {
   // Default center (Rome) if no services
   const defaultCenter: [number, number] = [41.9028, 12.4964];
 
