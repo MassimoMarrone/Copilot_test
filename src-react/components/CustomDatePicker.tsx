@@ -14,6 +14,7 @@ interface CustomDatePickerProps {
   minDate?: Date;
   filterDate?: (date: Date) => boolean;
   className?: string;
+  highlightDates?: { [className: string]: Date[] }[];
 }
 
 const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
@@ -23,6 +24,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   minDate,
   filterDate,
   className,
+  highlightDates,
 }) => {
   return (
     <div className="custom-datepicker-wrapper">
@@ -34,6 +36,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
         placeholderText={placeholderText}
         minDate={minDate}
         filterDate={filterDate}
+        highlightDates={highlightDates}
         className={`custom-datepicker-input ${className || ""}`}
         calendarClassName="custom-datepicker-calendar"
         showPopperArrow={false}

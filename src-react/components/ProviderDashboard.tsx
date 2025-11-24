@@ -29,6 +29,7 @@ interface Service {
 
 interface Booking {
   id: string;
+  serviceId: string;
   serviceTitle: string;
   date: string;
   amount: number;
@@ -69,6 +70,11 @@ const ProviderDashboard: React.FC = () => {
     longitude: number;
     availability: ProviderAvailability;
   } | null>(null);
+  const [availabilityService, setAvailabilityService] = useState<Service | null>(
+    null
+  );
+  const [availabilityForm, setAvailabilityForm] =
+    useState<ProviderAvailability | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [userEmail, setUserEmail] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
@@ -283,6 +289,33 @@ const ProviderDashboard: React.FC = () => {
     }
   };
 
+  const handleUpdateAvailability = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!availabilityService || !availabilityForm) return;
+
+    const formData = new FormData();
+    formData.append("availability", JSON.stringify(availabilityForm));
+
+    try {
+      const response = await fetch(`/api/services/${availabilityService.id}`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (response.ok) {
+        alert("Disponibilità aggiornata con successo!");
+        setAvailabilityService(null);
+        setAvailabilityForm(null);
+        loadServices();
+      } else {
+        const data = await response.json();
+        alert(data.error || "Errore nell'aggiornamento della disponibilità");
+      }
+    } catch (error) {
+      alert("Errore di connessione");
+    }
+  };
+
   const handleCompleteBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedBooking || !photoProof) {
@@ -372,36 +405,60 @@ const ProviderDashboard: React.FC = () => {
                     {new Date(service.createdAt).toLocaleDateString("it-IT")}
                   </small>
                 </p>
-                <button
-                  className="btn-edit-service"
-                  onClick={() => {
-                    setEditingService(service);
-                    setEditForm({
-                      title: service.title,
-                      description: service.description,
-                      price: service.price.toString(),
-                      address: service.address || "",
-                      latitude: service.latitude || 0,
-                      longitude: service.longitude || 0,
-                      availability: service.availability || {
-                        weekly: defaultWeeklySchedule,
-                        blockedDates: [],
-                      },
-                    });
-                  }}
-                  style={{
-                    marginTop: "10px",
-                    backgroundColor: "#ffc107",
-                    color: "#000",
-                    border: "none",
-                    padding: "8px 16px",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    width: "100%",
-                  }}
-                >
-                  ✏️ Modifica Servizio & Disponibilità
-                </button>
+                <div className="service-actions" style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                  <button
+                    className="btn-calendar"
+                    onClick={() => {
+                      setAvailabilityService(service);
+                      setAvailabilityForm(
+                        service.availability || {
+                          weekly: defaultWeeklySchedule,
+                          blockedDates: [],
+                        }
+                      );
+                    }}
+                    style={{
+                      flex: 1,
+                      backgroundColor: "#6f42c1",
+                      color: "white",
+                      border: "none",
+                      padding: "8px 16px",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    📅 Calendario
+                  </button>
+                  <button
+                    className="btn-edit-service"
+                    onClick={() => {
+                      setEditingService(service);
+                      setEditForm({
+                        title: service.title,
+                        description: service.description,
+                        price: service.price.toString(),
+                        address: service.address || "",
+                        latitude: service.latitude || 0,
+                        longitude: service.longitude || 0,
+                        availability: service.availability || {
+                          weekly: defaultWeeklySchedule,
+                          blockedDates: [],
+                        },
+                      });
+                    }}
+                    style={{
+                      flex: 1,
+                      backgroundColor: "#ffc107",
+                      color: "#000",
+                      border: "none",
+                      padding: "8px 16px",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ✏️ Modifica
+                  </button>
+                </div>
               </div>
             ))
           )}
@@ -712,6 +769,74 @@ const ProviderDashboard: React.FC = () => {
         </div>
       )}
 
+      {/* Availability Modal */}
+      {availabilityService && availabilityForm && (
+        <div
+          className="modal-overlay"
+          onClick={() => {
+            setAvailabilityService(null);
+            setAvailabilityForm(null);
+          }}
+        >
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: "800px",
+              width: "90%",
+              maxHeight: "90vh",
+              overflowY: "auto",
+            }}
+          >
+            <button
+              className="modal-close"
+              onClick={() => {
+                setAvailabilityService(null);
+                setAvailabilityForm(null);
+              }}
+            >
+              &times;
+            </button>
+            <h2>Gestione Calendario: {availabilityService.title}</h2>
+            <p style={{ color: "#666", marginBottom: "20px" }}>
+              Visualizza le prenotazioni e gestisci i giorni di chiusura.
+            </p>
+
+            <form onSubmit={handleUpdateAvailability}>
+              <AvailabilityManager
+                value={availabilityForm}
+                onChange={(newAvailability) =>
+                  setAvailabilityForm(newAvailability)
+                }
+                bookedDates={bookings
+                  .filter(
+                    (b) =>
+                      b.serviceId === availabilityService.id &&
+                      b.status !== "cancelled"
+                  )
+                  .map((b) => new Date(b.date).toISOString().split("T")[0])}
+              />
+
+              <div className="button-group" style={{ marginTop: "20px" }}>
+                <button type="submit" className="btn btn-primary">
+                  Salva Disponibilità
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setAvailabilityService(null);
+                    setAvailabilityForm(null);
+                  }}
+                >
+                  Chiudi
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Edit Service Modal */}
       {editingService && editForm && (
         <div
@@ -817,6 +942,13 @@ const ProviderDashboard: React.FC = () => {
                 onChange={(newAvailability) =>
                   setEditForm({ ...editForm, availability: newAvailability })
                 }
+                bookedDates={bookings
+                  .filter(
+                    (b) =>
+                      b.serviceId === editingService.id &&
+                      b.status !== "cancelled"
+                  )
+                  .map((b) => new Date(b.date).toISOString().split("T")[0])}
               />
 
               <div className="button-group" style={{ marginTop: "20px" }}>

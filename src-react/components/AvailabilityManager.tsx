@@ -45,11 +45,13 @@ export const defaultWeeklySchedule: WeeklySchedule = {
 interface AvailabilityManagerProps {
   value: ProviderAvailability;
   onChange: (newAvailability: ProviderAvailability) => void;
+  bookedDates?: string[]; // Array of YYYY-MM-DD strings
 }
 
 const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
   value,
   onChange,
+  bookedDates = [],
 }) => {
   const [newBlockedDate, setNewBlockedDate] = useState<Date | null>(null);
 
@@ -122,9 +124,15 @@ const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
     const dateString = `${year}-${month}-${day}`;
 
     if (value.blockedDates.includes(dateString)) {
-      alert("Data già bloccata.");
+        alert("Data già bloccata.");
+        return;
+    }
+
+    if (bookedDates.includes(dateString)) {
+      alert("Impossibile bloccare questa data: ci sono già prenotazioni attive.");
       return;
     }
+
     const newAvailability = {
       ...value,
       blockedDates: [...value.blockedDates, dateString].sort(),
@@ -220,6 +228,11 @@ const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
               onChange={(date) => setNewBlockedDate(date)}
               placeholderText="Seleziona una data"
               filterDate={isDateSelectable}
+              highlightDates={[
+                {
+                  "booked-date-highlight": bookedDates.map((d) => new Date(d)),
+                },
+              ]}
             />
             <button
               type="button"

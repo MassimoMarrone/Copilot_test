@@ -74,9 +74,15 @@ const ALLOWED_FILE_TYPES = (
   process.env.ALLOWED_FILE_TYPES || "image/jpeg,image/jpg,image/png,image/gif"
 ).split(",");
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_dummy", {
-  apiVersion: "2025-11-17.clover",
-});
+const stripe = new Stripe(
+  (process.env.STRIPE_SECRET_KEY || "sk_test_dummy").trim(),
+  {
+    apiVersion: "2025-11-17.clover",
+  }
+);
+
+// In-memory store for mock Stripe sessions (for testing without valid API key)
+const mockStripeSessions: Record<string, any> = {};
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -820,8 +826,8 @@ app.post(
       .isLength({ min: 10, max: 2000 })
       .withMessage("Description must be between 10 and 2000 characters"),
     body("price")
-      .isFloat({ min: 0.01 })
-      .withMessage("Price must be a positive number"),
+      .isFloat({ min: 0.50 })
+      .withMessage("Price must be at least €0.50"),
     body("address")
       .optional()
       .trim()
@@ -925,8 +931,8 @@ app.put(
       .withMessage("Description must be between 10 and 2000 characters"),
     body("price")
       .optional()
-      .isFloat({ min: 0.01 })
-      .withMessage("Price must be a positive number"),
+      .isFloat({ min: 0.50 })
+      .withMessage("Price must be at least €0.50"),
     body("address")
       .optional()
       .trim()
@@ -1134,56 +1140,94 @@ app.post(
         return;
       }
 
-      // Create Stripe checkout session with booking details in metadata
-      const session = await stripe.checkout.sessions.create({
-        payment_method_types: ["card"],
-        line_items: [
-          {
-            price_data: {
-              currency: "eur",
-              product_data: {
-                name: service.title,
-                description: `Service booking for ${new Date(
-                  date
-                ).toLocaleDateString("it-IT")}`,
+      // Check minimum price for Stripe
+      if (service.price < 0.50) {
+        res.status(400).json({
+          error:
+            "Il prezzo del servizio è inferiore al minimo consentito per i pagamenti online (€0.50). Contatta il fornitore per aggiornare il prezzo.",
+        });
+        return;
+      }
+
+      // Truncate metadata values to 500 characters (Stripe limit)
+      const safeMetadata = {
+        serviceId: service.id,
+        clientId: req.user!.id,
+        clientEmail: req.user!.email.substring(0, 500),
+        providerId: service.providerId,
+        providerEmail: service.providerEmail.substring(0, 500),
+        serviceTitle: service.title.substring(0, 500),
+        amount: service.price.toString(),
+        date: date,
+        clientPhone: (clientPhone || "").substring(0, 500),
+        preferredTime: (preferredTime || "").substring(0, 500),
+        notes: (notes || "").substring(0, 500),
+        address: (address || "").substring(0, 500),
+      };
+
+      let session;
+
+      // Mock Stripe for testing if using dummy key
+      if (
+        process.env.STRIPE_SECRET_KEY === "sk_test_dummy" ||
+        !process.env.STRIPE_SECRET_KEY
+      ) {
+        console.log("Using mock Stripe session for testing");
+        const mockSessionId = "cs_test_" + Date.now();
+        const mockSession = {
+          id: mockSessionId,
+          status: "complete",
+          payment_status: "unpaid", // capture_method: manual
+          payment_intent: "pi_mock_" + Date.now(),
+          metadata: safeMetadata,
+        };
+        mockStripeSessions[mockSessionId] = mockSession;
+
+        session = {
+          id: mockSessionId,
+          url: `${req.protocol}://${req.get(
+            "host"
+          )}/client-dashboard?payment=success&session_id=${mockSessionId}`,
+        };
+      } else {
+        // Create Stripe checkout session with booking details in metadata
+        session = await stripe.checkout.sessions.create({
+          payment_method_types: ["card"],
+          line_items: [
+            {
+              price_data: {
+                currency: "eur",
+                product_data: {
+                  name: service.title,
+                  description: `Service booking for ${new Date(
+                    date
+                  ).toLocaleDateString("it-IT")}`,
+                },
+                unit_amount: Math.round(service.price * 100), // Amount in cents
               },
-              unit_amount: Math.round(service.price * 100), // Amount in cents
+              quantity: 1,
             },
-            quantity: 1,
+          ],
+          mode: "payment",
+          payment_intent_data: {
+            capture_method: "manual", // Authorize only (freeze funds)
           },
-        ],
-        mode: "payment",
-        payment_intent_data: {
-          capture_method: "manual", // Authorize only (freeze funds)
-        },
-        success_url: `${req.protocol}://${req.get(
-          "host"
-        )}/client-dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${req.protocol}://${req.get(
-          "host"
-        )}/client-dashboard?payment=cancel`,
-        metadata: {
-          serviceId: service.id,
-          clientId: req.user!.id,
-          clientEmail: req.user!.email,
-          providerId: service.providerId,
-          providerEmail: service.providerEmail,
-          serviceTitle: service.title,
-          amount: service.price.toString(),
-          date: date,
-          clientPhone: clientPhone || "",
-          preferredTime: preferredTime || "",
-          notes: notes || "",
-          address: address || "",
-        },
-      });
+          success_url: `${req.protocol}://${req.get(
+            "host"
+          )}/client-dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${req.protocol}://${req.get(
+            "host"
+          )}/client-dashboard?payment=cancel`,
+          metadata: safeMetadata,
+        });
+      }
 
       res.json({ id: session.id, url: session.url });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Booking creation error:", error);
       res
         .status(500)
-        .json({ error: "Failed to create booking checkout session" });
+        .json({ error: "Failed to create booking checkout session: " + (error.message || "Unknown error") });
     }
   }
 );
@@ -1604,23 +1648,38 @@ app.post(
     try {
       // 1. Capture the funds if they are just authorized
       if (booking.paymentStatus === "authorized" && booking.paymentIntentId) {
-        await stripe.paymentIntents.capture(booking.paymentIntentId);
-        console.log(`Captured payment for booking ${booking.id}`);
+        if (booking.paymentIntentId.startsWith("pi_mock_")) {
+          console.log(`Mock captured payment for booking ${booking.id}`);
+        } else {
+          await stripe.paymentIntents.capture(booking.paymentIntentId);
+          console.log(`Captured payment for booking ${booking.id}`);
+        }
       }
 
       // 2. Transfer funds to provider if they have a connected Stripe account
       if (user.stripeAccountId) {
-        await stripe.transfers.create({
-          amount: transferAmount,
-          currency: "eur",
-          destination: user.stripeAccountId,
-          description: `Payout for booking ${booking.id}`,
-        });
-        console.log(
-          `Transferred ${transferAmount / 100} EUR to provider ${user.email} (${
-            user.stripeAccountId
-          })`
-        );
+        if (
+          process.env.STRIPE_SECRET_KEY === "sk_test_dummy" ||
+          !process.env.STRIPE_SECRET_KEY
+        ) {
+          console.log(
+            `Mock transfer of ${transferAmount / 100} EUR to provider ${
+              user.email
+            } (${user.stripeAccountId})`
+          );
+        } else {
+          await stripe.transfers.create({
+            amount: transferAmount,
+            currency: "eur",
+            destination: user.stripeAccountId,
+            description: `Payout for booking ${booking.id}`,
+          });
+          console.log(
+            `Transferred ${transferAmount / 100} EUR to provider ${
+              user.email
+            } (${user.stripeAccountId})`
+          );
+        }
       } else {
         console.log(
           `Provider ${user.email} has no Stripe account connected. Funds remain in platform account.`
@@ -1759,7 +1818,20 @@ app.get(
         return;
       }
 
-      const session = await stripe.checkout.sessions.retrieve(session_id);
+      let session;
+      if (
+        (process.env.STRIPE_SECRET_KEY === "sk_test_dummy" ||
+          !process.env.STRIPE_SECRET_KEY) &&
+        session_id.startsWith("cs_test_")
+      ) {
+        session = mockStripeSessions[session_id];
+        if (!session) {
+          res.status(404).json({ error: "Mock session not found" });
+          return;
+        }
+      } else {
+        session = await stripe.checkout.sessions.retrieve(session_id);
+      }
 
       // Check if the session is complete (user finished the flow)
       // With capture_method: 'manual', payment_status will be 'unpaid' but status 'complete'
