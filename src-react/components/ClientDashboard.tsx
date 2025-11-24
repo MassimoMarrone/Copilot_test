@@ -57,7 +57,10 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
   const [showBecomeProviderModal, setShowBecomeProviderModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isProvider, setIsProvider] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{ id: string; email: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{
+    id: string;
+    email: string;
+  } | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -319,13 +322,17 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
         <div className="view-mode-toggle">
           <button
             onClick={() => setViewMode("list")}
-            className={`btn view-mode-btn ${viewMode === "list" ? "active" : ""}`}
+            className={`btn view-mode-btn ${
+              viewMode === "list" ? "active" : ""
+            }`}
           >
             📋 Lista
           </button>
           <button
             onClick={() => setViewMode("map")}
-            className={`btn view-mode-btn ${viewMode === "map" ? "active" : ""}`}
+            className={`btn view-mode-btn ${
+              viewMode === "map" ? "active" : ""
+            }`}
           >
             🗺️ Mappa
           </button>
@@ -360,15 +367,16 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
             )}
           </div>
         ) : (
-          <div className="map-container-wrapper" style={{ height: "500px", marginTop: "20px" }}>
-            <ServiceMap 
-              services={filteredServices} 
-              onBook={(service) => openBookingModal(service)} 
+          <div
+            className="map-container-wrapper"
+            style={{ height: "500px", marginTop: "20px" }}
+          >
+            <ServiceMap
+              services={filteredServices}
+              onBook={(service) => openBookingModal(service)}
             />
           </div>
         )}
-
-
       </div>
 
       <div className="dashboard-section">
