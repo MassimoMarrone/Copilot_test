@@ -56,11 +56,13 @@ Applicazione web per la prenotazione di servizi di pulizia con sistema di pagame
 - 🔒 **Helmet**: Header di sicurezza HTTP configurati
 - 🧼 **Input Validation**: Validazione rigorosa dei dati in ingresso
 - ⚡ **Architettura Scalabile**: Backend Node.js/Express e Frontend React/Vite
+- 🏗️ **Pattern Controller-Service**: Separazione netta tra logica di business e gestione delle richieste HTTP per una migliore manutenibilità e testabilità.
 
 ## Requisiti
 
 - Node.js (v14 o superiore)
 - npm
+- Database SQL (SQLite per sviluppo, PostgreSQL per produzione)
 
 ## Installazione
 
@@ -84,19 +86,26 @@ cp .env.example .env
 # Modifica .env con le tue configurazioni
 ```
 
-4. Compila il codice TypeScript:
+4. Inizializza il database Prisma:
+
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+5. Compila il codice TypeScript:
 
 ```bash
 npm run build
 ```
 
-5. Avvia il server:
+6. Avvia il server:
 
 ```bash
 npm start
 ```
 
-6. Apri il browser e vai a:
+7. Apri il browser e vai a:
 
 ```
 http://localhost:3000
@@ -111,6 +120,7 @@ http://localhost:3000
 - `npm run dev` - Compila e avvia il backend in un solo comando
 - `npm run dev:react` - Avvia il server di sviluppo Vite per React
 - `npm run clean` - Pulisce le cartelle dist e public/react
+- `npx prisma studio` - Apre l'interfaccia grafica per gestire il database
 
 ## Utilizzo
 
@@ -173,13 +183,15 @@ http://localhost:3000
 ## Tecnologie Utilizzate
 
 - **Backend**: Node.js, Express.js con TypeScript
+- **Database**: Prisma ORM (SQLite/PostgreSQL)
+- **Architettura**: Controller-Service Pattern
 - **Autenticazione**: JWT, bcryptjs
 - **Upload File**: Multer con validazione
 - **Sicurezza**: Helmet.js, express-rate-limit, express-validator
 - **Configurazione**: dotenv
 - **Frontend**: React 19 con TypeScript, Vite
 - **UI/UX**: Modal-based login/registration, responsive navbar
-- **Storage**: File system (JSON files) - da sostituire con database in produzione
+- **Storage**: File system (Uploads) e Database Relazionale
 
 ## Note
 
@@ -199,7 +211,7 @@ Questa versione include:
 
 ### Ulteriori Miglioramenti per Produzione
 
-- In produzione, sostituire il sistema di storage basato su file con un database (MongoDB, PostgreSQL, etc.)
+- In produzione, utilizzare PostgreSQL invece di SQLite
 - Implementare un sistema di pagamento reale (Stripe, PayPal, etc.)
 - Aggiungere SSL/HTTPS obbligatorio
 - Aggiungere validazione email con conferma via email
@@ -224,7 +236,7 @@ Questa versione include:
 
 ### Raccomandazioni per Produzione ⚠️
 
-1. **Database**: Migrare da file JSON a database production-grade
+1. **Database**: Usare PostgreSQL gestito (es. AWS RDS, Supabase)
 2. **HTTPS**: Configurare SSL/TLS con certificati validi
 3. **Secrets Management**: Usare servizi dedicati (AWS Secrets Manager, etc.)
 4. **Email Verification**: Implementare verifica email utenti
@@ -236,6 +248,8 @@ Vedi [SECURITY.md](SECURITY.md) per l'analisi completa e le raccomandazioni.
 
 ### ✅ Completato di Recente
 
+- **Refactoring Backend**: Adozione del pattern Controller-Service per una migliore organizzazione del codice.
+- **Integrazione Prisma ORM**: Sostituzione dei file JSON con un database relazionale robusto.
 - **Admin Dashboard**: Interfaccia completa per gestione utenti, servizi e prenotazioni.
 - **Sistema Email (SMTP)**: Integrazione Nodemailer con supporto SMTP reale (Gmail) e template HTML.
 - **Rebranding**: Aggiornamento nome applicazione da "TimeShare" a "Domy".
@@ -244,24 +258,21 @@ Vedi [SECURITY.md](SECURITY.md) per l'analisi completa e le raccomandazioni.
 ### 🚧 In Corso / Da Fare (To-Do)
 
 1. **Integrazione Pagamenti Reale (Stripe)**
+
    - Implementazione flusso Escrow completo con Stripe Connect.
    - Gestione webhook per aggiornamenti stato pagamento.
-2. **Migrazione Database**
 
-   - Migrazione da file JSON a database relazionale (SQLite per dev, PostgreSQL per prod).
-   - Implementazione ORM (Prisma o TypeORM).
-
-3. **Verifica Email Utente**
+2. **Verifica Email Utente**
 
    - Invio link di conferma alla registrazione.
    - Blocco login per utenti non verificati.
 
-4. **Sistema di Recensioni**
+3. **Sistema di Recensioni**
 
    - UI per lasciare feedback (stelle + commento) dopo il completamento del servizio.
    - Visualizzazione media recensioni nel profilo fornitore.
 
-5. **Chat in Tempo Reale**
+4. **Chat in Tempo Reale**
    - Miglioramento UX chat.
    - Supporto invio immagini in chat.
    - Notifiche visive nuovi messaggi.
