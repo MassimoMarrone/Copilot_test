@@ -62,6 +62,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
     email: string;
   } | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [searchLocation, setSearchLocation] = useState<{ lat: number; lng: number } | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -142,6 +143,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
 
     // Filter by location (if provided)
     if (location && location.lat && location.lng) {
+      setSearchLocation({ lat: location.lat, lng: location.lng });
       filtered = filtered.filter((service) => {
         if (!service.latitude || !service.longitude) return false;
 
@@ -156,6 +158,8 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
         // Filter services within 50km
         return distance <= 50;
       });
+    } else {
+      setSearchLocation(null);
     }
 
     setFilteredServices(filtered);
@@ -374,6 +378,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
             <ServiceMap
               services={filteredServices}
               onBook={(service) => openBookingModal(service)}
+              center={searchLocation}
             />
           </div>
         )}
