@@ -27,6 +27,7 @@ export interface Service {
   description: string;
   category?: string;
   price: number;
+  productsUsed?: string[];
   address?: string;
   latitude?: number;
   longitude?: number;

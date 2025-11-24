@@ -19,6 +19,7 @@ interface Service {
   description: string;
   category?: string;
   price: number;
+  productsUsed?: string[];
   providerEmail: string;
   address?: string;
   latitude?: number;
@@ -36,6 +37,15 @@ const CATEGORIES = [
   "Elettricista",
   "Traslochi",
   "Altro",
+];
+
+const AVAILABLE_PRODUCTS = [
+  "Prodotti Ecologici",
+  "Prodotti Ipoallergenici",
+  "Attrezzatura Professionale",
+  "Prodotti Sanificanti",
+  "Prodotti Pet-Friendly",
+  "Prodotti Senza Profumo",
 ];
 
 interface Booking {
@@ -77,6 +87,7 @@ const ProviderDashboard: React.FC = () => {
     description: string;
     category: string;
     price: string;
+    productsUsed: string[];
     address: string;
     latitude: number;
     longitude: number;
@@ -101,6 +112,7 @@ const ProviderDashboard: React.FC = () => {
     description: "",
     category: "Altro",
     price: "",
+    productsUsed: [] as string[],
     address: "",
     latitude: 0,
     longitude: 0,
@@ -219,6 +231,7 @@ const ProviderDashboard: React.FC = () => {
     formData.append("description", newService.description);
     formData.append("category", newService.category);
     formData.append("price", newService.price);
+    formData.append("productsUsed", JSON.stringify(newService.productsUsed));
 
     if (newService.address) {
       formData.append("address", newService.address);
@@ -246,6 +259,7 @@ const ProviderDashboard: React.FC = () => {
           description: "",
           category: "Altro",
           price: "",
+          productsUsed: [],
           address: "",
           latitude: 0,
           longitude: 0,
@@ -270,6 +284,7 @@ const ProviderDashboard: React.FC = () => {
     formData.append("description", editForm.description);
     formData.append("category", editForm.category);
     formData.append("price", editForm.price);
+    formData.append("productsUsed", JSON.stringify(editForm.productsUsed));
     formData.append("availability", JSON.stringify(editForm.availability));
 
     if (editForm.address) {
@@ -454,6 +469,7 @@ const ProviderDashboard: React.FC = () => {
                         description: service.description,
                         category: service.category || "Altro",
                         price: service.price.toString(),
+                        productsUsed: service.productsUsed || [],
                         address: service.address || "",
                         latitude: service.latitude || 0,
                         longitude: service.longitude || 0,
@@ -766,6 +782,33 @@ const ProviderDashboard: React.FC = () => {
                 />
               </div>
               <div className="form-group">
+                <label>Prodotti Utilizzati</label>
+                <div className="products-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  {AVAILABLE_PRODUCTS.map((product) => (
+                    <label key={product} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                      <input
+                        type="checkbox"
+                        checked={newService.productsUsed.includes(product)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setNewService({
+                              ...newService,
+                              productsUsed: [...newService.productsUsed, product],
+                            });
+                          } else {
+                            setNewService({
+                              ...newService,
+                              productsUsed: newService.productsUsed.filter((p) => p !== product),
+                            });
+                          }
+                        }}
+                      />
+                      {product}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="form-group">
                 <label>Immagine Servizio (Opzionale)</label>
                 <input
                   type="file"
@@ -968,6 +1011,33 @@ const ProviderDashboard: React.FC = () => {
                   }
                   required
                 />
+              </div>
+              <div className="form-group">
+                <label>Prodotti Utilizzati</label>
+                <div className="products-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  {AVAILABLE_PRODUCTS.map((product) => (
+                    <label key={product} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                      <input
+                        type="checkbox"
+                        checked={editForm.productsUsed.includes(product)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setEditForm({
+                              ...editForm,
+                              productsUsed: [...editForm.productsUsed, product],
+                            });
+                          } else {
+                            setEditForm({
+                              ...editForm,
+                              productsUsed: editForm.productsUsed.filter((p) => p !== product),
+                            });
+                          }
+                        }}
+                      />
+                      {product}
+                    </label>
+                  ))}
+                </div>
               </div>
               <div className="form-group">
                 <label>Nuova Immagine (Opzionale)</label>

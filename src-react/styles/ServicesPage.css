@@ -800,3 +800,21 @@
 .time-popup::-webkit-scrollbar-thumb:hover {
   background: #999;
 }
+
+.service-products {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.product-tag {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid #c8e6c9;
+}
+

@@ -43,6 +43,7 @@ interface Service {
   reviewCount?: number;
   imageUrl?: string;
   availability?: ProviderAvailability;
+  productsUsed?: string[];
 }
 
 const ServicesPage: React.FC = () => {
@@ -136,13 +137,27 @@ const ServicesPage: React.FC = () => {
     query: string,
     location?: { lat: number; lng: number; address: string },
     priceRange?: { min: number; max: number },
-    category?: string
+    category?: string,
+    products?: string[]
   ) => {
     let filtered = services;
 
     // Filter by category
     if (category && category !== "Tutte") {
       filtered = filtered.filter((service) => service.category === category);
+    }
+
+    // Filter by products
+    if (products && products.length > 0) {
+      filtered = filtered.filter((service) => {
+        if (!service.productsUsed || service.productsUsed.length === 0) return false;
+        // Check if service has ALL selected products (AND logic)
+        // Or ANY selected product (OR logic) - usually OR is better for discovery, but AND is more precise.
+        // Let's go with OR logic for now (if service has at least one of the selected products)
+        // Actually, if I select "Eco-friendly" and "Pet-friendly", I probably want services that are BOTH.
+        // Let's stick to AND logic for now as it's a filter.
+        return products.every((p) => service.productsUsed!.includes(p));
+      });
     }
 
     // Filter by search query
@@ -420,6 +435,17 @@ const ServicesPage: React.FC = () => {
                     </span>
                   </div>
                   <p className="service-description">{service.description}</p>
+                  
+                  {service.productsUsed && service.productsUsed.length > 0 && (
+                    <div className="service-products">
+                      {service.productsUsed.map((product) => (
+                        <span key={product} className="product-tag">
+                          {product}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
                   {service.address && (
                     <p className="service-location">📍 {service.address}</p>
                   )}

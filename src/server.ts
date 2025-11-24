@@ -846,6 +846,20 @@ app.post(
       .optional()
       .isFloat({ min: -180, max: 180 })
       .withMessage("Longitude must be between -180 and 180"),
+    body("productsUsed")
+      .optional()
+      .custom((value) => {
+        if (typeof value === "string") {
+          try {
+            const parsed = JSON.parse(value);
+            if (!Array.isArray(parsed)) throw new Error("Must be an array");
+            return true;
+          } catch {
+            throw new Error("Products used must be a valid JSON array string");
+          }
+        }
+        return true;
+      }),
   ],
   validate,
   (req: Request, res: Response): void => {
@@ -856,7 +870,7 @@ app.post(
       return;
     }
 
-    const { title, description, category, price, address, latitude, longitude } =
+    const { title, description, category, price, address, latitude, longitude, productsUsed } =
       req.body;
 
     let imageUrl = undefined;
@@ -902,6 +916,7 @@ app.post(
       description,
       category: category || "Altro",
       price: parseFloat(price),
+      productsUsed: productsUsed ? (typeof productsUsed === 'string' ? JSON.parse(productsUsed) : productsUsed) : [],
       address: address || undefined,
       latitude: latitude ? parseFloat(latitude) : undefined,
       longitude: longitude ? parseFloat(longitude) : undefined,
@@ -957,6 +972,20 @@ app.put(
       .optional()
       .isFloat({ min: -180, max: 180 })
       .withMessage("Longitude must be between -180 and 180"),
+    body("productsUsed")
+      .optional()
+      .custom((value) => {
+        if (typeof value === "string") {
+          try {
+            const parsed = JSON.parse(value);
+            if (!Array.isArray(parsed)) throw new Error("Must be an array");
+            return true;
+          } catch {
+            throw new Error("Products used must be a valid JSON array string");
+          }
+        }
+        return true;
+      }),
     body("availability")
       .optional()
       .custom((value) => {
@@ -999,6 +1028,7 @@ app.put(
       latitude,
       longitude,
       availability,
+      productsUsed,
     } = req.body;
 
     const service = services[serviceIndex];
@@ -1010,6 +1040,13 @@ app.put(
     if (address !== undefined) service.address = address;
     if (latitude) service.latitude = parseFloat(latitude);
     if (longitude) service.longitude = parseFloat(longitude);
+    if (productsUsed) {
+      try {
+        service.productsUsed = typeof productsUsed === 'string' ? JSON.parse(productsUsed) : productsUsed;
+      } catch (e) {
+        console.error("Error parsing productsUsed", e);
+      }
+    }
 
     if (req.file) {
       service.imageUrl = "/uploads/" + req.file.filename;

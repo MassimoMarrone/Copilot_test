@@ -6,7 +6,8 @@ interface SearchBarProps {
     query: string,
     location?: { lat: number; lng: number; address: string },
     priceRange?: { min: number; max: number },
-    category?: string
+    category?: string,
+    products?: string[]
   ) => void;
   // googleMapsApiKey removed as we use OpenStreetMap
 }
@@ -20,6 +21,15 @@ const CATEGORIES = [
   "Elettricista",
   "Traslochi",
   "Altro",
+];
+
+const AVAILABLE_PRODUCTS = [
+  "Prodotti Ecologici",
+  "Prodotti Ipoallergenici",
+  "Attrezzatura Professionale",
+  "Prodotti Sanificanti",
+  "Prodotti Pet-Friendly",
+  "Prodotti Senza Profumo",
 ];
 
 interface NominatimResult {
@@ -43,6 +53,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const [minPrice, setMinPrice] = useState<number>(0);
   const [maxPrice, setMaxPrice] = useState<number>(200);
   const [selectedCategory, setSelectedCategory] = useState<string>("Tutte");
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const filterRef = useRef<HTMLDivElement>(null);
@@ -172,9 +183,9 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     };
 
     if (locationEnabled && currentLocation) {
-      onSearch(searchQuery, currentLocation, priceRange, selectedCategory);
+      onSearch(searchQuery, currentLocation, priceRange, selectedCategory, selectedProducts);
     } else {
-      onSearch(searchQuery, undefined, priceRange, selectedCategory);
+      onSearch(searchQuery, undefined, priceRange, selectedCategory, selectedProducts);
     }
   };
 
@@ -291,6 +302,28 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div className="filter-section">
+              <label className="filter-label">Prodotti Utilizzati</label>
+              <div className="products-filter-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                {AVAILABLE_PRODUCTS.map((product) => (
+                  <label key={product} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.9rem", cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedProducts.includes(product)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedProducts([...selectedProducts, product]);
+                        } else {
+                          setSelectedProducts(selectedProducts.filter((p) => p !== product));
+                        }
+                      }}
+                    />
+                    {product}
+                  </label>
+                ))}
+              </div>
             </div>
 
             <div className="filter-section">
