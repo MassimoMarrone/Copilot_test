@@ -32,6 +32,7 @@ interface Booking {
   preferredTime?: string;
   notes?: string;
   address?: string;
+  hasReview?: boolean;
 }
 
 interface ClientDashboardProps {
@@ -412,7 +413,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                   >
                     💬 Apri Chat
                   </button>
-                  {booking.status === "completed" && (
+                  {booking.status === "completed" && !booking.hasReview && (
                     <button
                       onClick={() => {
                         setReviewBooking(booking);
@@ -422,6 +423,9 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                     >
                       ⭐ Lascia una Recensione
                     </button>
+                  )}
+                  {booking.status === "completed" && booking.hasReview && (
+                    <span className="badge-reviewed">✅ Recensito</span>
                   )}
                 </div>
               </div>

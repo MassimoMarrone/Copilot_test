@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import ReviewModal from "../components/ReviewModal";
 import "../styles/BookingsPage.css";
 
 interface Booking {
@@ -16,6 +17,7 @@ interface Booking {
   preferredTime?: string;
   notes?: string;
   address?: string;
+  hasReview?: boolean;
 }
 
 const BookingsPage: React.FC = () => {
@@ -23,6 +25,8 @@ const BookingsPage: React.FC = () => {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewBooking, setReviewBooking] = useState<Booking | null>(null);
 
   useEffect(() => {
     loadBookings();
@@ -133,11 +137,40 @@ const BookingsPage: React.FC = () => {
                   >
                     💬 Chat con Fornitore
                   </button>
+                  {booking.status === "completed" && !booking.hasReview && (
+                    <button
+                      onClick={() => {
+                        setReviewBooking(booking);
+                        setShowReviewModal(true);
+                      }}
+                      className="btn-review"
+                    >
+                      ⭐ Lascia Recensione
+                    </button>
+                  )}
+                  {booking.status === "completed" && booking.hasReview && (
+                    <span className="badge-reviewed">✅ Recensito</span>
+                  )}
                 </div>
               </div>
             ))
           )}
         </div>
+      )}
+
+      {showReviewModal && reviewBooking && (
+        <ReviewModal
+          booking={reviewBooking}
+          onClose={() => {
+            setShowReviewModal(false);
+            setReviewBooking(null);
+          }}
+          onReviewSubmit={() => {
+            setShowReviewModal(false);
+            setReviewBooking(null);
+            loadBookings();
+          }}
+        />
       )}
     </div>
   );

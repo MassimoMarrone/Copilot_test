@@ -1411,7 +1411,16 @@ app.get(
       res.status(403).json({ error: "Only clients can access this" });
       return;
     }
-    const myBookings = bookings.filter((b) => b.clientId === req.user!.id);
+    // Enrich bookings with review status
+    const myBookings = bookings
+      .filter((b) => b.clientId === req.user!.id)
+      .map((booking) => {
+        const hasReview = reviews.some(
+          (r) => r.bookingId === booking.id && r.clientId === req.user!.id
+        );
+        return { ...booking, hasReview };
+      });
+
     res.json(myBookings);
   }
 );
