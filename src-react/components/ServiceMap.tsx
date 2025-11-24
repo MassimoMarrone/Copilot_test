@@ -35,15 +35,21 @@ interface Service {
 
 interface ServiceMapProps {
   services: Service[];
-  onBook: (service: Service) => void;
+  onBook?: (service: Service) => void;
+  center?: { lat: number; lng: number } | null;
 }
 
 // Component to update map center when services change
-const MapUpdater: React.FC<{ services: Service[] }> = ({ services }) => {
+const MapUpdater: React.FC<{
+  services: Service[];
+  center?: { lat: number; lng: number } | null;
+}> = ({ services, center }) => {
   const map = useMap();
 
   useEffect(() => {
-    if (services.length > 0) {
+    if (center) {
+      map.setView([center.lat, center.lng], 13);
+    } else if (services.length > 0) {
       const bounds = L.latLngBounds(
         services
           .filter((s) => s.latitude && s.longitude)
@@ -54,12 +60,16 @@ const MapUpdater: React.FC<{ services: Service[] }> = ({ services }) => {
         map.fitBounds(bounds, { padding: [50, 50] });
       }
     }
-  }, [services, map]);
+  }, [services, map, center]);
 
   return null;
 };
 
-const ServiceMap: React.FC<ServiceMapProps> = ({ services, onBook }) => {
+const ServiceMap: React.FC<ServiceMapProps> = ({
+  services,
+  onBook,
+  center,
+}) => {
   // Default center (Rome) if no services
   const defaultCenter: [number, number] = [41.9028, 12.4964];
 
@@ -88,7 +98,7 @@ const ServiceMap: React.FC<ServiceMapProps> = ({ services, onBook }) => {
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
 
-        <MapUpdater services={servicesWithLocation} />
+        <MapUpdater services={servicesWithLocation} center={center} />
 
         {servicesWithLocation.map((service) => (
           <Marker
@@ -120,21 +130,23 @@ const ServiceMap: React.FC<ServiceMapProps> = ({ services, onBook }) => {
                     </span>
                   </div>
                 )}
-                <button
-                  onClick={() => onBook(service)}
-                  style={{
-                    width: "100%",
-                    padding: "6px 12px",
-                    backgroundColor: "#000",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  Prenota
-                </button>
+                {onBook && (
+                  <button
+                    onClick={() => onBook(service)}
+                    style={{
+                      width: "100%",
+                      padding: "6px 12px",
+                      backgroundColor: "#000",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    Prenota
+                  </button>
+                )}
               </div>
             </Popup>
           </Marker>

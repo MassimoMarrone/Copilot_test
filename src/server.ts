@@ -150,7 +150,7 @@ app.use(
 // Rate limiting
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || "900000", 10), // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || "2000", 10),
+  max: 100000, // Increased for testing
   message: "Too many requests from this IP, please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
@@ -161,7 +161,7 @@ app.use("/api/", limiter);
 // Stricter rate limiting for authentication endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // limit each IP to 500 requests per windowMs (increased for testing)
+  max: 100000, // Increased for testing
   message: "Too many authentication attempts, please try again later.",
   skipSuccessfulRequests: true,
 });
@@ -572,21 +572,28 @@ app.get(
   "/api/me",
   authenticate,
   async (req: Request, res: Response): Promise<void> => {
-    const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user!.id },
+      });
+      if (!user) {
+        res.status(404).json({ error: "User not found" });
+        return;
+      }
+      res.json({
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        bio: user.bio,
+        avatarUrl: user.avatarUrl,
+        userType: user.userType,
+        isClient: user.isClient,
+        isProvider: user.isProvider,
+      });
+    } catch (error) {
+      console.error("Error in /api/me:", error);
+      res.status(500).json({ error: "Internal server error fetching user" });
     }
-    res.json({
-      id: user.id,
-      email: user.email,
-      displayName: user.displayName,
-      bio: user.bio,
-      avatarUrl: user.avatarUrl,
-      userType: user.userType,
-      isClient: user.isClient,
-      isProvider: user.isProvider,
-    });
   }
 );
 
@@ -829,37 +836,68 @@ app.post(
 app.get(
   "/api/services",
   async (_req: Request, res: Response): Promise<void> => {
-    // Filter out services from blocked providers
-    const services = await prisma.service.findMany({
-      where: {
-        provider: {
-          isBlocked: false,
+    try {
+      // Filter out services from blocked providers
+      const services = await prisma.service.findMany({
+        where: {
+          provider: {
+            isBlocked: false,
+          },
         },
-      },
-      include: {
-        reviews: true,
-      },
-    });
+        include: {
+          reviews: true,
+        },
+      });
 
-    const activeServices = services.map((service: any) => {
-      const reviewCount = service.reviews.length;
-      const averageRating =
-        reviewCount > 0
-          ? service.reviews.reduce((acc: number, r: any) => acc + r.rating, 0) /
-            reviewCount
-          : 0;
+      const activeServices = services.map((service: any) => {
+        const reviewCount = service.reviews.length;
+        const averageRating =
+          reviewCount > 0
+            ? service.reviews.reduce(
+                (acc: number, r: any) => acc + r.rating,
+                0
+              ) / reviewCount
+            : 0;
 
-      // Parse JSON fields if they are strings (Prisma might return them as objects if type is Json, but let's be safe)
-      // Actually Prisma types them as JsonValue, so we might need to cast or ensure they are what we expect.
-      // For the API response, we just pass them through.
+        // Parse JSON fields
+        let parsedProducts = [];
+        if (service.productsUsed) {
+          try {
+            parsedProducts =
+              typeof service.productsUsed === "string"
+                ? JSON.parse(service.productsUsed)
+                : service.productsUsed;
+          } catch (e) {
+            console.error("Error parsing productsUsed:", e);
+            parsedProducts = [];
+          }
+        }
 
-      return {
-        ...service,
-        reviewCount,
-        averageRating: parseFloat(averageRating.toFixed(1)),
-      };
-    });
-    res.json(activeServices);
+        let parsedAvailability = null;
+        if (service.availability) {
+          try {
+            parsedAvailability =
+              typeof service.availability === "string"
+                ? JSON.parse(service.availability)
+                : service.availability;
+          } catch (e) {
+            console.error("Error parsing availability:", e);
+          }
+        }
+
+        return {
+          ...service,
+          productsUsed: parsedProducts,
+          availability: parsedAvailability,
+          reviewCount,
+          averageRating: parseFloat(averageRating.toFixed(1)),
+        };
+      });
+      res.json(activeServices);
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      res.status(500).json({ error: "Failed to fetch services" });
+    }
   }
 );
 
@@ -964,6 +1002,9 @@ app.post(
         lowerDesc.includes("cleaning")
       ) {
         imageUrl = "/assets/cleaning.jpg";
+      } else {
+        // Default fallback image
+        imageUrl = "/assets/cleaning.jpg";
       }
     }
 
@@ -992,9 +1033,9 @@ app.post(
         price: parseFloat(price),
         productsUsed: productsUsed
           ? typeof productsUsed === "string"
-            ? JSON.parse(productsUsed)
-            : productsUsed
-          : [],
+            ? productsUsed
+            : JSON.stringify(productsUsed)
+          : JSON.stringify([]),
         address: address || undefined,
         latitude: latitude ? parseFloat(latitude) : undefined,
         longitude: longitude ? parseFloat(longitude) : undefined,
@@ -1118,14 +1159,10 @@ app.put(
     if (latitude) updateData.latitude = parseFloat(latitude);
     if (longitude) updateData.longitude = parseFloat(longitude);
     if (productsUsed) {
-      try {
-        updateData.productsUsed =
-          typeof productsUsed === "string"
-            ? JSON.parse(productsUsed)
-            : productsUsed;
-      } catch (e) {
-        console.error("Error parsing productsUsed", e);
-      }
+      updateData.productsUsed =
+        typeof productsUsed === "string"
+          ? productsUsed
+          : JSON.stringify(productsUsed);
     }
 
     if (req.file) {
@@ -1133,14 +1170,10 @@ app.put(
     }
 
     if (availability) {
-      try {
-        updateData.availability =
-          typeof availability === "string"
-            ? JSON.parse(availability)
-            : availability;
-      } catch (e) {
-        console.error("Error parsing availability", e);
-      }
+      updateData.availability =
+        typeof availability === "string"
+          ? availability
+          : JSON.stringify(availability);
     }
 
     const service = await prisma.service.update({
@@ -1166,11 +1199,88 @@ app.get(
     const myServices = await prisma.service.findMany({
       where: { providerId: req.user!.id },
     });
-    res.json(myServices);
+
+    const parsedServices = myServices.map((service) => {
+      let parsedProducts = [];
+      if (service.productsUsed) {
+        try {
+          parsedProducts =
+            typeof service.productsUsed === "string"
+              ? JSON.parse(service.productsUsed)
+              : service.productsUsed;
+        } catch (e) {
+          console.error("Error parsing productsUsed", e);
+        }
+      }
+
+      let parsedAvailability = null;
+      if (service.availability) {
+        try {
+          parsedAvailability =
+            typeof service.availability === "string"
+              ? JSON.parse(service.availability)
+              : service.availability;
+        } catch (e) {
+          console.error("Error parsing availability", e);
+        }
+      }
+
+      return {
+        ...service,
+        productsUsed: parsedProducts,
+        availability: parsedAvailability,
+      };
+    });
+
+    res.json(parsedServices);
   }
 );
 
-// Availability routes - REMOVED (Moved to Service)
+// Delete a service
+app.delete(
+  "/api/services/:id",
+  authenticate,
+  async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+
+    if (!user || !user.isProvider) {
+      res.status(403).json({ error: "Only providers can delete services" });
+      return;
+    }
+
+    const existingService = await prisma.service.findFirst({
+      where: { id, providerId: req.user!.id },
+    });
+
+    if (!existingService) {
+      res.status(404).json({ error: "Service not found or unauthorized" });
+      return;
+    }
+
+    // Check if there are active bookings
+    const activeBookings = await prisma.booking.findMany({
+      where: {
+        serviceId: id,
+        status: { in: ["pending", "confirmed", "paid"] },
+      },
+    });
+
+    if (activeBookings.length > 0) {
+      res.status(400).json({
+        error:
+          "Cannot delete service with active bookings. Please cancel them first.",
+      });
+      return;
+    }
+
+    await prisma.service.delete({
+      where: { id },
+    });
+
+    res.json({ success: true });
+  }
+);
 
 // Booking routes
 
@@ -1230,39 +1340,49 @@ app.post(
         const bookingDateObj = new Date(date);
         const dateString = bookingDateObj.toISOString().split("T")[0];
 
-        // Cast availability to any to access properties since it's JsonValue
-        const availability: any = service.availability;
-
-        // Check blocked dates
-        if (
-          availability.blockedDates &&
-          availability.blockedDates.includes(dateString)
-        ) {
-          res.status(400).json({
-            error: "The service is not available on this date (blocked).",
-          });
-          return;
+        // Parse availability if it's a string
+        let availability: any = service.availability;
+        if (typeof availability === "string") {
+          try {
+            availability = JSON.parse(availability);
+          } catch (e) {
+            console.error("Error parsing availability for booking:", e);
+            availability = null;
+          }
         }
 
-        // Check weekly schedule
-        const days = [
-          "sunday",
-          "monday",
-          "tuesday",
-          "wednesday",
-          "thursday",
-          "friday",
-          "saturday",
-        ];
-        const dayName = days[bookingDateObj.getDay()];
-
-        if (availability.weekly) {
-          const daySchedule = availability.weekly[dayName];
-          if (daySchedule && !daySchedule.enabled) {
+        if (availability) {
+          // Check blocked dates
+          if (
+            availability.blockedDates &&
+            availability.blockedDates.includes(dateString)
+          ) {
             res.status(400).json({
-              error: `The service is not available on ${dayName}s.`,
+              error: "The service is not available on this date (blocked).",
             });
             return;
+          }
+
+          // Check weekly schedule
+          const days = [
+            "sunday",
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+          ];
+          const dayName = days[bookingDateObj.getDay()];
+
+          if (availability.weekly) {
+            const daySchedule = availability.weekly[dayName];
+            if (daySchedule && !daySchedule.enabled) {
+              res.status(400).json({
+                error: `The service is not available on ${dayName}s.`,
+              });
+              return;
+            }
           }
         }
       }
@@ -1788,7 +1908,6 @@ app.post(
     res.json(updatedReview);
   }
 );
-
 // Get booked dates for a specific service
 app.get(
   "/api/services/:serviceId/booked-dates",
@@ -2357,6 +2476,22 @@ app.post(
       },
     });
 
+    // Real-time updates: Emit socket events
+    // 1. Broadcast to the booking room (for anyone currently viewing this chat)
+    io.to(bookingId).emit("receive_message", chatMessage);
+
+    // 2. Notify the recipient specifically (in case they are online but not in the booking room)
+    const recipientId =
+      booking.clientId === req.user!.id ? booking.providerId : booking.clientId;
+
+    io.to(`user_${recipientId}`).emit("receive_message", chatMessage);
+
+    // 3. Send notification for unread count update
+    io.to(`user_${recipientId}`).emit("message_received_notification", {
+      bookingId,
+      senderId: req.user!.id,
+    });
+
     res.json(chatMessage);
   }
 );
@@ -2856,19 +2991,24 @@ app.get("*splat", pageLimiter, (req: Request, res: Response) => {
 io.on("connection", (socket) => {
   console.log("New client connected:", socket.id);
 
-  socket.on("join_booking", (bookingId) => {
-    socket.join(bookingId);
+  socket.on("join_booking", async (bookingId) => {
+    await socket.join(bookingId);
     console.log(`User ${socket.id} joined booking room: ${bookingId}`);
   });
 
   // NEW: Join user specific room for notifications
-  socket.on("join_user_room", (userId) => {
-    socket.join(`user_${userId}`);
+  socket.on("join_user_room", async (userId) => {
+    await socket.join(`user_${userId}`);
     console.log(`User ${socket.id} joined user room: user_${userId}`);
   });
 
   socket.on("send_message", async (data) => {
     const { bookingId, message, senderId, senderEmail, senderType } = data;
+
+    const roomSize = io.sockets.adapter.rooms.get(bookingId)?.size || 0;
+    console.log(
+      `Sending message to room ${bookingId} with ${roomSize} clients`
+    );
 
     try {
       // Create message object
@@ -2896,6 +3036,8 @@ io.on("connection", (socket) => {
           booking.clientId === senderId ? booking.providerId : booking.clientId;
 
         // Emit event to recipient's personal room
+        io.to(`user_${recipientId}`).emit("receive_message", chatMessage);
+
         io.to(`user_${recipientId}`).emit("message_received_notification", {
           bookingId,
           senderId,
@@ -2913,8 +3055,12 @@ io.on("connection", (socket) => {
 
 // Error handling middleware
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error("Error:", err);
-  res.status(500).json({ error: "Internal server error" });
+  console.error("Unhandled Error:", err);
+  res.status(500).json({
+    error: "Internal server error",
+    message: err.message,
+    stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+  });
 });
 
 // Start the server only if not in a test environment

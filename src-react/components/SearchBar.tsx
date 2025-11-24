@@ -87,6 +87,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     const value = e.target.value;
     setLocationQuery(value);
 
+    // Reset current location when user types to avoid mismatch
+    if (locationEnabled) {
+      setLocationEnabled(false);
+      setCurrentLocation(null);
+    }
+
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }

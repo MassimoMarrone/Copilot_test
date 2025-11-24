@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import UserMenu from "./UserMenu";
+import ServiceMap from "./ServiceMap";
 import "../styles/AdminDashboard.css";
 
 interface User {
@@ -13,9 +14,16 @@ interface User {
 
 interface Service {
   id: string;
+  providerId: string;
   title: string;
+  description: string;
   providerEmail: string;
   price: number;
+  category?: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  createdAt?: string;
 }
 
 interface Booking {
@@ -25,6 +33,7 @@ interface Booking {
   providerEmail: string;
   date: string;
   status: string;
+  paymentStatus: string;
   amount: number;
 }
 
@@ -44,6 +53,9 @@ const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     "overview" | "users" | "services" | "bookings"
   >("overview");
+  const [serviceViewMode, setServiceViewMode] = useState<"list" | "map">(
+    "list"
+  );
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -281,25 +293,45 @@ const AdminDashboard: React.FC = () => {
       {activeTab === "services" && (
         <div className="dashboard-section">
           <h2>🛠️ Services Management</h2>
-          <div className="admin-list">
-            {services.map((service) => (
-              <div key={service.id} className="admin-card">
-                <div className="card-info">
-                  <h3>{service.title}</h3>
-                  <p>Provider: {service.providerEmail}</p>
-                  <p>Price: €{service.price}</p>
-                </div>
-                <div className="card-actions">
-                  <button
-                    onClick={() => handleDeleteService(service.id)}
-                    className="btn btn-sm btn-danger"
-                  >
-                    Delete Service
-                  </button>
-                </div>
-              </div>
-            ))}
+          <div className="view-mode-toggle">
+            <button
+              onClick={() => setServiceViewMode("list")}
+              className={`btn ${serviceViewMode === "list" ? "active" : ""}`}
+            >
+              List View
+            </button>
+            <button
+              onClick={() => setServiceViewMode("map")}
+              className={`btn ${serviceViewMode === "map" ? "active" : ""}`}
+            >
+              Map View
+            </button>
           </div>
+          {serviceViewMode === "list" ? (
+            <div className="admin-list">
+              {services.map((service) => (
+                <div key={service.id} className="admin-card">
+                  <div className="card-info">
+                    <h3>{service.title}</h3>
+                    <p>Provider: {service.providerEmail}</p>
+                    <p>Category: {service.category || "N/A"}</p>
+                    <p>Price: €{service.price}</p>
+                    {service.address && <p>📍 {service.address}</p>}
+                  </div>
+                  <div className="card-actions">
+                    <button
+                      onClick={() => handleDeleteService(service.id)}
+                      className="btn btn-sm btn-danger"
+                    >
+                      Delete Service
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <ServiceMap services={services} />
+          )}
         </div>
       )}
 
@@ -323,6 +355,9 @@ const AdminDashboard: React.FC = () => {
                   </p>
                   <p>
                     <strong>Status:</strong> {booking.status}
+                  </p>
+                  <p>
+                    <strong>Payment:</strong> {booking.paymentStatus}
                   </p>
                   <p>
                     <strong>Amount:</strong> €{booking.amount}
