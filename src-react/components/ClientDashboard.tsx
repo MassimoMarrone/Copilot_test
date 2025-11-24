@@ -4,7 +4,6 @@ import { io } from "socket.io-client";
 import ToastNotification, { Notification } from "./ToastNotification";
 import NotificationCenter from "./NotificationCenter";
 // import SearchBar from "./SearchBar"; // Removed
-import ChatModal from "./ChatModal";
 import ReviewModal from "./ReviewModal"; // Will be created next
 import "../styles/ClientDashboard.css";
 import "../styles/ToastNotification.css";
@@ -50,7 +49,6 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
   const [bookingNotes, setBookingNotes] = useState("");
   const [bookingAddress, setBookingAddress] = useState("");
   const [showBookingModal, setShowBookingModal] = useState(false);
-  const [showChatModal, setShowChatModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewBooking, setReviewBooking] = useState<Booking | null>(null);
@@ -408,8 +406,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                 <div className="button-group">
                   <button
                     onClick={() => {
-                      setSelectedBooking(booking);
-                      setShowChatModal(true);
+                      navigate(`/messages?bookingId=${booking.id}`);
                     }}
                     className="btn btn-chat"
                   >
@@ -538,22 +535,6 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
             </form>
           </div>
         </div>
-      )}
-
-      {/* Chat Modal */}
-      {showChatModal && selectedBooking && (
-        <ChatModal
-          bookingId={selectedBooking.id}
-          isOpen={showChatModal}
-          onClose={() => {
-            setShowChatModal(false);
-            setSelectedBooking(null);
-          }}
-          currentUserType="client"
-          otherPartyEmail={selectedBooking.providerEmail}
-          userId={userId}
-          userEmail={userEmail}
-        />
       )}
 
       {/* Review Modal */}

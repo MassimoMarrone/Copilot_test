@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import ToastNotification, { Notification } from "./ToastNotification";
-import ChatModal from "./ChatModal";
 import ServiceList from "./provider/ServiceList";
 import BookingList from "./provider/BookingList";
 import ReviewList from "./provider/ReviewList";
@@ -28,8 +27,6 @@ const ProviderDashboard: React.FC = () => {
 
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-
-  const [showChatModal, setShowChatModal] = useState(false);
 
   const [availabilityService, setAvailabilityService] =
     useState<Service | null>(null);
@@ -300,8 +297,7 @@ const ProviderDashboard: React.FC = () => {
           }}
           onCancel={handleCancelBooking}
           onChat={(booking) => {
-            setSelectedBooking(booking);
-            setShowChatModal(true);
+            navigate(`/messages?bookingId=${booking.id}`);
           }}
         />
       </div>
@@ -375,22 +371,6 @@ const ProviderDashboard: React.FC = () => {
         onClose={() => setShowCompleteModal(false)}
         onConfirm={handleCompleteBooking}
       />
-
-      {/* Chat Modal */}
-      {showChatModal && selectedBooking && (
-        <ChatModal
-          bookingId={selectedBooking.id}
-          isOpen={showChatModal}
-          onClose={() => {
-            setShowChatModal(false);
-            setSelectedBooking(null);
-          }}
-          currentUserType="provider"
-          otherPartyEmail={selectedBooking.clientEmail}
-          userId={userId}
-          userEmail={userEmail}
-        />
-      )}
     </div>
   );
 };

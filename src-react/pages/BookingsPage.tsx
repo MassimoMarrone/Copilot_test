@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import ChatModal from "../components/ChatModal";
 import "../styles/BookingsPage.css";
 
 interface Booking {
@@ -20,10 +20,9 @@ interface Booking {
 
 const BookingsPage: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-  const [showChatModal, setShowChatModal] = useState(false);
 
   useEffect(() => {
     loadBookings();
@@ -129,10 +128,7 @@ const BookingsPage: React.FC = () => {
 
                 <div className="booking-actions">
                   <button
-                    onClick={() => {
-                      setSelectedBooking(booking);
-                      setShowChatModal(true);
-                    }}
+                    onClick={() => navigate(`/messages?bookingId=${booking.id}`)}
                     className="btn-chat"
                   >
                     💬 Chat con Fornitore
@@ -142,22 +138,6 @@ const BookingsPage: React.FC = () => {
             ))
           )}
         </div>
-      )}
-
-      {/* Chat Modal */}
-      {showChatModal && selectedBooking && user && (
-        <ChatModal
-          bookingId={selectedBooking.id}
-          isOpen={showChatModal}
-          onClose={() => {
-            setShowChatModal(false);
-            setSelectedBooking(null);
-          }}
-          currentUserType="client"
-          otherPartyEmail={selectedBooking.providerEmail}
-          userId={user.id}
-          userEmail={user.email}
-        />
       )}
     </div>
   );
