@@ -11,7 +11,7 @@ const resendLastEmail = async () => {
   try {
     // Get last booking
     const lastBooking = await prisma.booking.findFirst({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
 
     if (!lastBooking) {

@@ -11,10 +11,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { body, validationResult } from "express-validator";
 import dotenv from "dotenv";
-import {
-  JWTPayload,
-  Notification,
-} from "./types";
+import { JWTPayload, Notification } from "./types";
 import Stripe from "stripe";
 import { OAuth2Client } from "google-auth-library";
 import { sendEmail, emailTemplates } from "./emailService";
@@ -280,9 +277,9 @@ const sendNotification = async (
         read: false,
         createdAt: new Date(),
         link,
-      }
+      },
     });
-    
+
     io.to(`user_${userId}`).emit("new_notification", notification);
   } catch (err) {
     console.error("Failed to create/emit notification", err);
@@ -293,15 +290,15 @@ const sendNotification = async (
 const initAdmin = async (): Promise<void> => {
   const adminCount = await prisma.user.count({
     where: {
-      OR: [{ userType: "admin" }, { isAdmin: true }]
-    }
+      OR: [{ userType: "admin" }, { isAdmin: true }],
+    },
   });
 
   if (adminCount === 0) {
     const adminEmail = process.env.ADMIN_EMAIL || "admin@example.com";
     const adminPassword = process.env.ADMIN_PASSWORD || "admin";
     const hashed = bcrypt.hashSync(adminPassword, 10);
-    
+
     await prisma.user.create({
       data: {
         id: "admin-1",
@@ -313,7 +310,7 @@ const initAdmin = async (): Promise<void> => {
         isAdmin: true,
         acceptedTerms: true,
         createdAt: new Date(),
-      }
+      },
     });
     console.log(`Created default admin: ${adminEmail}`);
   }
@@ -371,7 +368,7 @@ app.post(
       }
 
       const hashedPassword = await bcrypt.hash(password, 12);
-      
+
       const user = await prisma.user.create({
         data: {
           email,
@@ -381,7 +378,7 @@ app.post(
           isProvider: false,
           acceptedTerms: true,
           createdAt: new Date(),
-        }
+        },
       });
 
       // Send welcome email
@@ -536,7 +533,7 @@ app.post(
             acceptedTerms: true,
             createdAt: new Date(),
             googleId,
-          }
+          },
         });
       }
 
@@ -571,23 +568,27 @@ app.post("/api/logout", (_req: Request, res: Response): void => {
 });
 
 // Get current user
-app.get("/api/me", authenticate, async (req: Request, res: Response): Promise<void> => {
-  const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
-  if (!user) {
-    res.status(404).json({ error: "User not found" });
-    return;
+app.get(
+  "/api/me",
+  authenticate,
+  async (req: Request, res: Response): Promise<void> => {
+    const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+    res.json({
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      bio: user.bio,
+      avatarUrl: user.avatarUrl,
+      userType: user.userType,
+      isClient: user.isClient,
+      isProvider: user.isProvider,
+    });
   }
-  res.json({
-    id: user.id,
-    email: user.email,
-    displayName: user.displayName,
-    bio: user.bio,
-    avatarUrl: user.avatarUrl,
-    userType: user.userType,
-    isClient: user.isClient,
-    isProvider: user.isProvider,
-  });
-});
+);
 
 // Update profile
 app.put(
@@ -642,107 +643,116 @@ app.put(
 );
 
 // Get public provider profile
-app.get("/api/providers/:id", async (req: Request, res: Response): Promise<void> => {
-  const { id } = req.params;
-  
-  const provider = await prisma.user.findFirst({
-    where: { id, isProvider: true }
-  });
+app.get(
+  "/api/providers/:id",
+  async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
 
-  if (!provider) {
-    res.status(404).json({ error: "Provider not found" });
-    return;
-  }
+    const provider = await prisma.user.findFirst({
+      where: { id, isProvider: true },
+    });
 
-  // Get provider's services
-  const providerServices = await prisma.service.findMany({
-    where: { providerId: id }
-  });
-
-  // Get provider's reviews
-  const providerReviews = await prisma.review.findMany({
-    where: { providerId: id },
-    orderBy: { createdAt: 'desc' },
-    include: {
-      client: {
-        select: { email: true }
-      }
-    }
-  });
-
-  // Calculate average rating
-  const averageRating =
-    providerReviews.length > 0
-      ? providerReviews.reduce((acc: number, r: any) => acc + r.rating, 0) /
-        providerReviews.length
-      : 0;
-
-  res.json({
-    id: provider.id,
-    displayName: provider.displayName || provider.email.split("@")[0],
-    bio: provider.bio,
-    avatarUrl: provider.avatarUrl,
-    createdAt: provider.createdAt,
-    services: providerServices,
-    reviews: providerReviews.map((r: any) => ({
-      ...r,
-      clientName: r.client?.email.split("@")[0] || "Client",
-      helpfulCount: r.helpfulCount || 0,
-    })),
-    averageRating: parseFloat(averageRating.toFixed(1)),
-    reviewCount: providerReviews.length,
-  });
-});
-
-// Delete own account
-app.delete("/api/me", authenticate, async (req: Request, res: Response): Promise<void> => {
-  const userId = req.user!.id;
-  
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-
-  if (!user) {
-    res.status(404).json({ error: "User not found" });
-    return;
-  }
-
-  // Prevent deleting the last admin if the user is an admin
-  if (user.userType === "admin") {
-    const adminCount = await prisma.user.count({ where: { userType: "admin" } });
-    if (adminCount <= 1) {
-      res.status(400).json({ error: "Cannot delete the last admin" });
+    if (!provider) {
+      res.status(404).json({ error: "Provider not found" });
       return;
     }
+
+    // Get provider's services
+    const providerServices = await prisma.service.findMany({
+      where: { providerId: id },
+    });
+
+    // Get provider's reviews
+    const providerReviews = await prisma.review.findMany({
+      where: { providerId: id },
+      orderBy: { createdAt: "desc" },
+      include: {
+        client: {
+          select: { email: true },
+        },
+      },
+    });
+
+    // Calculate average rating
+    const averageRating =
+      providerReviews.length > 0
+        ? providerReviews.reduce((acc: number, r: any) => acc + r.rating, 0) /
+          providerReviews.length
+        : 0;
+
+    res.json({
+      id: provider.id,
+      displayName: provider.displayName || provider.email.split("@")[0],
+      bio: provider.bio,
+      avatarUrl: provider.avatarUrl,
+      createdAt: provider.createdAt,
+      services: providerServices,
+      reviews: providerReviews.map((r: any) => ({
+        ...r,
+        clientName: r.client?.email.split("@")[0] || "Client",
+        helpfulCount: r.helpfulCount || 0,
+      })),
+      averageRating: parseFloat(averageRating.toFixed(1)),
+      reviewCount: providerReviews.length,
+    });
   }
+);
 
-  // Cancel all pending bookings for this user (as client or provider)
-  await prisma.booking.updateMany({
-    where: {
-      OR: [{ clientId: userId }, { providerId: userId }],
-      status: "pending"
-    },
-    data: {
-      status: "cancelled",
-      // Note: paymentStatus update logic might need more complex handling if strictly following previous logic
-      // but for now we just cancel.
+// Delete own account
+app.delete(
+  "/api/me",
+  authenticate,
+  async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.id;
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
     }
-  });
 
-  // Remove user
-  await prisma.user.delete({ where: { id: userId } });
+    // Prevent deleting the last admin if the user is an admin
+    if (user.userType === "admin") {
+      const adminCount = await prisma.user.count({
+        where: { userType: "admin" },
+      });
+      if (adminCount <= 1) {
+        res.status(400).json({ error: "Cannot delete the last admin" });
+        return;
+      }
+    }
 
-  // Clean up related data
-  // Prisma cascade delete should handle services, bookings, reviews etc if configured in schema
-  // If not, we might need manual cleanup, but assuming schema handles relations.
-  // Based on schema provided earlier, we might need to check onDelete behavior.
-  // Assuming standard cascade or manual cleanup if needed.
-  // For now, let's assume Prisma handles it or we leave orphans if not critical.
-  // Actually, let's manually delete services to be safe if cascade isn't set up.
-  await prisma.service.deleteMany({ where: { providerId: userId } });
+    // Cancel all pending bookings for this user (as client or provider)
+    await prisma.booking.updateMany({
+      where: {
+        OR: [{ clientId: userId }, { providerId: userId }],
+        status: "pending",
+      },
+      data: {
+        status: "cancelled",
+        // Note: paymentStatus update logic might need more complex handling if strictly following previous logic
+        // but for now we just cancel.
+      },
+    });
 
-  // Clear cookie
-  res.clearCookie("token");
-  res.json({ success: true });
-});
+    // Remove user
+    await prisma.user.delete({ where: { id: userId } });
+
+    // Clean up related data
+    // Prisma cascade delete should handle services, bookings, reviews etc if configured in schema
+    // If not, we might need manual cleanup, but assuming schema handles relations.
+    // Based on schema provided earlier, we might need to check onDelete behavior.
+    // Assuming standard cascade or manual cleanup if needed.
+    // For now, let's assume Prisma handles it or we leave orphans if not critical.
+    // Actually, let's manually delete services to be safe if cascade isn't set up.
+    await prisma.service.deleteMany({ where: { providerId: userId } });
+
+    // Clear cookie
+    res.clearCookie("token");
+    res.json({ success: true });
+  }
+);
 
 // Become a provider - upgrade from client to provider
 app.post(
@@ -760,7 +770,9 @@ app.post(
         return;
       }
 
-      const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+      const user = await prisma.user.findUnique({
+        where: { id: req.user!.id },
+      });
       if (!user) {
         res.status(404).json({ error: "User not found" });
         return;
@@ -778,7 +790,7 @@ app.post(
         data: {
           isProvider: true,
           acceptedProviderTerms: true,
-        }
+        },
       });
 
       // Issue a new token with updated info
@@ -814,38 +826,42 @@ app.post(
 // Services routes
 
 // Get all services (for clients to browse)
-app.get("/api/services", async (_req: Request, res: Response): Promise<void> => {
-  // Filter out services from blocked providers
-  const services = await prisma.service.findMany({
-    where: {
-      provider: {
-        isBlocked: false
-      }
-    },
-    include: {
-      reviews: true
-    }
-  });
+app.get(
+  "/api/services",
+  async (_req: Request, res: Response): Promise<void> => {
+    // Filter out services from blocked providers
+    const services = await prisma.service.findMany({
+      where: {
+        provider: {
+          isBlocked: false,
+        },
+      },
+      include: {
+        reviews: true,
+      },
+    });
 
-  const activeServices = services.map((service: any) => {
-    const reviewCount = service.reviews.length;
-    const averageRating =
-      reviewCount > 0
-        ? service.reviews.reduce((acc: number, r: any) => acc + r.rating, 0) / reviewCount
-        : 0;
-    
-    // Parse JSON fields if they are strings (Prisma might return them as objects if type is Json, but let's be safe)
-    // Actually Prisma types them as JsonValue, so we might need to cast or ensure they are what we expect.
-    // For the API response, we just pass them through.
-    
-    return {
-      ...service,
-      reviewCount,
-      averageRating: parseFloat(averageRating.toFixed(1)),
-    };
-  });
-  res.json(activeServices);
-});
+    const activeServices = services.map((service: any) => {
+      const reviewCount = service.reviews.length;
+      const averageRating =
+        reviewCount > 0
+          ? service.reviews.reduce((acc: number, r: any) => acc + r.rating, 0) /
+            reviewCount
+          : 0;
+
+      // Parse JSON fields if they are strings (Prisma might return them as objects if type is Json, but let's be safe)
+      // Actually Prisma types them as JsonValue, so we might need to cast or ensure they are what we expect.
+      // For the API response, we just pass them through.
+
+      return {
+        ...service,
+        reviewCount,
+        averageRating: parseFloat(averageRating.toFixed(1)),
+      };
+    });
+    res.json(activeServices);
+  }
+);
 
 // Create service (providers only)
 app.post(
@@ -988,7 +1004,7 @@ app.post(
           weekly: defaultWeeklySchedule,
           blockedDates: [],
         }),
-      }
+      },
     });
 
     res.json(service);
@@ -1072,7 +1088,7 @@ app.put(
     }
 
     const existingService = await prisma.service.findFirst({
-      where: { id, providerId: req.user!.id }
+      where: { id, providerId: req.user!.id },
     });
 
     if (!existingService) {
@@ -1129,7 +1145,7 @@ app.put(
 
     const service = await prisma.service.update({
       where: { id },
-      data: updateData
+      data: updateData,
     });
 
     res.json(service);
@@ -1148,7 +1164,7 @@ app.get(
       return;
     }
     const myServices = await prisma.service.findMany({
-      where: { providerId: req.user!.id }
+      where: { providerId: req.user!.id },
     });
     res.json(myServices);
   }
@@ -1198,10 +1214,10 @@ app.post(
 
       const { serviceId, date, clientPhone, preferredTime, notes, address } =
         req.body;
-      
+
       const service = await prisma.service.findUnique({
         where: { id: serviceId },
-        include: { provider: true }
+        include: { provider: true },
       });
 
       if (!service) {
@@ -1213,12 +1229,15 @@ app.post(
       if (service.availability) {
         const bookingDateObj = new Date(date);
         const dateString = bookingDateObj.toISOString().split("T")[0];
-        
+
         // Cast availability to any to access properties since it's JsonValue
         const availability: any = service.availability;
 
         // Check blocked dates
-        if (availability.blockedDates && availability.blockedDates.includes(dateString)) {
+        if (
+          availability.blockedDates &&
+          availability.blockedDates.includes(dateString)
+        ) {
           res.status(400).json({
             error: "The service is not available on this date (blocked).",
           });
@@ -1236,7 +1255,7 @@ app.post(
           "saturday",
         ];
         const dayName = days[bookingDateObj.getDay()];
-        
+
         if (availability.weekly) {
           const daySchedule = availability.weekly[dayName];
           if (daySchedule && !daySchedule.enabled) {
@@ -1251,13 +1270,13 @@ app.post(
       // Check for overlapping bookings on the same date for the same service
       // Only check bookings that are not cancelled
       // const bookingDate = new Date(date).toISOString().split("T")[0]; // Get date part only
-      
-      // We need to query bookings. Since date is stored as DateTime in Prisma, 
+
+      // We need to query bookings. Since date is stored as DateTime in Prisma,
       // we need to be careful with comparison.
       // Assuming we store date as DateTime, we should check range or equality.
       // However, the original code compared string split("T")[0].
       // Let's assume we check if any booking exists on that day.
-      
+
       const startOfDay = new Date(date);
       startOfDay.setHours(0, 0, 0, 0);
       const endOfDay = new Date(date);
@@ -1269,9 +1288,9 @@ app.post(
           status: { not: "cancelled" },
           date: {
             gte: startOfDay as any,
-            lte: endOfDay as any
-          }
-        }
+            lte: endOfDay as any,
+          },
+        },
       });
 
       if (existingBooking) {
@@ -1385,18 +1404,18 @@ app.get(
       res.status(403).json({ error: "Only clients can access this" });
       return;
     }
-    
+
     const myBookings = await prisma.booking.findMany({
       where: { clientId: req.user!.id },
       include: {
-        review: true
-      }
+        review: true,
+      },
     });
 
     // Enrich bookings with review status
     const enrichedBookings = myBookings.map((booking: any) => {
       const hasReview = !!booking.review;
-      // Remove review object from response to match previous structure if needed, 
+      // Remove review object from response to match previous structure if needed,
       // or keep it. The frontend expects `hasReview`.
       const { review, ...bookingData } = booking;
       return { ...bookingData, hasReview };
@@ -1418,7 +1437,7 @@ app.get(
       return;
     }
     const providerBookings = await prisma.booking.findMany({
-      where: { providerId: req.user!.id }
+      where: { providerId: req.user!.id },
     });
     res.json(providerBookings);
   }
@@ -1464,7 +1483,7 @@ app.post(
     const clientId = req.user!.id;
 
     const booking = await prisma.booking.findFirst({
-      where: { id: bookingId, clientId: clientId }
+      where: { id: bookingId, clientId: clientId },
     });
 
     if (!booking) {
@@ -1480,7 +1499,7 @@ app.post(
     }
 
     const existingReview = await prisma.review.findFirst({
-      where: { bookingId: bookingId, clientId: clientId }
+      where: { bookingId: bookingId, clientId: clientId },
     });
 
     if (existingReview) {
@@ -1500,7 +1519,7 @@ app.post(
         createdAt: new Date(),
         helpfulCount: 0,
         helpfulVoters: JSON.stringify([]),
-      }
+      },
     });
 
     sendNotification(
@@ -1541,7 +1560,7 @@ app.get(
     }
 
     const myReviews = await prisma.review.findMany({
-      where: { providerId: req.user!.id }
+      where: { providerId: req.user!.id },
     });
     res.json(myReviews);
   }
@@ -1568,7 +1587,7 @@ app.post(
     // Schema said: helpfulVoters String // serialized JSON array
     // Wait, schema said `helpfulVoters String // serialized JSON array`.
     // So we need to parse and stringify.
-    
+
     let helpfulVoters: string[] = [];
     try {
       helpfulVoters = JSON.parse(review.helpfulVoters || "[]");
@@ -1593,8 +1612,8 @@ app.post(
       where: { id: reviewId },
       data: {
         helpfulVoters: JSON.stringify(helpfulVoters),
-        helpfulCount: newHelpfulCount
-      }
+        helpfulCount: newHelpfulCount,
+      },
     });
 
     res.json({
@@ -1606,43 +1625,48 @@ app.post(
 );
 
 // Get reviews for a specific service (public)
-app.get("/api/services/:serviceId/reviews", async (req: Request, res: Response) => {
-  const { serviceId } = req.params;
-  const { sort } = req.query; // newest, highest, lowest, helpful
+app.get(
+  "/api/services/:serviceId/reviews",
+  async (req: Request, res: Response) => {
+    const { serviceId } = req.params;
+    const { sort } = req.query; // newest, highest, lowest, helpful
 
-  let orderBy: any = { createdAt: 'desc' };
+    let orderBy: any = { createdAt: "desc" };
 
-  if (sort === "highest") {
-    orderBy = { rating: 'desc' };
-  } else if (sort === "lowest") {
-    orderBy = { rating: 'asc' };
-  } else if (sort === "helpful") {
-    orderBy = { helpfulCount: 'desc' };
-  }
-
-  const serviceReviews = await prisma.review.findMany({
-    where: { serviceId },
-    orderBy: orderBy,
-    include: {
-      client: {
-        select: { email: true }
-      }
+    if (sort === "highest") {
+      orderBy = { rating: "desc" };
+    } else if (sort === "lowest") {
+      orderBy = { rating: "asc" };
+    } else if (sort === "helpful") {
+      orderBy = { helpfulCount: "desc" };
     }
-  });
 
-  // Enrich reviews with client name (first name only for privacy)
-  const enrichedReviews = serviceReviews.map((review: any) => {
-    // Simple privacy: use email prefix or "Client" if not available
-    const clientName = review.client ? review.client.email.split("@")[0] : "Client";
-    return {
-      ...review,
-      clientName,
-      helpfulCount: review.helpfulCount || 0,
-    };
-  });
+    const serviceReviews = await prisma.review.findMany({
+      where: { serviceId },
+      orderBy: orderBy,
+      include: {
+        client: {
+          select: { email: true },
+        },
+      },
+    });
 
-  res.json(enrichedReviews);
-});
+    // Enrich reviews with client name (first name only for privacy)
+    const enrichedReviews = serviceReviews.map((review: any) => {
+      // Simple privacy: use email prefix or "Client" if not available
+      const clientName = review.client
+        ? review.client.email.split("@")[0]
+        : "Client";
+      return {
+        ...review,
+        clientName,
+        helpfulCount: review.helpfulCount || 0,
+      };
+    });
+
+    res.json(enrichedReviews);
+  }
+);
 
 // Edit a review (client only)
 app.put(
@@ -1683,7 +1707,7 @@ app.put(
 
     const updatedReview = await prisma.review.update({
       where: { id: reviewId },
-      data: updateData
+      data: updateData,
     });
 
     res.json(updatedReview);
@@ -1749,8 +1773,8 @@ app.post(
       where: { id: reviewId },
       data: {
         providerReply: reply,
-        providerReplyCreatedAt: new Date()
-      }
+        providerReplyCreatedAt: new Date(),
+      },
     });
 
     // Notify client
@@ -1772,7 +1796,9 @@ app.get(
   async (req: Request, res: Response): Promise<void> => {
     const { serviceId } = req.params;
 
-    const service = await prisma.service.findUnique({ where: { id: serviceId } });
+    const service = await prisma.service.findUnique({
+      where: { id: serviceId },
+    });
 
     if (!service) {
       res.status(404).json({ error: "Service not found" });
@@ -1783,14 +1809,16 @@ app.get(
     const serviceBookings = await prisma.booking.findMany({
       where: {
         serviceId: serviceId,
-        status: { not: "cancelled" }
-      }
+        status: { not: "cancelled" },
+      },
     });
 
     // Extract unique dates
     const bookedDates = Array.from(
       new Set(
-        serviceBookings.map((b: any) => new Date(b.date).toISOString().split("T")[0])
+        serviceBookings.map(
+          (b: any) => new Date(b.date).toISOString().split("T")[0]
+        )
       )
     );
 
@@ -1811,7 +1839,7 @@ app.post(
     }
 
     const booking = await prisma.booking.findFirst({
-      where: { id: req.params.id, providerId: req.user!.id }
+      where: { id: req.params.id, providerId: req.user!.id },
     });
 
     if (!booking) {
@@ -1839,8 +1867,8 @@ app.post(
       where: { id: booking.id },
       data: {
         status: "cancelled",
-        paymentStatus: newPaymentStatus
-      }
+        paymentStatus: newPaymentStatus,
+      },
     });
 
     // Notify both parties
@@ -1917,7 +1945,7 @@ app.post(
     }
 
     const booking = await prisma.booking.findFirst({
-      where: { id: req.params.id, providerId: req.user!.id }
+      where: { id: req.params.id, providerId: req.user!.id },
     });
 
     if (!booking) {
@@ -2005,8 +2033,8 @@ app.post(
         status: "completed",
         paymentStatus: "released",
         photoProof: "/uploads/" + req.file.filename,
-        completedAt: new Date()
-      }
+        completedAt: new Date(),
+      },
     });
 
     // Notify client
@@ -2040,11 +2068,11 @@ app.post(
   authenticate,
   async (req: Request, res: Response): Promise<void> => {
     const { stripeAccountId } = req.body;
-    
+
     try {
       await prisma.user.update({
         where: { id: req.user!.id },
-        data: { stripeAccountId }
+        data: { stripeAccountId },
       });
       res.json({ success: true, stripeAccountId });
     } catch (error) {
@@ -2060,7 +2088,9 @@ app.post(
   async (req: Request, res: Response): Promise<void> => {
     try {
       const { bookingId } = req.body;
-      const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+      });
 
       if (!booking) {
         res.status(404).json({ error: "Booking not found" });
@@ -2164,7 +2194,9 @@ app.get(
           const bookingId = `booking-${session.id}`;
 
           // Check if booking already exists for this session to prevent duplicates
-          const existingBooking = await prisma.booking.findUnique({ where: { id: bookingId } });
+          const existingBooking = await prisma.booking.findUnique({
+            where: { id: bookingId },
+          });
 
           if (existingBooking) {
             res.json({ success: true, booking: existingBooking });
@@ -2191,7 +2223,7 @@ app.get(
               preferredTime: metadata.preferredTime || null,
               notes: metadata.notes || null,
               address: metadata.address || null,
-            }
+            },
           });
 
           // Notify provider about new booking
@@ -2230,15 +2262,17 @@ app.get(
         } else {
           // Old flow: Update existing booking (for backward compatibility)
           const bookingId = metadata?.bookingId;
-          const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+          const booking = await prisma.booking.findUnique({
+            where: { id: bookingId },
+          });
 
           if (booking) {
             const updatedBooking = await prisma.booking.update({
               where: { id: bookingId },
               data: {
                 paymentStatus: "authorized",
-                paymentIntentId: paymentIntentId
-              }
+                paymentIntentId: paymentIntentId,
+              },
             });
             res.json({ success: true, booking: updatedBooking });
           } else {
@@ -2273,7 +2307,9 @@ app.post(
     const { message } = req.body;
 
     // Verify the booking exists and user is part of it
-    const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
 
     if (!booking) {
       res.status(404).json({ error: "Booking not found" });
@@ -2318,7 +2354,7 @@ app.post(
         message,
         read: false,
         createdAt: new Date(),
-      }
+      },
     });
 
     res.json(chatMessage);
@@ -2333,7 +2369,9 @@ app.get(
     const { bookingId } = req.params;
 
     // Verify the booking exists and user is part of it
-    const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
 
     if (!booking) {
       res.status(404).json({ error: "Booking not found" });
@@ -2352,7 +2390,7 @@ app.get(
     // Get all messages for this booking, sorted by creation time
     const messages = await prisma.chatMessage.findMany({
       where: { bookingId },
-      orderBy: { createdAt: 'asc' }
+      orderBy: { createdAt: "asc" },
     });
 
     res.json(messages);
@@ -2369,9 +2407,9 @@ app.get(
     // Find all bookings where user is client or provider
     const userBookings = await prisma.booking.findMany({
       where: {
-        OR: [{ clientId: userId }, { providerId: userId }]
+        OR: [{ clientId: userId }, { providerId: userId }],
       },
-      select: { id: true }
+      select: { id: true },
     });
 
     const bookingIds = userBookings.map((b: any) => b.id);
@@ -2385,8 +2423,8 @@ app.get(
       where: {
         bookingId: { in: bookingIds },
         senderId: { not: userId },
-        read: false
-      }
+        read: false,
+      },
     });
 
     res.json({ count: unreadCount });
@@ -2402,7 +2440,9 @@ app.put(
     const userId = req.user!.id;
 
     // Verify the booking exists and user is part of it
-    const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
 
     if (!booking) {
       res.status(404).json({ error: "Booking not found" });
@@ -2419,9 +2459,9 @@ app.put(
       where: {
         bookingId: bookingId,
         senderId: { not: userId },
-        read: false
+        read: false,
       },
-      data: { read: true }
+      data: { read: true },
     });
 
     res.json({ success: true });
@@ -2438,24 +2478,24 @@ app.get(
     // Find all bookings where user is client or provider
     const userBookings = await prisma.booking.findMany({
       where: {
-        OR: [{ clientId: userId }, { providerId: userId }]
+        OR: [{ clientId: userId }, { providerId: userId }],
       },
       include: {
         messages: {
-          orderBy: { createdAt: 'desc' },
-          take: 1
+          orderBy: { createdAt: "desc" },
+          take: 1,
         },
         _count: {
           select: {
             messages: {
               where: {
                 senderId: { not: userId },
-                read: false
-              }
-            }
-          }
-        }
-      }
+                read: false,
+              },
+            },
+          },
+        },
+      },
     });
 
     const conversations = userBookings.map((booking: any) => {
@@ -2518,20 +2558,20 @@ app.post(
 
     await prisma.user.update({
       where: { id },
-      data: { isBlocked: true }
+      data: { isBlocked: true },
     });
 
     // Cancel all pending bookings for this user (as client or provider)
     await prisma.booking.updateMany({
       where: {
         OR: [{ clientId: id }, { providerId: id }],
-        status: "pending"
+        status: "pending",
       },
       data: {
         status: "cancelled",
         // Note: paymentStatus update logic might need more complex handling if strictly following previous logic
         // but for now we just cancel.
-      }
+      },
     });
 
     res.json({ success: true });
@@ -2553,7 +2593,7 @@ app.post(
 
     await prisma.user.update({
       where: { id },
-      data: { isBlocked: false }
+      data: { isBlocked: false },
     });
     res.json({ success: true });
   }
@@ -2574,7 +2614,9 @@ app.delete(
 
     // Prevent deleting the last admin
     if (user.userType === "admin") {
-      const adminCount = await prisma.user.count({ where: { userType: "admin" } });
+      const adminCount = await prisma.user.count({
+        where: { userType: "admin" },
+      });
       if (adminCount <= 1) {
         res.status(400).json({ error: "Cannot delete the last admin" });
         return;
@@ -2589,7 +2631,7 @@ app.delete(
     // For now, let's assume Prisma handles it or we leave orphans if not critical.
     // Actually, let's manually delete services to be safe if cascade isn't set up.
     await prisma.service.deleteMany({ where: { providerId: id } });
-    
+
     res.json({ success: true });
   }
 );
@@ -2659,8 +2701,8 @@ app.post(
       where: { id },
       data: {
         status: "cancelled",
-        paymentStatus: newPaymentStatus
-      }
+        paymentStatus: newPaymentStatus,
+      },
     });
 
     res.json({ success: true });
@@ -2694,11 +2736,11 @@ app.get(
     const totalUsers = await prisma.user.count();
     const totalServices = await prisma.service.count();
     const totalBookings = await prisma.booking.count();
-    
+
     const revenueResult = await prisma.booking.aggregate({
       _sum: {
-        amount: true
-      }
+        amount: true,
+      },
     });
     const totalRevenue = revenueResult._sum.amount || 0;
 
@@ -2714,13 +2756,17 @@ app.get(
 // Notification routes
 
 // Get user notifications
-app.get("/api/notifications", authenticate, async (req: Request, res: Response) => {
-  const userNotifications = await prisma.notification.findMany({
-    where: { userId: req.user!.id },
-    orderBy: { createdAt: 'desc' }
-  });
-  res.json(userNotifications);
-});
+app.get(
+  "/api/notifications",
+  authenticate,
+  async (req: Request, res: Response) => {
+    const userNotifications = await prisma.notification.findMany({
+      where: { userId: req.user!.id },
+      orderBy: { createdAt: "desc" },
+    });
+    res.json(userNotifications);
+  }
+);
 
 // Mark notification as read
 app.put(
@@ -2729,7 +2775,7 @@ app.put(
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const notification = await prisma.notification.findFirst({
-      where: { id, userId: req.user!.id }
+      where: { id, userId: req.user!.id },
     });
 
     if (!notification) {
@@ -2739,7 +2785,7 @@ app.put(
 
     await prisma.notification.update({
       where: { id },
-      data: { read: true }
+      data: { read: true },
     });
     res.json({ success: true });
   }
@@ -2752,7 +2798,7 @@ app.put(
   async (req: Request, res: Response) => {
     await prisma.notification.updateMany({
       where: { userId: req.user!.id, read: false },
-      data: { read: true }
+      data: { read: true },
     });
     res.json({ success: true });
   }
@@ -2835,14 +2881,16 @@ io.on("connection", (socket) => {
           message,
           read: false,
           createdAt: new Date(),
-        }
+        },
       });
 
       // Broadcast to room (including sender)
       io.to(bookingId).emit("receive_message", chatMessage);
 
       // Notify recipient about new message for unread count update
-      const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+      });
       if (booking) {
         const recipientId =
           booking.clientId === senderId ? booking.providerId : booking.clientId;
@@ -2887,9 +2935,4 @@ export const resetData = async (): Promise<void> => {
   await prisma.user.deleteMany();
 };
 
-export {
-  app,
-  httpServer,
-  io,
-  initAdmin,
-};
+export { app, httpServer, io, initAdmin };
