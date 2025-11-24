@@ -1,21 +1,15 @@
-import { Router, Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { Router } from "express";
 import { authenticate, requireAdmin } from "../middleware/auth";
+import { adminController } from "../controllers/adminController";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Get all users
 router.get(
   "/users",
   authenticate,
   requireAdmin,
-  async (_req: Request, res: Response) => {
-    // Return users without passwords
-    const users = await prisma.user.findMany();
-    const safeUsers = users.map(({ password, ...user }: any) => user);
-    res.json(safeUsers);
-  }
+  adminController.getAllUsers
 );
 
 // Block user
@@ -23,38 +17,7 @@ router.post(
   "/users/:id/block",
   authenticate,
   requireAdmin,
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const user = await prisma.user.findUnique({ where: { id } });
-
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
-
-    if (user.userType === "admin") {
-      res.status(400).json({ error: "Cannot block an admin" });
-      return;
-    }
-
-    await prisma.user.update({
-      where: { id },
-      data: { isBlocked: true },
-    });
-
-    // Cancel all pending bookings for this user (as client or provider)
-    await prisma.booking.updateMany({
-      where: {
-        OR: [{ clientId: id }, { providerId: id }],
-        status: "pending",
-      },
-      data: {
-        status: "cancelled",
-      },
-    });
-
-    res.json({ success: true });
-  }
+  adminController.blockUser
 );
 
 // Unblock user
@@ -62,21 +25,7 @@ router.post(
   "/users/:id/unblock",
   authenticate,
   requireAdmin,
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const user = await prisma.user.findUnique({ where: { id } });
-
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
-
-    await prisma.user.update({
-      where: { id },
-      data: { isBlocked: false },
-    });
-    res.json({ success: true });
-  }
+  adminController.unblockUser
 );
 
 // Delete user
@@ -84,32 +33,7 @@ router.delete(
   "/users/:id",
   authenticate,
   requireAdmin,
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const user = await prisma.user.findUnique({ where: { id } });
-
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
-
-    // Prevent deleting the last admin
-    if (user.userType === "admin") {
-      const adminCount = await prisma.user.count({
-        where: { userType: "admin" },
-      });
-      if (adminCount <= 1) {
-        res.status(400).json({ error: "Cannot delete the last admin" });
-        return;
-      }
-    }
-
-    await prisma.user.delete({ where: { id } });
-    // Also clean up related data
-    await prisma.service.deleteMany({ where: { providerId: id } });
-
-    res.json({ success: true });
-  }
+  adminController.deleteUser
 );
 
 // Get all services
@@ -117,10 +41,7 @@ router.get(
   "/services",
   authenticate,
   requireAdmin,
-  async (_req: Request, res: Response) => {
-    const services = await prisma.service.findMany();
-    res.json(services);
-  }
+  adminController.getAllServices
 );
 
 // Delete service
@@ -128,18 +49,7 @@ router.delete(
   "/services/:id",
   authenticate,
   requireAdmin,
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const service = await prisma.service.findUnique({ where: { id } });
-
-    if (!service) {
-      res.status(404).json({ error: "Service not found" });
-      return;
-    }
-
-    await prisma.service.delete({ where: { id } });
-    res.json({ success: true });
-  }
+  adminController.deleteService
 );
 
 // Get all bookings
@@ -147,12 +57,7 @@ router.get(
   "/bookings",
   authenticate,
   requireAdmin,
-  async (_req: Request, res: Response) => {
-    const bookings = await prisma.booking.findMany({
-      orderBy: { date: "desc" },
-    });
-    res.json(bookings);
-  }
+  adminController.getAllBookings
 );
 
 // Cancel booking
@@ -160,21 +65,7 @@ router.post(
   "/bookings/:id/cancel",
   authenticate,
   requireAdmin,
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const booking = await prisma.booking.findUnique({ where: { id } });
-
-    if (!booking) {
-      res.status(404).json({ error: "Booking not found" });
-      return;
-    }
-
-    await prisma.booking.update({
-      where: { id },
-      data: { status: "cancelled" },
-    });
-    res.json({ success: true });
-  }
+  adminController.cancelBooking
 );
 
 // Delete booking
@@ -182,18 +73,7 @@ router.delete(
   "/bookings/:id",
   authenticate,
   requireAdmin,
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const booking = await prisma.booking.findUnique({ where: { id } });
-
-    if (!booking) {
-      res.status(404).json({ error: "Booking not found" });
-      return;
-    }
-
-    await prisma.booking.delete({ where: { id } });
-    res.json({ success: true });
-  }
+  adminController.deleteBooking
 );
 
 // Get stats
@@ -201,29 +81,7 @@ router.get(
   "/stats",
   authenticate,
   requireAdmin,
-  async (_req: Request, res: Response) => {
-    const totalUsers = await prisma.user.count();
-    const totalServices = await prisma.service.count();
-    const totalBookings = await prisma.booking.count();
-
-    // Calculate total revenue (sum of amounts of completed bookings)
-    const completedBookings = await prisma.booking.findMany({
-      where: { status: "completed" },
-      select: { amount: true },
-    });
-
-    const totalRevenue = completedBookings.reduce(
-      (sum, booking) => sum + booking.amount,
-      0
-    );
-
-    res.json({
-      totalUsers,
-      totalServices,
-      totalBookings,
-      totalRevenue,
-    });
-  }
+  adminController.getStats
 );
 
 export default router;
