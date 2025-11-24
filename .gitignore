@@ -9,9 +9,7 @@ public/uploads/*.png
 public/uploads/*.gif
 !public/uploads/.gitkeep
 *.log
-
-
-/src/generated/prisma
+.env
 
 # SQLite database
 *.db
