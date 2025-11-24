@@ -10,3 +10,11 @@ public/uploads/*.gif
 !public/uploads/.gitkeep
 *.log
 
+
+/src/generated/prisma
+
+# SQLite database
+*.db
+*.db-journal
+prisma/*.db
+prisma/*.db-journal

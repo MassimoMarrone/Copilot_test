@@ -1,26 +1,24 @@
 import dotenv from "dotenv";
-import fs from "fs";
-import path from "path";
+import { PrismaClient } from "@prisma/client";
 import { sendEmail, emailTemplates } from "../src/emailService";
 
 // Load environment variables
 dotenv.config();
 
-const bookingsPath = path.join(__dirname, "../data/bookings.json");
+const prisma = new PrismaClient();
 
 const resendLastEmail = async () => {
   try {
-    // Read bookings
-    const bookingsData = fs.readFileSync(bookingsPath, "utf-8");
-    const bookings = JSON.parse(bookingsData);
+    // Get last booking
+    const lastBooking = await prisma.booking.findFirst({
+      orderBy: { createdAt: 'desc' }
+    });
 
-    if (bookings.length === 0) {
+    if (!lastBooking) {
       console.log("❌ No bookings found.");
       return;
     }
 
-    // Get last booking
-    const lastBooking = bookings[bookings.length - 1];
     console.log(`Found last booking: ${lastBooking.id}`);
     console.log(`Client: ${lastBooking.clientEmail}`);
     console.log(`Provider: ${lastBooking.providerEmail}`);
@@ -54,6 +52,8 @@ const resendLastEmail = async () => {
     console.log("✅ Emails resent successfully!");
   } catch (error) {
     console.error("❌ Error resending emails:", error);
+  } finally {
+    await prisma.$disconnect();
   }
 };
 

@@ -1,0 +1,135 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                    String    @id @default(uuid())
+  email                 String    @unique
+  password              String
+  userType              String    // "client", "provider", "admin"
+  isClient              Boolean   @default(true)
+  isProvider            Boolean   @default(false)
+  isAdmin               Boolean   @default(false)
+  isBlocked             Boolean   @default(false)
+  acceptedTerms         Boolean   @default(false)
+  acceptedProviderTerms Boolean   @default(false)
+  stripeAccountId       String?
+  googleId              String?
+  createdAt             DateTime  @default(now())
+  displayName           String?
+  bio                   String?
+  avatarUrl             String?
+
+  // Relations
+  services              Service[]
+  bookingsAsClient      Booking[] @relation("ClientBookings")
+  bookingsAsProvider    Booking[] @relation("ProviderBookings")
+  reviewsGiven          Review[]  @relation("ClientReviews")
+  reviewsReceived       Review[]  @relation("ProviderReviews")
+  sentMessages          ChatMessage[]
+  notifications         Notification[]
+}
+
+model Service {
+  id            String    @id @default(uuid())
+  providerId    String
+  provider      User      @relation(fields: [providerId], references: [id])
+  providerEmail String
+  title         String
+  description   String
+  category      String?
+  price         Float
+  productsUsed  String?   // JSON string
+  address       String?
+  latitude      Float?
+  longitude     Float?
+  imageUrl      String?
+  createdAt     DateTime  @default(now())
+  averageRating Float     @default(0)
+  reviewCount   Int       @default(0)
+  availability  String?   // JSON string
+
+  bookings      Booking[]
+  reviews       Review[]
+}
+
+model Booking {
+  id              String    @id
+  serviceId       String
+  service         Service   @relation(fields: [serviceId], references: [id])
+  clientId        String
+  client          User      @relation("ClientBookings", fields: [clientId], references: [id])
+  clientEmail     String
+  providerId      String
+  provider        User      @relation("ProviderBookings", fields: [providerId], references: [id])
+  providerEmail   String
+  serviceTitle    String
+  amount          Float
+  date            DateTime
+  status          String
+  paymentStatus   String
+  paymentIntentId String?
+  photoProof      String?
+  createdAt       DateTime  @default(now())
+  completedAt     DateTime?
+  clientPhone     String?
+  preferredTime   String?
+  notes           String?
+  address         String?
+
+  messages        ChatMessage[]
+  review          Review?
+}
+
+model Review {
+  id            String    @id @default(uuid())
+  bookingId     String    @unique
+  booking       Booking   @relation(fields: [bookingId], references: [id])
+  serviceId     String
+  service       Service   @relation(fields: [serviceId], references: [id])
+  providerId    String
+  provider      User      @relation("ProviderReviews", fields: [providerId], references: [id])
+  clientId      String
+  client        User      @relation("ClientReviews", fields: [clientId], references: [id])
+  rating        Int
+  ratingDetails String?   // JSON string
+  comment       String
+  createdAt     DateTime  @default(now())
+  providerReply String?
+  providerReplyCreatedAt DateTime?
+  helpfulCount  Int       @default(0)
+  helpfulVoters String?   // JSON string
+}
+
+model ChatMessage {
+  id          String    @id @default(uuid())
+  bookingId   String
+  booking     Booking   @relation(fields: [bookingId], references: [id])
+  senderId    String
+  sender      User      @relation(fields: [senderId], references: [id])
+  senderEmail String
+  senderType  String
+  message     String
+  read        Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  type      String
+  read      Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  link      String?
+}
