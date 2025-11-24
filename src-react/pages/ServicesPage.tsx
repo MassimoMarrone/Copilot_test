@@ -3,6 +3,8 @@ import { useAuth } from "../context/AuthContext";
 import ServiceReviewsModal from "../components/ServiceReviewsModal";
 import SearchBar from "../components/SearchBar";
 import ServiceMap from "../components/ServiceMap";
+import { servicesService, Service } from "../services/servicesService";
+import { bookingService } from "../services/bookingService";
 import "../styles/ServicesPage.css";
 
 interface TimeSlot {
@@ -30,23 +32,7 @@ interface ProviderAvailability {
   blockedDates: string[];
 }
 
-interface Service {
-  id: string;
-  providerId: string;
-  title: string;
-  description: string;
-  price: number;
-  category?: string;
-  providerEmail: string;
-  address?: string;
-  latitude?: number;
-  longitude?: number;
-  averageRating?: number;
-  reviewCount?: number;
-  imageUrl?: string;
-  availability?: ProviderAvailability;
-  productsUsed?: string[];
-}
+// Service interface is imported from servicesService
 
 const ServicesPage: React.FC = () => {
   const [services, setServices] = useState<Service[]>([]);
@@ -105,8 +91,7 @@ const ServicesPage: React.FC = () => {
 
   const loadServices = async () => {
     try {
-      const response = await fetch("/api/services");
-      const data = await response.json();
+      const data = await servicesService.getAllServices();
       setServices(data);
       setFilteredServices(data);
     } catch (error) {
@@ -362,30 +347,18 @@ const ServicesPage: React.FC = () => {
     const finalTime = selectedTimeSlot || preferredTime;
 
     try {
-      const response = await fetch("/api/bookings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          serviceId: selectedService.id,
-          date: bookingDate,
-          clientPhone: clientPhone,
-          preferredTime: finalTime,
-          notes: bookingNotes,
-          address: bookingAddress,
-        }),
+      const { url } = await bookingService.createBooking({
+        serviceId: selectedService.id,
+        date: bookingDate,
+        clientPhone: clientPhone,
+        preferredTime: finalTime,
+        notes: bookingNotes,
+        address: bookingAddress,
       });
 
-      if (response.ok) {
-        const { url } = await response.json();
-        window.location.href = url;
-      } else {
-        const data = await response.json();
-        alert(data.error || "Errore nella prenotazione");
-      }
-    } catch (error) {
-      alert("Errore di connessione");
+      window.location.href = url;
+    } catch (error: any) {
+      alert(error.message || "Errore nella prenotazione");
     }
   };
 

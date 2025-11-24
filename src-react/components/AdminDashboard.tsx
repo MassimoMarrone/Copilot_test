@@ -2,15 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import UserMenu from "./UserMenu";
 import ServiceMap from "./ServiceMap";
+import { adminService, AdminUser, AdminStats } from "../services/adminService";
+import { useAuth } from "../context/AuthContext";
 import "../styles/AdminDashboard.css";
-
-interface User {
-  id: string;
-  email: string;
-  userType: string;
-  createdAt: string;
-  isBlocked?: boolean;
-}
 
 interface Service {
   id: string;
@@ -37,19 +31,12 @@ interface Booking {
   amount: number;
 }
 
-interface AdminStats {
-  totalUsers: number;
-  totalServices: number;
-  totalBookings: number;
-  totalRevenue: number;
-}
-
 const AdminDashboard: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const { user: currentUser, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<
     "overview" | "users" | "services" | "bookings"
   >("overview");
@@ -59,41 +46,27 @@ const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    checkAuth();
-    loadData();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      const response = await fetch("/api/me");
-      if (!response.ok) {
-        navigate("/");
-        return;
-      }
-      const user = await response.json();
-      if (user.userType !== "admin") {
-        navigate("/");
-        return;
-      }
-      setCurrentUser(user);
-    } catch (error) {
+    if (!currentUser || currentUser.userType !== "admin") {
       navigate("/");
+      return;
     }
-  };
+    loadData();
+  }, [currentUser, navigate]);
 
   const loadData = async () => {
     try {
-      const [usersRes, servicesRes, bookingsRes, statsRes] = await Promise.all([
-        fetch("/api/admin/users"),
-        fetch("/api/admin/services"),
-        fetch("/api/admin/bookings"),
-        fetch("/api/admin/stats"),
-      ]);
+      const [usersData, servicesData, bookingsData, statsData] =
+        await Promise.all([
+          adminService.getUsers(),
+          adminService.getServices(),
+          adminService.getBookings(),
+          adminService.getStats(),
+        ]);
 
-      if (usersRes.ok) setUsers(await usersRes.json());
-      if (servicesRes.ok) setServices(await servicesRes.json());
-      if (bookingsRes.ok) setBookings(await bookingsRes.json());
-      if (statsRes.ok) setStats(await statsRes.json());
+      setUsers(usersData);
+      setServices(servicesData);
+      setBookings(bookingsData);
+      setStats(statsData);
     } catch (error) {
       console.error("Error loading admin data:", error);
     }
@@ -113,20 +86,13 @@ const AdminDashboard: React.FC = () => {
       return;
 
     try {
-      const response = await fetch(`/api/admin/users/${id}/${action}`, {
-        method: "POST",
-      });
-      if (response.ok) {
-        setUsers(
-          users.map((u) => (u.id === id ? { ...u, isBlocked: !isBlocked } : u))
-        );
-        // Reload bookings as some might have been cancelled
-        const bookingsRes = await fetch("/api/admin/bookings");
-        if (bookingsRes.ok) setBookings(await bookingsRes.json());
-      } else {
-        const data = await response.json();
-        alert(data.error || `Failed to ${action} user`);
-      }
+      await adminService.toggleUserBlock(id, isBlocked);
+      setUsers(
+        users.map((u) => (u.id === id ? { ...u, isBlocked: !isBlocked } : u))
+      );
+      // Reload bookings as some might have been cancelled
+      const bookingsData = await adminService.getBookings();
+      setBookings(bookingsData);
     } catch (error) {
       alert(`Error ${action}ing user`);
     }
@@ -141,16 +107,9 @@ const AdminDashboard: React.FC = () => {
       return;
 
     try {
-      const response = await fetch(`/api/admin/users/${id}`, {
-        method: "DELETE",
-      });
-      if (response.ok) {
-        setUsers(users.filter((u) => u.id !== id));
-        loadData(); // Reload stats
-      } else {
-        const data = await response.json();
-        alert(data.error || "Failed to delete user");
-      }
+      await adminService.deleteUser(id);
+      setUsers(users.filter((u) => u.id !== id));
+      loadData(); // Reload stats
     } catch (error) {
       alert("Error deleting user");
     }
@@ -161,15 +120,9 @@ const AdminDashboard: React.FC = () => {
       return;
 
     try {
-      const response = await fetch(`/api/admin/services/${id}`, {
-        method: "DELETE",
-      });
-      if (response.ok) {
-        setServices(services.filter((s) => s.id !== id));
-        loadData(); // Reload stats
-      } else {
-        alert("Failed to delete service");
-      }
+      await adminService.deleteService(id);
+      setServices(services.filter((s) => s.id !== id));
+      loadData(); // Reload stats
     } catch (error) {
       alert("Error deleting service");
     }
@@ -184,10 +137,8 @@ const AdminDashboard: React.FC = () => {
             userEmail={currentUser?.email}
             userType="admin"
             onLogout={() => {
-              fetch("/api/logout", { method: "POST" }).then(() => {
-                navigate("/");
-                window.location.reload();
-              });
+              logout();
+              navigate("/");
             }}
           />
         </div>
@@ -375,23 +326,12 @@ const AdminDashboard: React.FC = () => {
                           )
                             return;
                           try {
-                            const response = await fetch(
-                              `/api/admin/bookings/${booking.id}/cancel`,
-                              {
-                                method: "POST",
-                              }
-                            );
-                            if (response.ok) {
-                              // Refresh bookings list
-                              const bookingsRes = await fetch(
-                                "/api/admin/bookings"
-                              );
-                              if (bookingsRes.ok)
-                                setBookings(await bookingsRes.json());
-                              loadData(); // Reload stats
-                            } else {
-                              alert("Failed to cancel booking");
-                            }
+                            await adminService.cancelBooking(booking.id);
+                            // Refresh bookings list
+                            const bookingsData =
+                              await adminService.getBookings();
+                            setBookings(bookingsData);
+                            loadData(); // Reload stats
                           } catch (error) {
                             alert("Error cancelling booking");
                           }
@@ -410,20 +350,11 @@ const AdminDashboard: React.FC = () => {
                       )
                         return;
                       try {
-                        const response = await fetch(
-                          `/api/admin/bookings/${booking.id}`,
-                          {
-                            method: "DELETE",
-                          }
+                        await adminService.deleteBooking(booking.id);
+                        setBookings(
+                          bookings.filter((b) => b.id !== booking.id)
                         );
-                        if (response.ok) {
-                          setBookings(
-                            bookings.filter((b) => b.id !== booking.id)
-                          );
-                          loadData(); // Reload stats
-                        } else {
-                          alert("Failed to delete booking");
-                        }
+                        loadData(); // Reload stats
                       } catch (error) {
                         alert("Error deleting booking");
                       }

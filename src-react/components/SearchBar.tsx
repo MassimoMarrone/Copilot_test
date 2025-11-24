@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import "../styles/SearchBar.css";
+import { locationService } from "../services/locationService";
 
 interface SearchBarProps {
   onSearch: (
@@ -33,7 +34,7 @@ const AVAILABLE_PRODUCTS = [
 ];
 
 interface NominatimResult {
-  place_id: number;
+  place_id: string;
   lat: string;
   lon: string;
   display_name: string;
@@ -105,19 +106,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const apiKey = import.meta.env.VITE_LOCATIONIQ_API_KEY;
-        const response = await fetch(
-          `https://us1.locationiq.com/v1/search.php?key=${apiKey}&q=${encodeURIComponent(
-            value
-          )}&format=json&countrycodes=it&limit=5`
-        );
-        const data = await response.json();
-        // LocationIQ returns array on success, object with error on failure
+        const data = await locationService.searchAddress(value);
         if (Array.isArray(data)) {
           setLocationResults(data);
           setShowResults(true);
         } else {
-          console.error("LocationIQ Error:", data);
           setLocationResults([]);
         }
       } catch (error) {
@@ -149,19 +142,16 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
         const { latitude, longitude } = position.coords;
 
         try {
-          // Reverse geocode using LocationIQ
-          const apiKey = import.meta.env.VITE_LOCATIONIQ_API_KEY;
-          const response = await fetch(
-            `https://us1.locationiq.com/v1/reverse.php?key=${apiKey}&lat=${latitude}&lon=${longitude}&format=json`
+          const address = await locationService.reverseGeocode(
+            latitude,
+            longitude
           );
-          const data = await response.json();
 
           const location = {
             lat: latitude,
             lng: longitude,
             address:
-              data.display_name ||
-              `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+              address || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
           };
 
           setCurrentLocation(location);

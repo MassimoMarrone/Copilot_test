@@ -10,6 +10,10 @@ import CompleteBookingModal from "./provider/CompleteBookingModal";
 import AvailabilityModal from "./provider/AvailabilityModal";
 import { Service, Booking, Review } from "../types/provider";
 import { ProviderAvailability } from "./AvailabilityManager";
+import { authService } from "../services/authService";
+import { servicesService } from "../services/servicesService";
+import { bookingService } from "../services/bookingService";
+import { reviewService } from "../services/reviewService";
 import "../styles/ProviderDashboard.css";
 import "../styles/ToastNotification.css";
 
@@ -85,12 +89,7 @@ const ProviderDashboard: React.FC = () => {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch("/api/me");
-      if (!response.ok) {
-        navigate("/");
-        return;
-      }
-      const user = await response.json();
+      const user = await authService.getCurrentUser();
       setUserEmail(user.email);
       setUserId(user.id);
       const isProviderUser = user.isProvider || user.userType === "provider";
@@ -104,9 +103,9 @@ const ProviderDashboard: React.FC = () => {
 
   const loadServices = async () => {
     try {
-      const response = await fetch("/api/my-services");
-      const data = await response.json();
-      setServices(data);
+      const data = await servicesService.getMyServices();
+      // Cast to any because types might slightly differ between frontend definitions
+      setServices(data as any);
     } catch (error) {
       console.error("Error loading services:", error);
     }
@@ -114,9 +113,8 @@ const ProviderDashboard: React.FC = () => {
 
   const loadBookings = async () => {
     try {
-      const response = await fetch("/api/provider-bookings");
-      const data = await response.json();
-      setBookings(data);
+      const data = await bookingService.getProviderBookings();
+      setBookings(data as any);
     } catch (error) {
       console.error("Error loading bookings:", error);
     }
@@ -124,9 +122,8 @@ const ProviderDashboard: React.FC = () => {
 
   const loadReviews = async () => {
     try {
-      const response = await fetch("/api/my-reviews");
-      const data = await response.json();
-      setReviews(data);
+      const data = await reviewService.getMyReviews();
+      setReviews(data as any);
     } catch (error) {
       console.error("Error loading reviews:", error);
     }
@@ -134,21 +131,12 @@ const ProviderDashboard: React.FC = () => {
 
   const handleCreateService = async (formData: FormData) => {
     try {
-      const response = await fetch("/api/services", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.ok) {
-        alert("Servizio creato con successo!");
-        setShowServiceModal(false);
-        loadServices();
-      } else {
-        const data = await response.json();
-        alert(data.error || "Errore nella creazione del servizio");
-      }
-    } catch (error) {
-      alert("Errore di connessione");
+      await servicesService.createService(formData);
+      alert("Servizio creato con successo!");
+      setShowServiceModal(false);
+      loadServices();
+    } catch (error: any) {
+      alert(error.message || "Errore nella creazione del servizio");
     }
   };
 
@@ -156,22 +144,13 @@ const ProviderDashboard: React.FC = () => {
     if (!editingService) return;
 
     try {
-      const response = await fetch(`/api/services/${editingService.id}`, {
-        method: "PUT",
-        body: formData,
-      });
-
-      if (response.ok) {
-        alert("Servizio aggiornato con successo!");
-        setShowServiceModal(false);
-        setEditingService(null);
-        loadServices();
-      } else {
-        const data = await response.json();
-        alert(data.error || "Errore nell'aggiornamento del servizio");
-      }
-    } catch (error) {
-      alert("Errore di connessione");
+      await servicesService.updateService(editingService.id, formData);
+      alert("Servizio aggiornato con successo!");
+      setShowServiceModal(false);
+      setEditingService(null);
+      loadServices();
+    } catch (error: any) {
+      alert(error.message || "Errore nell'aggiornamento del servizio");
     }
   };
 
@@ -180,56 +159,32 @@ const ProviderDashboard: React.FC = () => {
   ) => {
     if (!availabilityService) return;
 
-    const formData = new FormData();
-    formData.append("availability", JSON.stringify(availability));
-
     try {
-      const response = await fetch(`/api/services/${availabilityService.id}`, {
-        method: "PUT",
-        body: formData,
-      });
-
-      if (response.ok) {
-        alert("Disponibilità aggiornata con successo!");
-        setAvailabilityService(null);
-        loadServices();
-      } else {
-        const data = await response.json();
-        alert(data.error || "Errore nell'aggiornamento della disponibilità");
-      }
-    } catch (error) {
-      alert("Errore di connessione");
+      await servicesService.updateAvailability(
+        availabilityService.id,
+        availability
+      );
+      alert("Disponibilità aggiornata con successo!");
+      setAvailabilityService(null);
+      loadServices();
+    } catch (error: any) {
+      alert(error.message || "Errore nell'aggiornamento della disponibilità");
     }
   };
 
   const handleCompleteBooking = async (photo: File) => {
     if (!selectedBooking) return;
 
-    const formData = new FormData();
-    formData.append("photo", photo);
-
     try {
-      const response = await fetch(
-        `/api/bookings/${selectedBooking.id}/complete`,
-        {
-          method: "POST",
-          body: formData,
-        }
+      await bookingService.completeBooking(selectedBooking.id, photo);
+      alert(
+        "Servizio completato! Il pagamento è stato rilasciato dall'escrow."
       );
-
-      if (response.ok) {
-        alert(
-          "Servizio completato! Il pagamento è stato rilasciato dall'escrow."
-        );
-        setShowCompleteModal(false);
-        setSelectedBooking(null);
-        loadBookings();
-      } else {
-        const data = await response.json();
-        alert(data.error || "Errore nel completamento del servizio");
-      }
-    } catch (error) {
-      alert("Errore di connessione");
+      setShowCompleteModal(false);
+      setSelectedBooking(null);
+      loadBookings();
+    } catch (error: any) {
+      alert(error.message || "Errore nel completamento del servizio");
     }
   };
 
@@ -242,20 +197,13 @@ const ProviderDashboard: React.FC = () => {
       return;
 
     try {
-      const response = await fetch(`/api/bookings/${booking.id}/cancel`, {
-        method: "POST",
-      });
-      if (response.ok) {
-        alert("Prenotazione cancellata con successo");
-        loadBookings();
-      } else {
-        const data = await response.json();
-        alert(
-          data.error || "Errore durante la cancellazione della prenotazione"
-        );
-      }
-    } catch (error) {
-      alert("Errore di connessione");
+      await bookingService.cancelBooking(booking.id);
+      alert("Prenotazione cancellata con successo");
+      loadBookings();
+    } catch (error: any) {
+      alert(
+        error.message || "Errore durante la cancellazione della prenotazione"
+      );
     }
   };
 
@@ -269,20 +217,12 @@ const ProviderDashboard: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`/api/services/${service.id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        alert("Servizio eliminato con successo");
-        loadServices();
-      } else {
-        const data = await response.json();
-        alert(data.error || "Errore durante l'eliminazione del servizio");
-      }
-    } catch (error) {
+      await servicesService.deleteService(service.id);
+      alert("Servizio eliminato con successo");
+      loadServices();
+    } catch (error: any) {
       console.error("Error deleting service:", error);
-      alert("Errore di connessione");
+      alert(error.message || "Errore di connessione");
     }
   };
 
@@ -291,6 +231,13 @@ const ProviderDashboard: React.FC = () => {
       <div className="dashboard-header">
         <h1>🛠️ Dashboard Fornitore</h1>
         <div className="header-actions">
+          <button
+            className="btn-secondary"
+            onClick={() => navigate("/client-dashboard")}
+            style={{ marginRight: "10px" }}
+          >
+            👤 Dashboard Cliente
+          </button>
           <button
             className="btn-add-service"
             onClick={() => {

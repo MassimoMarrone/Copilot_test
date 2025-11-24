@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
+import { chatService } from "../services/chatService";
 import "../styles/ChatModal.css";
 
 interface ChatMessage {
@@ -90,17 +91,10 @@ const ChatModal: React.FC<ChatModalProps> = ({
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/bookings/${bookingId}/messages`);
-
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Errore nel caricamento dei messaggi");
-      }
-    } catch (err) {
-      setError("Errore di connessione");
+      const data = await chatService.getMessages(bookingId);
+      setMessages(data as any);
+    } catch (err: any) {
+      setError(err.message || "Errore nel caricamento dei messaggi");
     } finally {
       setLoading(false);
     }

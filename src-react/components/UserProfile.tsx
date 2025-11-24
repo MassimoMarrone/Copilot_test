@@ -2,18 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import UserMenu from "./UserMenu";
 import "../styles/UserProfile.css";
-
-interface User {
-  id: string;
-  email: string;
-  userType: "client" | "provider";
-  isProvider?: boolean;
-  isClient?: boolean;
-  createdAt?: string;
-  displayName?: string;
-  bio?: string;
-  avatarUrl?: string;
-}
+import { authService, User } from "../services/authService";
 
 const UserProfile: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -35,12 +24,7 @@ const UserProfile: React.FC = () => {
 
   const loadUserData = async () => {
     try {
-      const response = await fetch("/api/me");
-      if (!response.ok) {
-        navigate("/");
-        return;
-      }
-      const userData = await response.json();
+      const userData = await authService.getCurrentUser();
       setUser(userData);
       setDisplayName(userData.displayName || "");
       setBio(userData.bio || "");
@@ -70,23 +54,13 @@ const UserProfile: React.FC = () => {
     }
 
     try {
-      const response = await fetch("/api/me/profile", {
-        method: "PUT",
-        body: formData,
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-        setEditing(false);
-        alert("Profilo aggiornato con successo!");
-      } else {
-        const data = await response.json();
-        alert(data.error || "Errore durante l'aggiornamento del profilo");
-      }
+      const data = await authService.updateProfile(formData);
+      setUser(data.user);
+      setEditing(false);
+      alert("Profilo aggiornato con successo!");
     } catch (error) {
       console.error("Update profile error:", error);
-      alert("Errore di connessione");
+      alert("Errore durante l'aggiornamento del profilo");
     }
   };
 
@@ -100,18 +74,13 @@ const UserProfile: React.FC = () => {
     }
 
     try {
-      const response = await fetch("/api/me", { method: "DELETE" });
-      if (response.ok) {
-        alert("Account eliminato con successo.");
-        navigate("/");
-        window.location.reload();
-      } else {
-        const data = await response.json();
-        alert(data.error || "Errore durante l'eliminazione dell'account");
-      }
+      await authService.deleteAccount();
+      alert("Account eliminato con successo.");
+      navigate("/");
+      window.location.reload();
     } catch (error) {
       console.error("Delete account error:", error);
-      alert("Errore di connessione");
+      alert("Errore durante l'eliminazione dell'account");
     }
   };
 

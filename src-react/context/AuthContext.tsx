@@ -1,14 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-
-interface User {
-  id: string;
-  email: string;
-  userType: "client" | "provider" | "admin";
-  isClient: boolean;
-  isProvider: boolean;
-  isAdmin?: boolean;
-}
+import { authService, User } from "../services/authService";
 
 interface AuthContextType {
   user: User | null;
@@ -28,15 +20,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const checkAuth = async () => {
     try {
-      const response = await fetch("/api/me");
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-      } else {
-        setUser(null);
-      }
+      const userData = await authService.getCurrentUser();
+      setUser(userData);
     } catch (error) {
-      console.error("Auth check failed", error);
+      // console.error("Auth check failed", error);
       setUser(null);
     } finally {
       setLoading(false);
@@ -45,7 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const logout = async () => {
     try {
-      await fetch("/api/logout", { method: "POST" });
+      await authService.logout();
       setUser(null);
       navigate("/");
     } catch (error) {

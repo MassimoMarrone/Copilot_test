@@ -1,16 +1,10 @@
 import React, { useState, useRef } from "react";
 import "../styles/SearchBar.css"; // Reuse styles for now or create new ones
+import { locationService, LocationResult } from "../services/locationService";
 
 interface AddressAutocompleteProps {
   onSelect: (location: { lat: number; lng: number; address: string }) => void;
   initialValue?: string;
-}
-
-interface LocationResult {
-  place_id: string;
-  lat: string;
-  lon: string;
-  display_name: string;
 }
 
 const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
@@ -38,13 +32,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const apiKey = import.meta.env.VITE_LOCATIONIQ_API_KEY;
-        const response = await fetch(
-          `https://us1.locationiq.com/v1/search.php?key=${apiKey}&q=${encodeURIComponent(
-            value
-          )}&format=json&countrycodes=it&limit=5`
-        );
-        const data = await response.json();
+        const data = await locationService.searchAddress(value);
         if (Array.isArray(data)) {
           setResults(data);
           setShowResults(true);

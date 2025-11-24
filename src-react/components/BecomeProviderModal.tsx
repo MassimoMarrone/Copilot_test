@@ -1,5 +1,6 @@
 import React, { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { authService } from "../services/authService";
 import "../styles/Modal.css";
 
 interface BecomeProviderModalProps {
@@ -44,34 +45,19 @@ const BecomeProviderModal: React.FC<BecomeProviderModalProps> = ({
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/become-provider", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ acceptedProviderTerms }),
-      });
+      await authService.becomeProvider(acceptedProviderTerms);
 
-      const data = await response.json();
-
-      if (response.ok) {
-        if (onSuccess) {
-          onSuccess();
-        }
-        onClose();
-        alert(
-          "Congratulazioni! Ora sei anche un fornitore. Puoi pubblicare i tuoi servizi."
-        );
-        // Redirect to provider dashboard
-        navigate("/provider-dashboard");
-      } else {
-        const msg = data.errors
-          ? data.errors.map((err: any) => err.msg).join(", ")
-          : data.error || "Registrazione come fornitore fallita";
-        setErrorMessage(msg);
+      if (onSuccess) {
+        onSuccess();
       }
-    } catch (error) {
-      setErrorMessage("Errore di connessione");
+      onClose();
+      alert(
+        "Congratulazioni! Ora sei anche un fornitore. Puoi pubblicare i tuoi servizi."
+      );
+      // Redirect to provider dashboard
+      navigate("/provider-dashboard");
+    } catch (error: any) {
+      setErrorMessage(error.message || "Registrazione come fornitore fallita");
     } finally {
       setIsLoading(false);
     }

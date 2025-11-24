@@ -4,39 +4,10 @@ import SearchBar from "./SearchBar";
 import ChatModal from "./ChatModal";
 import BecomeProviderModal from "./BecomeProviderModal";
 import ServiceMap from "./ServiceMap";
+import { authService } from "../services/authService";
+import { servicesService, Service } from "../services/servicesService";
+import { bookingService, Booking } from "../services/bookingService";
 import "../styles/ClientDashboard.css";
-
-interface Service {
-  id: string;
-  providerId: string;
-  title: string;
-  description: string;
-  price: number;
-  providerEmail: string;
-  address?: string;
-  latitude?: number;
-  longitude?: number;
-  category?: string;
-  averageRating?: number;
-  reviewCount?: number;
-  imageUrl?: string;
-  productsUsed?: string[];
-}
-
-interface Booking {
-  id: string;
-  serviceTitle: string;
-  date: string;
-  amount: number;
-  providerEmail: string;
-  status: string;
-  paymentStatus: string;
-  photoProof?: string;
-  clientPhone?: string;
-  preferredTime?: string;
-  notes?: string;
-  address?: string;
-}
 
 interface ClientDashboardProps {
   // googleMapsApiKey removed
@@ -88,12 +59,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch("/api/me");
-      if (!response.ok) {
-        navigate("/");
-        return;
-      }
-      const user = await response.json();
+      const user = await authService.getCurrentUser();
       setCurrentUser(user);
       // Check if user is a provider (has isProvider flag)
       if (user.isProvider !== undefined) {
@@ -110,8 +76,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
 
   const loadServices = async () => {
     try {
-      const response = await fetch("/api/services");
-      const data = await response.json();
+      const data = await servicesService.getAllServices();
       setServices(data);
       setFilteredServices(data);
     } catch (error) {
@@ -121,8 +86,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
 
   const loadBookings = async () => {
     try {
-      const response = await fetch("/api/my-bookings");
-      const data = await response.json();
+      const data = await bookingService.getMyBookings();
       setBookings(data);
     } catch (error) {
       console.error("Error loading bookings:", error);
@@ -214,81 +178,49 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
     if (!selectedService) return;
 
     try {
-      const response = await fetch("/api/bookings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          serviceId: selectedService.id,
-          date: bookingDate,
-          clientPhone: clientPhone,
-          preferredTime: preferredTime,
-          notes: bookingNotes,
-          address: bookingAddress,
-        }),
+      const { url } = await bookingService.createBooking({
+        serviceId: selectedService.id,
+        date: bookingDate,
+        clientPhone: clientPhone,
+        preferredTime: preferredTime,
+        notes: bookingNotes,
+        address: bookingAddress,
       });
 
-      if (response.ok) {
-        const { url } = await response.json();
-        // Redirect to Stripe checkout immediately
-        window.location.href = url;
-      } else {
-        const data = await response.json();
-        alert(data.error || "Errore nella prenotazione");
-      }
-    } catch (error) {
-      alert("Errore di connessione");
+      // Redirect to Stripe checkout immediately
+      window.location.href = url;
+    } catch (error: any) {
+      alert(error.message || "Errore nella prenotazione");
     }
   };
 
   const verifyPayment = async (sessionId: string) => {
     try {
-      const response = await fetch(
-        `/api/verify-payment?session_id=${sessionId}`
+      await bookingService.verifyPayment(sessionId);
+      alert(
+        "Pagamento confermato! La prenotazione è stata creata con successo ed è ora in escrow."
       );
-      const data = await response.json();
-      if (response.ok) {
-        alert(
-          "Pagamento confermato! La prenotazione è stata creata con successo ed è ora in escrow."
-        );
-        loadBookings();
-        navigate("/client-dashboard");
-      } else {
-        alert(data.error || "Errore nella verifica del pagamento");
-      }
-    } catch (error) {
+      loadBookings();
+      navigate("/client-dashboard");
+    } catch (error: any) {
       console.error("Error verifying payment:", error);
-      alert("Errore di connessione durante la verifica del pagamento");
+      alert(error.message || "Errore nella verifica del pagamento");
     }
   };
 
   const handlePayment = async (bookingId: string) => {
     try {
-      const response = await fetch("/api/create-checkout-session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ bookingId }),
-      });
-
-      if (response.ok) {
-        const { url } = await response.json();
-        window.location.href = url;
-      } else {
-        const data = await response.json();
-        alert(data.error || "Errore nell'inizializzazione del pagamento");
-      }
-    } catch (error) {
+      const { url } = await bookingService.createCheckoutSession(bookingId);
+      window.location.href = url;
+    } catch (error: any) {
       console.error("Payment error:", error);
-      alert("Errore di connessione");
+      alert(error.message || "Errore nell'inizializzazione del pagamento");
     }
   };
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/logout", { method: "POST" });
+      await authService.logout();
       navigate("/");
     } catch (error) {
       console.error("Logout error:", error);
@@ -316,9 +248,6 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
               📊 Dashboard Fornitore
             </button>
           )}
-          <button onClick={handleLogout} className="btn btn-logout">
-            Logout
-          </button>
         </div>
       </div>
 

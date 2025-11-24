@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/UserMenu.css";
+import { authService } from "../services/authService";
 
 interface UserMenuProps {
   userEmail?: string;
@@ -42,7 +43,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
       return;
     }
     try {
-      await fetch("/api/logout", { method: "POST" });
+      await authService.logout();
       navigate("/");
       window.location.reload(); // Ensure state is cleared
     } catch (error) {

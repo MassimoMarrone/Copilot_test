@@ -1,16 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Modal.css";
 import "../styles/ServiceReviewsModal.css";
-
-interface Review {
-  id: string;
-  rating: number;
-  comment: string;
-  createdAt: string;
-  clientName?: string;
-  providerReply?: string;
-  providerReplyCreatedAt?: string;
-}
+import { reviewService, Review } from "../services/reviewService";
 
 interface ServiceReviewsModalProps {
   serviceId: string;
@@ -30,11 +21,7 @@ const ServiceReviewsModal: React.FC<ServiceReviewsModalProps> = ({
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const response = await fetch(`/api/services/${serviceId}/reviews`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch reviews");
-        }
-        const data = await response.json();
+        const data = await reviewService.getServiceReviews(serviceId);
         setReviews(data);
       } catch (err) {
         console.error("Error fetching reviews:", err);

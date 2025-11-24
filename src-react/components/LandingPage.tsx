@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import SearchBar from "./SearchBar";
 import heroImage from "../assets/hero.jpg";
+import { servicesService } from "../services/servicesService";
+import { bookingService } from "../services/bookingService";
 import "../styles/LandingPage.css";
 
 interface LandingPageProps {
@@ -43,8 +45,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
 
   const loadServices = async () => {
     try {
-      const response = await fetch("/api/services");
-      const data = await response.json();
+      const data = await servicesService.getAllServices();
       const servicesArray = Array.isArray(data) ? data : [];
       setServices(servicesArray);
       setFilteredServices(servicesArray);
@@ -143,31 +144,19 @@ const LandingPage: React.FC<LandingPageProps> = ({
     if (!selectedService) return;
 
     try {
-      const response = await fetch("/api/bookings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          serviceId: selectedService.id,
-          date: bookingDate,
-          clientPhone: clientPhone,
-          preferredTime: preferredTime,
-          notes: bookingNotes,
-          address: bookingAddress,
-        }),
+      const { url } = await bookingService.createBooking({
+        serviceId: selectedService.id,
+        date: bookingDate,
+        clientPhone: clientPhone,
+        preferredTime: preferredTime,
+        notes: bookingNotes,
+        address: bookingAddress,
       });
 
-      if (response.ok) {
-        const { url } = await response.json();
-        // Redirect to Stripe checkout immediately
-        window.location.href = url;
-      } else {
-        const data = await response.json();
-        alert(data.error || "Errore nella prenotazione");
-      }
-    } catch (error) {
-      alert("Errore di connessione");
+      // Redirect to Stripe checkout immediately
+      window.location.href = url;
+    } catch (error: any) {
+      alert(error.message || "Errore nella prenotazione");
     }
   };
 

@@ -142,4 +142,88 @@ router.delete(
   }
 );
 
+// Get all bookings
+router.get(
+  "/bookings",
+  authenticate,
+  requireAdmin,
+  async (_req: Request, res: Response) => {
+    const bookings = await prisma.booking.findMany({
+      orderBy: { date: "desc" },
+    });
+    res.json(bookings);
+  }
+);
+
+// Cancel booking
+router.post(
+  "/bookings/:id/cancel",
+  authenticate,
+  requireAdmin,
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const booking = await prisma.booking.findUnique({ where: { id } });
+
+    if (!booking) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+
+    await prisma.booking.update({
+      where: { id },
+      data: { status: "cancelled" },
+    });
+    res.json({ success: true });
+  }
+);
+
+// Delete booking
+router.delete(
+  "/bookings/:id",
+  authenticate,
+  requireAdmin,
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const booking = await prisma.booking.findUnique({ where: { id } });
+
+    if (!booking) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+
+    await prisma.booking.delete({ where: { id } });
+    res.json({ success: true });
+  }
+);
+
+// Get stats
+router.get(
+  "/stats",
+  authenticate,
+  requireAdmin,
+  async (_req: Request, res: Response) => {
+    const totalUsers = await prisma.user.count();
+    const totalServices = await prisma.service.count();
+    const totalBookings = await prisma.booking.count();
+
+    // Calculate total revenue (sum of amounts of completed bookings)
+    const completedBookings = await prisma.booking.findMany({
+      where: { status: "completed" },
+      select: { amount: true },
+    });
+
+    const totalRevenue = completedBookings.reduce(
+      (sum, booking) => sum + booking.amount,
+      0
+    );
+
+    res.json({
+      totalUsers,
+      totalServices,
+      totalBookings,
+      totalRevenue,
+    });
+  }
+);
+
 export default router;

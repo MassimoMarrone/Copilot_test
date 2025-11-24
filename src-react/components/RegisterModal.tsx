@@ -1,6 +1,7 @@
 import React, { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
+import { authService } from "../services/authService";
 import "../styles/Modal.css";
 
 interface RegisterModalProps {
@@ -35,20 +36,12 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
     }
 
     try {
-      const response = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          token: credentialResponse.credential,
-          acceptedTerms: acceptedTerms,
-        }),
-      });
+      const data = await authService.googleLogin(
+        credentialResponse.credential,
+        acceptedTerms
+      );
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (data.success) {
         onClose();
         if (data.userType === "admin") {
           navigate("/admin-dashboard");
@@ -61,8 +54,8 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
       } else {
         setErrorMessage(data.error || "Google registration failed");
       }
-    } catch (error) {
-      setErrorMessage("Connection error");
+    } catch (error: any) {
+      setErrorMessage(error.message || "Connection error");
     } finally {
       setIsLoading(false);
     }
@@ -89,29 +82,25 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password, acceptedTerms }),
+      const data = await authService.register({
+        email,
+        password,
+        acceptedTerms,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (data.success) {
         onClose(); // Chiudi il modale
         // All users are now registered as clients
         navigate("/client-dashboard");
       } else {
         // Handle express-validator errors array or single error message
-        const msg = data.errors
-          ? data.errors.map((err: any) => err.msg).join(", ")
-          : data.error || "Registrazione fallita";
-        setErrorMessage(msg);
+        // authService.register returns AuthResponse which has error string.
+        // If the backend returns errors array, api.ts might not expose it easily in AuthResponse unless we type it.
+        // But let's assume data.error contains the message.
+        setErrorMessage(data.error || "Registrazione fallita");
       }
-    } catch (error) {
-      setErrorMessage("Errore di connessione");
+    } catch (error: any) {
+      setErrorMessage(error.message || "Errore di connessione");
     } finally {
       setIsLoading(false);
     }

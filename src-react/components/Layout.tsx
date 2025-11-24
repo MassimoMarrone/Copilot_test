@@ -6,6 +6,7 @@ import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 import BecomeProviderModal from "./BecomeProviderModal";
 import { io } from "socket.io-client";
+import { chatService } from "../services/chatService";
 
 const Layout: React.FC = () => {
   const { user, logout, checkAuth } = useAuth();
@@ -18,11 +19,8 @@ const Layout: React.FC = () => {
   const fetchUnreadCount = async () => {
     if (!user) return;
     try {
-      const response = await fetch("/api/unread-messages-count");
-      if (response.ok) {
-        const data = await response.json();
-        setUnreadMessagesCount(data.count);
-      }
+      const { count } = await chatService.getUnreadCount();
+      setUnreadMessagesCount(count);
     } catch (error) {
       console.error("Error fetching unread count:", error);
     }

@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Notification } from "./ToastNotification";
+import {
+  notificationService,
+  Notification,
+} from "../services/notificationService";
 import "../styles/NotificationCenter.css";
 
 interface NotificationCenterProps {
@@ -51,11 +54,8 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
   const loadNotifications = async () => {
     try {
-      const response = await fetch("/api/notifications");
-      if (response.ok) {
-        const data = await response.json();
-        setNotifications(data);
-      }
+      const data = await notificationService.getNotifications();
+      setNotifications(data);
     } catch (error) {
       console.error("Error loading notifications:", error);
     }
@@ -65,9 +65,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
     if (notification.read) return;
 
     try {
-      await fetch(`/api/notifications/${notification.id}/read`, {
-        method: "PUT",
-      });
+      await notificationService.markAsRead(notification.id);
 
       setNotifications((prev) =>
         prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n))
@@ -79,9 +77,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
   const markAllAsRead = async () => {
     try {
-      await fetch("/api/notifications/read-all", {
-        method: "PUT",
-      });
+      await notificationService.markAllAsRead();
 
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     } catch (error) {

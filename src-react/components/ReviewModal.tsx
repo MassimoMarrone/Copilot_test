@@ -1,10 +1,7 @@
 import React, { useState } from "react";
+import { reviewService } from "../services/reviewService";
+import { Booking } from "../services/bookingService";
 import "../styles/Modal.css"; // Assuming a generic modal style
-
-interface Booking {
-  id: string;
-  serviceTitle: string;
-}
 
 interface ReviewModalProps {
   booking: Booking;
@@ -41,31 +38,16 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
     );
 
     try {
-      const response = await fetch(`/api/bookings/${booking.id}/review`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          rating: overallRating,
-          ratingDetails: {
-            punctuality,
-            communication,
-            quality,
-          },
-          comment,
-        }),
+      await reviewService.createReview({
+        serviceId: booking.serviceId,
+        rating: overallRating,
+        comment,
       });
 
-      if (response.ok) {
-        alert("Recensione inviata con successo!");
-        onReviewSubmit();
-      } else {
-        const data = await response.json();
-        setError(data.error || "Errore durante l'invio della recensione.");
-      }
-    } catch (err) {
-      setError("Errore di connessione. Riprova più tardi.");
+      alert("Recensione inviata con successo!");
+      onReviewSubmit();
+    } catch (err: any) {
+      setError(err.message || "Errore durante l'invio della recensione.");
     } finally {
       setIsSubmitting(false);
     }

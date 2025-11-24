@@ -2,23 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import ReviewModal from "../components/ReviewModal";
+import { bookingService, Booking } from "../services/bookingService";
 import "../styles/BookingsPage.css";
-
-interface Booking {
-  id: string;
-  serviceTitle: string;
-  date: string;
-  amount: number;
-  providerEmail: string;
-  status: string;
-  paymentStatus: string;
-  photoProof?: string;
-  clientPhone?: string;
-  preferredTime?: string;
-  notes?: string;
-  address?: string;
-  hasReview?: boolean;
-}
 
 const BookingsPage: React.FC = () => {
   const { user } = useAuth();
@@ -34,8 +19,7 @@ const BookingsPage: React.FC = () => {
 
   const loadBookings = async () => {
     try {
-      const response = await fetch("/api/my-bookings");
-      const data = await response.json();
+      const data = await bookingService.getMyBookings();
       setBookings(data);
     } catch (error) {
       console.error("Error loading bookings:", error);

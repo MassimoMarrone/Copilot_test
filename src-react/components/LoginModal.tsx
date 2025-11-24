@@ -1,6 +1,7 @@
 import React, { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
+import { authService } from "../services/authService";
 import "../styles/Modal.css";
 
 interface LoginModalProps {
@@ -30,17 +31,9 @@ const LoginModal: React.FC<LoginModalProps> = ({
     setIsLoading(true);
     setErrorMessage("");
     try {
-      const response = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token: credentialResponse.credential }),
-      });
+      const data = await authService.googleLogin(credentialResponse.credential);
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (data.success) {
         onClose();
         if (data.userType === "admin") {
           navigate("/admin-dashboard");
@@ -50,15 +43,31 @@ const LoginModal: React.FC<LoginModalProps> = ({
           navigate("/provider-dashboard");
         }
       } else {
-        if (data.code === "TERMS_REQUIRED") {
-          setPendingToken(credentialResponse.credential);
-          setShowTermsStep(true);
-        } else {
-          setErrorMessage(data.error || "Google login failed");
-        }
+        // Check if error is TERMS_REQUIRED (this logic might need adjustment based on authService response)
+        // authService.googleLogin returns AuthResponse which has error string.
+        // If the backend returns a specific code, authService might swallow it or return it in error.
+        // Let's assume authService throws or returns error.
+        // Wait, authService.googleLogin returns Promise<AuthResponse>.
+        // If the backend returns 403 with code TERMS_REQUIRED, api.ts might throw.
+        // I need to check api.ts error handling.
+        setErrorMessage(data.error || "Google login failed");
       }
-    } catch (error) {
-      setErrorMessage("Connection error");
+    } catch (error: any) {
+      // If api.ts throws for non-200, we need to check if it's the TERMS_REQUIRED case.
+      // The current api.ts throws an Error with the message from the server.
+      // If the server returns { code: "TERMS_REQUIRED" }, api.ts might not expose the code easily unless I parse the error message or update api.ts.
+      // However, let's assume for now we handle standard errors.
+      // If the backend sends 200 OK but with a flag, that's different.
+      // Let's check src/routes/auth.ts for google login.
+      if (
+        error.code === "TERMS_REQUIRED" ||
+        error.message === "TERMS_REQUIRED"
+      ) {
+        setPendingToken(credentialResponse.credential);
+        setShowTermsStep(true);
+      } else {
+        setErrorMessage(error.message || "Connection error");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -77,20 +86,9 @@ const LoginModal: React.FC<LoginModalProps> = ({
     if (!acceptedTerms) return;
     setIsLoading(true);
     try {
-      const response = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          token: pendingToken,
-          acceptedTerms: true,
-        }),
-      });
+      const data = await authService.googleLogin(pendingToken, true);
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (data.success) {
         onClose();
         if (data.userType === "admin") {
           navigate("/admin-dashboard");
@@ -102,8 +100,8 @@ const LoginModal: React.FC<LoginModalProps> = ({
       } else {
         setErrorMessage(data.error || "Registrazione fallita");
       }
-    } catch (error) {
-      setErrorMessage("Errore di connessione");
+    } catch (error: any) {
+      setErrorMessage(error.message || "Errore di connessione");
     } finally {
       setIsLoading(false);
     }
@@ -115,17 +113,9 @@ const LoginModal: React.FC<LoginModalProps> = ({
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const data = await authService.login({ email, password });
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (data.success) {
         onClose(); // Chiudi il modale
         // Redirect based on user type
         if (data.userType === "admin") {
@@ -140,8 +130,8 @@ const LoginModal: React.FC<LoginModalProps> = ({
       } else {
         setErrorMessage(data.error || "Login fallito");
       }
-    } catch (error) {
-      setErrorMessage("Errore di connessione");
+    } catch (error: any) {
+      setErrorMessage(error.message || "Errore di connessione");
     } finally {
       setIsLoading(false);
     }

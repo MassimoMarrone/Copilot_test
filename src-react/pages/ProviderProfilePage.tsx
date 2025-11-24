@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { userService, ProviderProfile } from "../services/userService";
+import { reviewService } from "../services/reviewService";
 import "../styles/ProviderProfilePage.css";
 
 interface Service {
@@ -28,16 +30,9 @@ interface Review {
   helpfulCount?: number;
 }
 
-interface ProviderProfile {
-  id: string;
-  displayName: string;
-  bio: string;
-  avatarUrl?: string;
-  createdAt: string;
+interface ExtendedProviderProfile extends ProviderProfile {
   services: Service[];
   reviews: Review[];
-  averageRating: number;
-  reviewCount: number;
 }
 
 const ProviderProfilePage: React.FC = () => {
@@ -45,7 +40,9 @@ const ProviderProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [provider, setProvider] = useState<ProviderProfile | null>(null);
+  const [provider, setProvider] = useState<ExtendedProviderProfile | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<
@@ -62,14 +59,10 @@ const ProviderProfilePage: React.FC = () => {
   const loadProviderProfile = async (id: string) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/providers/${id}`);
-      if (!response.ok) {
-        throw new Error("Provider not found");
-      }
-      const data = await response.json();
-      setProvider(data);
+      const data = await userService.getProviderProfile(id);
+      setProvider(data as unknown as ExtendedProviderProfile);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Provider not found");
     } finally {
       setLoading(false);
     }
@@ -82,27 +75,22 @@ const ProviderProfilePage: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`/api/reviews/${reviewId}/helpful`, {
-        method: "POST",
-      });
+      const data = await reviewService.markHelpful(reviewId);
 
-      if (response.ok) {
-        const data = await response.json();
-        // Update local state
-        setProvider((prev) => {
-          if (!prev) return null;
-          return {
-            ...prev,
-            reviews: prev.reviews.map((r) =>
-              r.id === reviewId ? { ...r, helpfulCount: data.helpfulCount } : r
-            ),
-          };
-        });
-        setHelpfulVotes((prev) => ({
+      // Update local state
+      setProvider((prev) => {
+        if (!prev) return null;
+        return {
           ...prev,
-          [reviewId]: data.isHelpful,
-        }));
-      }
+          reviews: prev.reviews.map((r) =>
+            r.id === reviewId ? { ...r, helpfulCount: data.helpfulCount } : r
+          ),
+        };
+      });
+      setHelpfulVotes((prev) => ({
+        ...prev,
+        [reviewId]: data.success,
+      }));
     } catch (error) {
       console.error("Error voting helpful:", error);
     }
