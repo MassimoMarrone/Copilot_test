@@ -232,6 +232,36 @@ Questa versione include:
 
 Vedi [SECURITY.md](SECURITY.md) per l'analisi completa e le raccomandazioni.
 
+## Roadmap & Stato Sviluppo
+
+### ✅ Completato di Recente
+- **Admin Dashboard**: Interfaccia completa per gestione utenti, servizi e prenotazioni.
+- **Sistema Email (SMTP)**: Integrazione Nodemailer con supporto SMTP reale (Gmail) e template HTML.
+- **Rebranding**: Aggiornamento nome applicazione da "TimeShare" a "Domy".
+- **Fix**: Correzione inizializzazione servizio email (lazy loading) per garantire il caricamento delle variabili d'ambiente.
+
+### 🚧 In Corso / Da Fare (To-Do)
+1. **Integrazione Pagamenti Reale (Stripe)**
+   - Implementazione flusso Escrow completo con Stripe Connect.
+   - Gestione webhook per aggiornamenti stato pagamento.
+   
+2. **Migrazione Database**
+   - Migrazione da file JSON a database relazionale (SQLite per dev, PostgreSQL per prod).
+   - Implementazione ORM (Prisma o TypeORM).
+
+3. **Verifica Email Utente**
+   - Invio link di conferma alla registrazione.
+   - Blocco login per utenti non verificati.
+
+4. **Sistema di Recensioni**
+   - UI per lasciare feedback (stelle + commento) dopo il completamento del servizio.
+   - Visualizzazione media recensioni nel profilo fornitore.
+
+5. **Chat in Tempo Reale**
+   - Miglioramento UX chat.
+   - Supporto invio immagini in chat.
+   - Notifiche visive nuovi messaggi.
+
 ## Licenza
 
 ISC

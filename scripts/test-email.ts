@@ -10,7 +10,11 @@ const testEmail = async () => {
   console.log(`   Port: ${process.env.SMTP_PORT}`);
   console.log(`   User: ${process.env.SMTP_USER}`);
 
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+  if (
+    !process.env.SMTP_HOST ||
+    !process.env.SMTP_USER ||
+    !process.env.SMTP_PASS
+  ) {
     console.error("❌ Missing SMTP configuration in .env");
     return;
   }

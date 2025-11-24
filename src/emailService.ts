@@ -45,7 +45,7 @@ const initEmailService = async () => {
 };
 
 // Initialize the service
-initEmailService().catch(console.error);
+// initEmailService().catch(console.error);
 
 export const sendEmail = async (
   to: string,
@@ -101,7 +101,11 @@ export const emailTemplates = {
       <p>Accedi alla tua dashboard per gestire la prenotazione.</p>
     </div>
   `,
-  newBookingClient: (clientName: string, serviceTitle: string, date: string) => `
+  newBookingClient: (
+    clientName: string,
+    serviceTitle: string,
+    date: string
+  ) => `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #007bff;">Prenotazione Confermata</h2>
       <p>Ciao ${clientName},</p>

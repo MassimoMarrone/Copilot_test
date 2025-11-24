@@ -2199,7 +2199,7 @@ app.get(
             `Hai ricevuto una nuova prenotazione per "${booking.serviceTitle}"`,
             "success"
           );
-          
+
           // Send emails
           sendEmail(
             booking.providerEmail,
@@ -2676,7 +2676,10 @@ app.get(
     const totalUsers = users.length;
     const totalServices = services.length;
     const totalBookings = bookings.length;
-    const totalRevenue = bookings.reduce((sum, booking) => sum + booking.amount, 0);
+    const totalRevenue = bookings.reduce(
+      (sum, booking) => sum + booking.amount,
+      0
+    );
 
     res.json({
       totalUsers,
