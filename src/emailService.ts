@@ -86,6 +86,21 @@ export const emailTemplates = {
       <p>Il team di Domy</p>
     </div>
   `,
+  verification: (name: string, link: string) => `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h1 style="color: #007bff;">Verifica la tua email</h1>
+      <p>Ciao ${name},</p>
+      <p>Grazie per esserti registrato a Domy. Per completare la registrazione, clicca sul link qui sotto:</p>
+      <p style="text-align: center;">
+        <a href="${link}" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Verifica Email</a>
+      </p>
+      <p>Oppure copia e incolla questo link nel tuo browser:</p>
+      <p><a href="${link}">${link}</a></p>
+      <p>Il link scadrà tra 24 ore.</p>
+      <br>
+      <p>Il team di Domy</p>
+    </div>
+  `,
   newBookingProvider: (
     providerName: string,
     clientName: string,

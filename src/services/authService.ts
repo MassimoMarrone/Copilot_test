@@ -2,6 +2,7 @@ import { PrismaClient, User } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
+import crypto from "crypto";
 import { sendEmail, emailTemplates } from "../emailService";
 
 const prisma = new PrismaClient();
@@ -23,6 +24,8 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     const user = await prisma.user.create({
       data: {
@@ -33,18 +36,54 @@ export class AuthService {
         isProvider: false,
         acceptedTerms: true,
         createdAt: new Date(),
+        isVerified: false,
+        verificationToken,
+        verificationTokenExpires,
+      },
+    });
+
+    const verificationLink = `${process.env.FRONTEND_URL || "http://localhost:3000"}/api/verify-email?token=${verificationToken}`;
+
+    sendEmail(
+      user.email,
+      "Verifica la tua email - Domy",
+      emailTemplates.verification(user.email.split("@")[0], verificationLink)
+    );
+
+    return { message: "Registration successful. Please check your email to verify your account." };
+  }
+
+  async verifyEmail(token: string) {
+    const user = await prisma.user.findFirst({
+      where: {
+        verificationToken: token,
+        verificationTokenExpires: {
+          gt: new Date(),
+        },
+      },
+    });
+
+    if (!user) {
+      throw new Error("Invalid or expired verification token");
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        isVerified: true,
+        verificationToken: null,
+        verificationTokenExpires: null,
       },
     });
 
     sendEmail(
-      user.email,
+      updatedUser.email,
       "Benvenuto in Domy!",
-      emailTemplates.welcome(user.email.split("@")[0])
+      emailTemplates.welcome(updatedUser.email.split("@")[0])
     );
 
-    const token = this.generateToken(user);
-
-    return { user, token };
+    const authToken = this.generateToken(updatedUser);
+    return { user: updatedUser, token: authToken };
   }
 
   async login(data: any) {
@@ -53,6 +92,10 @@ export class AuthService {
 
     if (!user) {
       throw new Error("Invalid credentials");
+    }
+
+    if (!user.isVerified && !user.googleId) {
+      throw new Error("Please verify your email before logging in");
     }
 
     if (!user.password) {
@@ -94,7 +137,7 @@ export class AuthService {
       if (!user.googleId) {
         user = await prisma.user.update({
           where: { email },
-          data: { googleId },
+          data: { googleId, isVerified: true },
         });
       }
     } else {
@@ -116,6 +159,7 @@ export class AuthService {
           acceptedTerms: true,
           createdAt: new Date(),
           googleId,
+          isVerified: true,
         },
       });
     }

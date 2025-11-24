@@ -4,9 +4,25 @@ import { authService } from "../services/authService";
 export class AuthController {
   async register(req: Request, res: Response): Promise<void> {
     try {
-      const { user, token } = await authService.register(req.body);
+      const result = await authService.register(req.body);
+      res.json({ success: true, message: result.message });
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      res.status(400).json({ error: error.message || "Registration failed" });
+    }
+  }
 
-      res.cookie("token", token, {
+  async verifyEmail(req: Request, res: Response): Promise<void> {
+    try {
+      const { token } = req.query;
+      if (!token || typeof token !== "string") {
+        res.status(400).json({ error: "Invalid verification token" });
+        return;
+      }
+
+      const { token: authToken } = await authService.verifyEmail(token);
+
+      res.cookie("token", authToken, {
         httpOnly: true,
         secure:
           process.env.NODE_ENV === "production" ||
@@ -16,15 +32,15 @@ export class AuthController {
         maxAge: 24 * 60 * 60 * 1000,
       });
 
-      res.json({
-        success: true,
-        userType: user.userType,
-        isClient: user.isClient,
-        isProvider: user.isProvider,
-      });
+      // Redirect to frontend dashboard or login page
+      res.redirect("/client-dashboard?verified=true");
     } catch (error: any) {
-      console.error("Registration error:", error);
-      res.status(400).json({ error: error.message || "Registration failed" });
+      console.error("Email verification error:", error);
+      res.status(400).send(`
+        <h1>Verification Failed</h1>
+        <p>${error.message}</p>
+        <a href="/login">Go to Login</a>
+      `);
     }
   }
 

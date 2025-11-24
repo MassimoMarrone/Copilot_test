@@ -21,6 +21,9 @@ model User {
   isBlocked             Boolean   @default(false)
   acceptedTerms         Boolean   @default(false)
   acceptedProviderTerms Boolean   @default(false)
+  isVerified            Boolean   @default(false)
+  verificationToken     String?
+  verificationTokenExpires DateTime?
   stripeAccountId       String?
   googleId              String?
   createdAt             DateTime  @default(now())
