@@ -201,6 +201,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, price: e.target.value })
               }
+              onWheel={(e) => (e.target as HTMLInputElement).blur()}
               required
             />
           </div>

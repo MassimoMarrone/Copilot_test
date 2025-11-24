@@ -3,10 +3,12 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import ChatModal from "./ChatModal";
 import BecomeProviderModal from "./BecomeProviderModal";
+import ServiceMap from "./ServiceMap";
 import "../styles/ClientDashboard.css";
 
 interface Service {
   id: string;
+  providerId: string;
   title: string;
   description: string;
   price: number;
@@ -14,6 +16,11 @@ interface Service {
   address?: string;
   latitude?: number;
   longitude?: number;
+  category?: string;
+  averageRating?: number;
+  reviewCount?: number;
+  imageUrl?: string;
+  productsUsed?: string[];
 }
 
 interface Booking {
@@ -50,6 +57,8 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
   const [showBecomeProviderModal, setShowBecomeProviderModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isProvider, setIsProvider] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ id: string; email: string } | null>(null);
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -78,6 +87,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
         return;
       }
       const user = await response.json();
+      setCurrentUser(user);
       // Check if user is a provider (has isProvider flag)
       if (user.isProvider !== undefined) {
         setIsProvider(user.isProvider);
@@ -306,33 +316,59 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
         <h2>🔍 Ricerca Servizi</h2>
         <SearchBar onSearch={handleSearch} />
 
-        <div className="services-grid">
-          {filteredServices.length === 0 ? (
-            <div className="empty-state">
-              <p>Nessun servizio disponibile.</p>
-            </div>
-          ) : (
-            filteredServices.map((service) => (
-              <div key={service.id} className="service-card">
-                <h3>{service.title}</h3>
-                <p className="service-description">{service.description}</p>
-                {service.address && (
-                  <p className="service-location">📍 {service.address}</p>
-                )}
-                <p className="service-price">€{service.price.toFixed(2)}</p>
-                <p className="service-provider">
-                  <small>Fornitore: {service.providerEmail}</small>
-                </p>
-                <button
-                  onClick={() => openBookingModal(service)}
-                  className="btn btn-book"
-                >
-                  Prenota
-                </button>
-              </div>
-            ))
-          )}
+        <div className="view-mode-toggle">
+          <button
+            onClick={() => setViewMode("list")}
+            className={`btn view-mode-btn ${viewMode === "list" ? "active" : ""}`}
+          >
+            📋 Lista
+          </button>
+          <button
+            onClick={() => setViewMode("map")}
+            className={`btn view-mode-btn ${viewMode === "map" ? "active" : ""}`}
+          >
+            🗺️ Mappa
+          </button>
         </div>
+
+        {viewMode === "list" ? (
+          <div className="services-grid">
+            {filteredServices.length === 0 ? (
+              <div className="empty-state">
+                <p>Nessun servizio disponibile.</p>
+              </div>
+            ) : (
+              filteredServices.map((service) => (
+                <div key={service.id} className="service-card">
+                  <h3>{service.title}</h3>
+                  <p className="service-description">{service.description}</p>
+                  {service.address && (
+                    <p className="service-location">📍 {service.address}</p>
+                  )}
+                  <p className="service-price">€{service.price.toFixed(2)}</p>
+                  <p className="service-provider">
+                    <small>Fornitore: {service.providerEmail}</small>
+                  </p>
+                  <button
+                    onClick={() => openBookingModal(service)}
+                    className="btn btn-book"
+                  >
+                    Prenota
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        ) : (
+          <div className="map-container-wrapper" style={{ height: "500px", marginTop: "20px" }}>
+            <ServiceMap 
+              services={filteredServices} 
+              onBook={(service) => openBookingModal(service)} 
+            />
+          </div>
+        )}
+
+
       </div>
 
       <div className="dashboard-section">
@@ -521,7 +557,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
       )}
 
       {/* Chat Modal */}
-      {showChatModal && selectedBooking && (
+      {showChatModal && selectedBooking && currentUser && (
         <ChatModal
           bookingId={selectedBooking.id}
           isOpen={showChatModal}
@@ -531,6 +567,8 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
           }}
           currentUserType="client"
           otherPartyEmail={selectedBooking.providerEmail}
+          userId={currentUser.id}
+          userEmail={currentUser.email}
         />
       )}
 
