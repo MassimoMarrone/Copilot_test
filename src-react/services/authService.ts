@@ -6,10 +6,11 @@ export interface User {
   displayName?: string;
   bio?: string;
   avatarUrl?: string;
-  userType: string;
+  userType: "client" | "provider" | "admin";
   isClient: boolean;
   isProvider: boolean;
   isAdmin?: boolean;
+  createdAt?: string;
 }
 
 export interface AuthResponse {

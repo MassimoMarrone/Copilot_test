@@ -16,6 +16,10 @@ export interface Review {
   service?: {
     title: string;
   };
+  // Added fields to match usage in ServiceReviewsModal
+  clientName?: string;
+  providerReply?: string;
+  providerReplyCreatedAt?: string;
 }
 
 export const reviewService = {

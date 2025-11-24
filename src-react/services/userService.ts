@@ -1,5 +1,5 @@
 import { get, put, del, upload } from "./api";
-import { Service, Review } from "./servicesService"; // Re-using types if possible, or redefine
+// Removed import { Service, Review } from "./servicesService"; to fix module not found error
 
 // Redefine types to avoid circular dependencies if servicesService imports userService (it doesn't, but good practice)
 // Actually, I can just define the ProviderProfile interface here.
