@@ -19,13 +19,13 @@ const UserProfile: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  
+
   // Form states
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
@@ -61,7 +61,7 @@ const UserProfile: React.FC = () => {
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const formData = new FormData();
     formData.append("displayName", displayName);
     formData.append("bio", bio);
@@ -144,44 +144,53 @@ const UserProfile: React.FC = () => {
         <div className="container">
           <div className="profile-card">
             <div className="profile-avatar-section">
-              <div 
+              <div
                 className="profile-avatar-large"
-                style={{ 
-                  backgroundImage: previewUrl || user.avatarUrl ? `url(${previewUrl || user.avatarUrl})` : 'none',
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center'
+                style={{
+                  backgroundImage:
+                    previewUrl || user.avatarUrl
+                      ? `url(${previewUrl || user.avatarUrl})`
+                      : "none",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
                 }}
               >
                 {!(previewUrl || user.avatarUrl) && "👤"}
               </div>
               {editing && (
                 <div className="avatar-upload">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn-upload"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     Cambia Foto
                   </button>
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    onChange={handleFileChange} 
-                    style={{ display: 'none' }} 
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    style={{ display: "none" }}
                     accept="image/*"
                   />
                 </div>
               )}
               <h2>{user.displayName || "Utente"}</h2>
               {user.isProvider && (
-                <a href={`/provider/${user.id}`} className="view-public-profile">
+                <a
+                  href={`/provider/${user.id}`}
+                  className="view-public-profile"
+                >
                   Vedi Profilo Pubblico
                 </a>
               )}
             </div>
 
             {editing ? (
-              <form onSubmit={handleUpdateProfile} className="profile-edit-form">
+              <form
+                onSubmit={handleUpdateProfile}
+                className="profile-edit-form"
+              >
                 <div className="form-group">
                   <label>Nome Visualizzato</label>
                   <input
@@ -192,7 +201,7 @@ const UserProfile: React.FC = () => {
                     maxLength={50}
                   />
                 </div>
-                
+
                 <div className="form-group">
                   <label>Biografia</label>
                   <textarea
@@ -205,9 +214,11 @@ const UserProfile: React.FC = () => {
                 </div>
 
                 <div className="form-actions">
-                  <button type="submit" className="btn btn-primary">Salva Modifiche</button>
-                  <button 
-                    type="button" 
+                  <button type="submit" className="btn btn-primary">
+                    Salva Modifiche
+                  </button>
+                  <button
+                    type="button"
                     className="btn btn-secondary"
                     onClick={() => {
                       setEditing(false);
@@ -257,7 +268,7 @@ const UserProfile: React.FC = () => {
                     </span>
                   </div>
                 )}
-                
+
                 <div className="profile-actions">
                   <button
                     className="btn btn-secondary"

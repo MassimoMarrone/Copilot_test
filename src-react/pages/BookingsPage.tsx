@@ -132,7 +132,9 @@ const BookingsPage: React.FC = () => {
 
                 <div className="booking-actions">
                   <button
-                    onClick={() => navigate(`/messages?bookingId=${booking.id}`)}
+                    onClick={() =>
+                      navigate(`/messages?bookingId=${booking.id}`)
+                    }
                     className="btn-chat"
                   >
                     💬 Chat con Fornitore

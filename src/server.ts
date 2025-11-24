@@ -1391,13 +1391,11 @@ app.post(
       res.json({ id: session.id, url: session.url });
     } catch (error: any) {
       console.error("Booking creation error:", error);
-      res
-        .status(500)
-        .json({
-          error:
-            "Failed to create booking checkout session: " +
-            (error.message || "Unknown error"),
-        });
+      res.status(500).json({
+        error:
+          "Failed to create booking checkout session: " +
+          (error.message || "Unknown error"),
+      });
     }
   }
 );
@@ -1608,7 +1606,9 @@ app.get("/api/services/:serviceId/reviews", (req: Request, res: Response) => {
   } else if (sort === "lowest") {
     serviceReviews.sort((a, b) => a.rating - b.rating);
   } else if (sort === "helpful") {
-    serviceReviews.sort((a, b) => (b.helpfulCount || 0) - (a.helpfulCount || 0));
+    serviceReviews.sort(
+      (a, b) => (b.helpfulCount || 0) - (a.helpfulCount || 0)
+    );
   } else {
     // Default: newest
     serviceReviews.sort(
@@ -1993,7 +1993,6 @@ app.post(
 );
 
 // Legacy Stripe Payment Route - kept for backward compatibility with existing unpaid bookings
-// For new bookings, payment is handled directly in the /api/bookings endpoint
 app.post(
   "/api/create-checkout-session",
   authenticate,
@@ -2570,6 +2569,45 @@ app.post(
 
     saveData();
     res.json({ success: true });
+  }
+);
+
+app.delete(
+  "/api/admin/bookings/:id",
+  authenticate,
+  requireAdmin,
+  (req: Request, res: Response) => {
+    const { id } = req.params;
+    const bookingIndex = bookings.findIndex((b) => b.id === id);
+
+    if (bookingIndex === -1) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+
+    bookings.splice(bookingIndex, 1);
+    saveData();
+    res.json({ success: true });
+  }
+);
+
+// New admin stats route
+app.get(
+  "/api/admin/stats",
+  authenticate,
+  requireAdmin,
+  (_req: Request, res: Response) => {
+    const totalUsers = users.length;
+    const totalServices = services.length;
+    const totalBookings = bookings.length;
+    const totalRevenue = bookings.reduce((sum, booking) => sum + booking.amount, 0);
+
+    res.json({
+      totalUsers,
+      totalServices,
+      totalBookings,
+      totalRevenue,
+    });
   }
 );
 

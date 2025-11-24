@@ -44,11 +44,13 @@ const ProviderProfilePage: React.FC = () => {
   const { providerId } = useParams<{ providerId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [provider, setProvider] = useState<ProviderProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<"newest" | "highest" | "lowest" | "helpful">("newest");
+  const [sortBy, setSortBy] = useState<
+    "newest" | "highest" | "lowest" | "helpful"
+  >("newest");
   const [helpfulVotes, setHelpfulVotes] = useState<Record<string, boolean>>({}); // Track local votes
 
   useEffect(() => {
@@ -83,7 +85,7 @@ const ProviderProfilePage: React.FC = () => {
       const response = await fetch(`/api/reviews/${reviewId}/helpful`, {
         method: "POST",
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         // Update local state
@@ -91,14 +93,14 @@ const ProviderProfilePage: React.FC = () => {
           if (!prev) return null;
           return {
             ...prev,
-            reviews: prev.reviews.map((r) => 
+            reviews: prev.reviews.map((r) =>
               r.id === reviewId ? { ...r, helpfulCount: data.helpfulCount } : r
-            )
+            ),
           };
         });
         setHelpfulVotes((prev) => ({
           ...prev,
-          [reviewId]: data.isHelpful
+          [reviewId]: data.isHelpful,
         }));
       }
     } catch (error) {
@@ -109,17 +111,22 @@ const ProviderProfilePage: React.FC = () => {
   const getSortedReviews = () => {
     if (!provider) return [];
     const reviews = [...provider.reviews];
-    
+
     switch (sortBy) {
       case "highest":
         return reviews.sort((a, b) => b.rating - a.rating);
       case "lowest":
         return reviews.sort((a, b) => a.rating - b.rating);
       case "helpful":
-        return reviews.sort((a, b) => (b.helpfulCount || 0) - (a.helpfulCount || 0));
+        return reviews.sort(
+          (a, b) => (b.helpfulCount || 0) - (a.helpfulCount || 0)
+        );
       case "newest":
       default:
-        return reviews.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        return reviews.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
     }
   };
 
@@ -135,12 +142,12 @@ const ProviderProfilePage: React.FC = () => {
     // Since the booking logic is in ClientDashboard, we might want to refactor it or redirect.
     // A simple way is to redirect to client dashboard and pass serviceId in query params?
     // Or better, implement booking logic here or in a shared component.
-    
+
     // For this iteration, let's redirect to client dashboard with a query param
     // But ClientDashboard expects to load all services.
-    
+
     // Let's just alert for now as a placeholder or redirect to services page
-    navigate("/client-dashboard"); 
+    navigate("/client-dashboard");
   };
 
   if (loading) return <div className="loading">Caricamento profilo...</div>;
@@ -167,13 +174,16 @@ const ProviderProfilePage: React.FC = () => {
             <h1>{provider.displayName}</h1>
             <div className="profile-stats">
               <span className="rating">
-                ⭐ {provider.averageRating.toFixed(1)} ({provider.reviewCount} recensioni)
+                ⭐ {provider.averageRating.toFixed(1)} ({provider.reviewCount}{" "}
+                recensioni)
               </span>
               <span className="joined-date">
                 Membro dal {new Date(provider.createdAt).toLocaleDateString()}
               </span>
             </div>
-            <p className="profile-bio">{provider.bio || "Nessuna biografia disponibile."}</p>
+            <p className="profile-bio">
+              {provider.bio || "Nessuna biografia disponibile."}
+            </p>
           </div>
         </div>
       </div>
@@ -185,13 +195,17 @@ const ProviderProfilePage: React.FC = () => {
             {provider.services.map((service) => (
               <div key={service.id} className="service-card">
                 {service.imageUrl && (
-                  <img src={service.imageUrl} alt={service.title} className="service-image" />
+                  <img
+                    src={service.imageUrl}
+                    alt={service.title}
+                    className="service-image"
+                  />
                 )}
                 <div className="service-info">
                   <h3>{service.title}</h3>
                   <p className="service-price">€{service.price.toFixed(2)}</p>
                   <p className="service-description">{service.description}</p>
-                  <button 
+                  <button
                     className="btn-book"
                     onClick={() => handleBookService(service.id)}
                   >
@@ -208,8 +222,8 @@ const ProviderProfilePage: React.FC = () => {
             <h2>Recensioni</h2>
             <div className="sort-controls">
               <label>Ordina per:</label>
-              <select 
-                value={sortBy} 
+              <select
+                value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
               >
                 <option value="newest">Più recenti</option>
@@ -219,7 +233,7 @@ const ProviderProfilePage: React.FC = () => {
               </select>
             </div>
           </div>
-          
+
           <div className="reviews-list">
             {sortedReviews.length === 0 ? (
               <p>Nessuna recensione ancora.</p>
@@ -233,20 +247,28 @@ const ProviderProfilePage: React.FC = () => {
                       {new Date(review.createdAt).toLocaleDateString()}
                     </span>
                   </div>
-                  
+
                   {review.ratingDetails && (
                     <div className="review-details">
-                      <span title="Puntualità">🕒 {review.ratingDetails.punctuality}</span>
-                      <span title="Comunicazione">💬 {review.ratingDetails.communication}</span>
-                      <span title="Qualità">✨ {review.ratingDetails.quality}</span>
+                      <span title="Puntualità">
+                        🕒 {review.ratingDetails.punctuality}
+                      </span>
+                      <span title="Comunicazione">
+                        💬 {review.ratingDetails.communication}
+                      </span>
+                      <span title="Qualità">
+                        ✨ {review.ratingDetails.quality}
+                      </span>
                     </div>
                   )}
 
                   <p className="review-comment">{review.comment}</p>
-                  
+
                   <div className="review-footer">
-                    <button 
-                      className={`btn-helpful ${helpfulVotes[review.id] ? 'voted' : ''}`}
+                    <button
+                      className={`btn-helpful ${
+                        helpfulVotes[review.id] ? "voted" : ""
+                      }`}
                       onClick={() => handleHelpfulVote(review.id)}
                     >
                       👍 Utile ({review.helpfulCount || 0})

@@ -90,7 +90,7 @@
   .profile-content {
     grid-template-columns: 1fr;
   }
-  
+
   .profile-info-container {
     flex-direction: column;
     align-items: center;
@@ -103,7 +103,8 @@
   }
 }
 
-.services-section h2, .reviews-section h2 {
+.services-section h2,
+.reviews-section h2 {
   margin-bottom: 20px;
   color: #333;
   border-bottom: 2px solid #f0f2f5;

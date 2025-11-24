@@ -109,7 +109,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
             {renderStars(communication, setCommunication, "Comunicazione")}
             {renderStars(quality, setQuality, "Qualità del servizio")}
           </div>
-          
+
           <div className="overall-rating-preview">
             <p>
               Valutazione Complessiva:{" "}

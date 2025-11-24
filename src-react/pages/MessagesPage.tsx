@@ -14,9 +14,10 @@ const MessagesPage: React.FC = () => {
   const { refreshUnreadCount } = useOutletContext<OutletContextType>();
   const [searchParams] = useSearchParams();
   const initialBookingId = searchParams.get("bookingId");
-  
+
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [selectedConversation, setSelectedConversation] =
+    useState<Conversation | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -49,7 +50,7 @@ const MessagesPage: React.FC = () => {
     if (selectedConversation) {
       loadMessages(selectedConversation.bookingId);
       if (isMobileView) setShowSidebar(false);
-      
+
       // Mark as read
       markAsRead(selectedConversation.bookingId);
     }
@@ -61,7 +62,9 @@ const MessagesPage: React.FC = () => {
 
   useEffect(() => {
     if (initialBookingId && conversations.length > 0 && !selectedConversation) {
-      const targetConv = conversations.find(c => c.bookingId === initialBookingId);
+      const targetConv = conversations.find(
+        (c) => c.bookingId === initialBookingId
+      );
       if (targetConv) {
         setSelectedConversation(targetConv);
       }
@@ -83,17 +86,20 @@ const MessagesPage: React.FC = () => {
 
     newSocket.on("receive_message", (message: ChatMessage) => {
       // If message belongs to current chat, append it
-      if (selectedConversation && message.bookingId === selectedConversation.bookingId) {
+      if (
+        selectedConversation &&
+        message.bookingId === selectedConversation.bookingId
+      ) {
         setMessages((prev) => [...prev, message]);
         // Mark as read immediately if we are looking at it
         if (message.senderId !== user.id) {
           markAsRead(message.bookingId);
         }
       }
-      
+
       // Update conversation list (move to top, update last message)
       updateConversationList(message);
-      
+
       // Refresh global unread count
       if (message.senderId !== user.id) {
         refreshUnreadCount();
@@ -106,7 +112,7 @@ const MessagesPage: React.FC = () => {
   const updateConversationList = (message: ChatMessage) => {
     setConversations((prev) => {
       const index = prev.findIndex((c) => c.bookingId === message.bookingId);
-      
+
       // If conversation not found, reload list to get full details
       if (index === -1) {
         loadConversations();
@@ -116,10 +122,17 @@ const MessagesPage: React.FC = () => {
       const updatedConv = { ...prev[index] };
       updatedConv.lastMessage = message;
       updatedConv.updatedAt = message.createdAt;
-      
-      if (message.senderId !== user?.id && (!selectedConversation || selectedConversation.bookingId !== message.bookingId)) {
+
+      if (
+        message.senderId !== user?.id &&
+        (!selectedConversation ||
+          selectedConversation.bookingId !== message.bookingId)
+      ) {
         updatedConv.unreadCount += 1;
-      } else if (selectedConversation && selectedConversation.bookingId === message.bookingId) {
+      } else if (
+        selectedConversation &&
+        selectedConversation.bookingId === message.bookingId
+      ) {
         updatedConv.unreadCount = 0;
       }
 
@@ -148,7 +161,7 @@ const MessagesPage: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setMessages(data);
-        
+
         // Join the booking room
         if (socket) {
           socket.emit("join_booking", bookingId);
@@ -164,14 +177,14 @@ const MessagesPage: React.FC = () => {
       await fetch(`/api/bookings/${bookingId}/messages/read`, {
         method: "PUT",
       });
-      
+
       // Update local state
-      setConversations((prev) => 
-        prev.map(c => 
+      setConversations((prev) =>
+        prev.map((c) =>
           c.bookingId === bookingId ? { ...c, unreadCount: 0 } : c
         )
       );
-      
+
       refreshUnreadCount();
     } catch (error) {
       console.error("Error marking messages as read", error);
@@ -209,7 +222,7 @@ const MessagesPage: React.FC = () => {
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
   const formatDate = (dateString: string) => {
@@ -230,7 +243,11 @@ const MessagesPage: React.FC = () => {
   return (
     <div className="messages-page">
       {/* Sidebar */}
-      <div className={`conversations-sidebar ${!showSidebar && isMobileView ? "hidden" : ""}`}>
+      <div
+        className={`conversations-sidebar ${
+          !showSidebar && isMobileView ? "hidden" : ""
+        }`}
+      >
         <div className="conversations-header">
           <h2>Messaggi</h2>
         </div>
@@ -244,14 +261,20 @@ const MessagesPage: React.FC = () => {
               <div
                 key={conv.bookingId}
                 className={`conversation-item ${
-                  selectedConversation?.bookingId === conv.bookingId ? "active" : ""
+                  selectedConversation?.bookingId === conv.bookingId
+                    ? "active"
+                    : ""
                 } ${conv.unreadCount > 0 ? "unread" : ""}`}
                 onClick={() => setSelectedConversation(conv)}
               >
                 <div className="conversation-header">
-                  <span className="conversation-title">{conv.serviceTitle}</span>
+                  <span className="conversation-title">
+                    {conv.serviceTitle}
+                  </span>
                   <span className="conversation-time">
-                    {conv.lastMessage ? formatDate(conv.lastMessage.createdAt) : ""}
+                    {conv.lastMessage
+                      ? formatDate(conv.lastMessage.createdAt)
+                      : ""}
                   </span>
                 </div>
                 <div className="conversation-preview">
@@ -278,7 +301,7 @@ const MessagesPage: React.FC = () => {
         {selectedConversation ? (
           <>
             <div className="chat-header">
-              <button 
+              <button
                 className="back-button"
                 onClick={() => {
                   setShowSidebar(true);
@@ -302,7 +325,9 @@ const MessagesPage: React.FC = () => {
                   }`}
                 >
                   <div className="message-text">{msg.message}</div>
-                  <div className="message-time">{formatTime(msg.createdAt)}</div>
+                  <div className="message-time">
+                    {formatTime(msg.createdAt)}
+                  </div>
                 </div>
               ))}
               <div ref={messagesEndRef} />
@@ -316,8 +341,8 @@ const MessagesPage: React.FC = () => {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
               />
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="send-button"
                 disabled={!newMessage.trim()}
               >

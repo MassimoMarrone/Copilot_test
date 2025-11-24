@@ -25,7 +25,10 @@ function App() {
             <Route path="/messages" element={<MessagesPage />} />
             <Route path="/client-dashboard" element={<ClientDashboard />} />
             <Route path="/profile" element={<UserProfile />} />
-            <Route path="/provider/:providerId" element={<ProviderProfilePage />} />
+            <Route
+              path="/provider/:providerId"
+              element={<ProviderProfilePage />}
+            />
 
             {/* Legacy Dashboards - eventually refactor these too */}
             <Route path="/provider-dashboard" element={<ProviderDashboard />} />

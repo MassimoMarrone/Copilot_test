@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import UserMenu from "./UserMenu";
-import "../styles/ClientDashboard.css"; // Reuse existing styles for now
+import "../styles/AdminDashboard.css";
 
 interface User {
   id: string;
@@ -28,14 +28,22 @@ interface Booking {
   amount: number;
 }
 
+interface AdminStats {
+  totalUsers: number;
+  totalServices: number;
+  totalBookings: number;
+  totalRevenue: number;
+}
+
 const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [stats, setStats] = useState<AdminStats | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<"users" | "services" | "bookings">(
-    "users"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "users" | "services" | "bookings"
+  >("overview");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,15 +71,17 @@ const AdminDashboard: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [usersRes, servicesRes, bookingsRes] = await Promise.all([
+      const [usersRes, servicesRes, bookingsRes, statsRes] = await Promise.all([
         fetch("/api/admin/users"),
         fetch("/api/admin/services"),
         fetch("/api/admin/bookings"),
+        fetch("/api/admin/stats"),
       ]);
 
       if (usersRes.ok) setUsers(await usersRes.json());
       if (servicesRes.ok) setServices(await servicesRes.json());
       if (bookingsRes.ok) setBookings(await bookingsRes.json());
+      if (statsRes.ok) setStats(await statsRes.json());
     } catch (error) {
       console.error("Error loading admin data:", error);
     }
@@ -124,6 +134,7 @@ const AdminDashboard: React.FC = () => {
       });
       if (response.ok) {
         setUsers(users.filter((u) => u.id !== id));
+        loadData(); // Reload stats
       } else {
         const data = await response.json();
         alert(data.error || "Failed to delete user");
@@ -143,6 +154,7 @@ const AdminDashboard: React.FC = () => {
       });
       if (response.ok) {
         setServices(services.filter((s) => s.id !== id));
+        loadData(); // Reload stats
       } else {
         alert("Failed to delete service");
       }
@@ -152,8 +164,8 @@ const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="client-dashboard">
-      <div className="dashboard-header">
+    <div className="admin-dashboard">
+      <div className="admin-header">
         <h1>🛡️ Admin Dashboard</h1>
         <div className="header-actions">
           <UserMenu
@@ -169,89 +181,94 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      <div
-        className="dashboard-tabs"
-        style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}
-      >
+      <div className="admin-tabs">
         <button
-          className={`btn ${
-            activeTab === "users" ? "btn-primary" : "btn-secondary"
-          }`}
+          className={`tab-btn ${activeTab === "overview" ? "active" : ""}`}
+          onClick={() => setActiveTab("overview")}
+        >
+          📊 Overview
+        </button>
+        <button
+          className={`tab-btn ${activeTab === "users" ? "active" : ""}`}
           onClick={() => setActiveTab("users")}
-          style={{
-            backgroundColor: activeTab === "users" ? "#007bff" : "#6c757d",
-            color: "white",
-          }}
         >
           👥 Users
         </button>
         <button
-          className={`btn ${
-            activeTab === "services" ? "btn-primary" : "btn-secondary"
-          }`}
+          className={`tab-btn ${activeTab === "services" ? "active" : ""}`}
           onClick={() => setActiveTab("services")}
-          style={{
-            backgroundColor: activeTab === "services" ? "#007bff" : "#6c757d",
-            color: "white",
-          }}
         >
           🛠️ Services
         </button>
         <button
-          className={`btn ${
-            activeTab === "bookings" ? "btn-primary" : "btn-secondary"
-          }`}
+          className={`tab-btn ${activeTab === "bookings" ? "active" : ""}`}
           onClick={() => setActiveTab("bookings")}
-          style={{
-            backgroundColor: activeTab === "bookings" ? "#007bff" : "#6c757d",
-            color: "white",
-          }}
         >
           📅 Bookings
         </button>
       </div>
 
+      {activeTab === "overview" && stats && (
+        <div className="dashboard-section">
+          <h2>📊 Platform Overview</h2>
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-value">{stats.totalUsers}</div>
+              <div className="stat-label">Total Users</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{stats.totalServices}</div>
+              <div className="stat-label">Active Services</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{stats.totalBookings}</div>
+              <div className="stat-label">Total Bookings</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">€{stats.totalRevenue}</div>
+              <div className="stat-label">Total Volume</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {activeTab === "users" && (
         <div className="dashboard-section">
           <h2>👥 Users Management</h2>
-          <div className="bookings-list">
+          <div className="admin-list">
             {users.map((user) => (
-              <div
-                key={user.id}
-                className="booking-card"
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <div>
-                  <h3>{user.email}</h3>
+              <div key={user.id} className="admin-card">
+                <div className="card-info">
+                  <h3>
+                    {user.email}
+                    {user.isBlocked && (
+                      <span className="status-badge status-blocked">
+                        BLOCKED
+                      </span>
+                    )}
+                  </h3>
                   <p>
                     Role: <strong>{user.userType}</strong>
                   </p>
                   <p>Joined: {new Date(user.createdAt).toLocaleDateString()}</p>
                 </div>
                 {user.userType !== "admin" && (
-                  <div style={{ display: "flex", gap: "10px" }}>
+                  <div className="card-actions">
                     <button
                       onClick={() =>
                         handleBlockUser(user.id, user.isBlocked || false)
                       }
-                      className="btn"
-                      style={{
-                        backgroundColor: user.isBlocked ? "#28a745" : "#ffc107",
-                        color: "white",
-                      }}
+                      className={`btn btn-sm ${
+                        user.isBlocked ? "btn-success" : "btn-warning"
+                      }`}
                     >
                       {user.isBlocked ? "Unblock" : "Block"}
                     </button>
                     <button
                       onClick={() => handleDeleteUser(user.id)}
-                      className="btn btn-secondary"
-                      style={{ backgroundColor: "#dc3545", color: "white" }}
+                      className="btn btn-sm btn-danger"
                     >
-                      Delete User
+                      Delete
                     </button>
                   </div>
                 )}
@@ -264,29 +281,22 @@ const AdminDashboard: React.FC = () => {
       {activeTab === "services" && (
         <div className="dashboard-section">
           <h2>🛠️ Services Management</h2>
-          <div className="bookings-list">
+          <div className="admin-list">
             {services.map((service) => (
-              <div
-                key={service.id}
-                className="booking-card"
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <div>
+              <div key={service.id} className="admin-card">
+                <div className="card-info">
                   <h3>{service.title}</h3>
                   <p>Provider: {service.providerEmail}</p>
                   <p>Price: €{service.price}</p>
                 </div>
-                <button
-                  onClick={() => handleDeleteService(service.id)}
-                  className="btn btn-secondary"
-                  style={{ backgroundColor: "#dc3545", color: "white" }}
-                >
-                  Delete Service
-                </button>
+                <div className="card-actions">
+                  <button
+                    onClick={() => handleDeleteService(service.id)}
+                    className="btn btn-sm btn-danger"
+                  >
+                    Delete Service
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -296,18 +306,10 @@ const AdminDashboard: React.FC = () => {
       {activeTab === "bookings" && (
         <div className="dashboard-section">
           <h2>📅 Bookings Management</h2>
-          <div className="bookings-list">
+          <div className="admin-list">
             {bookings.map((booking) => (
-              <div
-                key={booking.id}
-                className="booking-card"
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <div>
+              <div key={booking.id} className="admin-card">
+                <div className="card-info">
                   <h3>{booking.serviceTitle}</h3>
                   <p>
                     <strong>Client:</strong> {booking.clientEmail}
@@ -326,7 +328,7 @@ const AdminDashboard: React.FC = () => {
                     <strong>Amount:</strong> €{booking.amount}
                   </p>
                 </div>
-                <div style={{ display: "flex", gap: "10px" }}>
+                <div className="card-actions">
                   {booking.status !== "cancelled" &&
                     booking.status !== "completed" && (
                       <button
@@ -351,6 +353,7 @@ const AdminDashboard: React.FC = () => {
                               );
                               if (bookingsRes.ok)
                                 setBookings(await bookingsRes.json());
+                              loadData(); // Reload stats
                             } else {
                               alert("Failed to cancel booking");
                             }
@@ -358,12 +361,42 @@ const AdminDashboard: React.FC = () => {
                             alert("Error cancelling booking");
                           }
                         }}
-                        className="btn btn-secondary"
-                        style={{ backgroundColor: "#ffc107", color: "black" }}
+                        className="btn btn-sm btn-warning"
                       >
                         Cancel
                       </button>
                     )}
+                  <button
+                    onClick={async () => {
+                      if (
+                        !window.confirm(
+                          "Are you sure you want to delete this booking permanently? This action cannot be undone."
+                        )
+                      )
+                        return;
+                      try {
+                        const response = await fetch(
+                          `/api/admin/bookings/${booking.id}`,
+                          {
+                            method: "DELETE",
+                          }
+                        );
+                        if (response.ok) {
+                          setBookings(
+                            bookings.filter((b) => b.id !== booking.id)
+                          );
+                          loadData(); // Reload stats
+                        } else {
+                          alert("Failed to delete booking");
+                        }
+                      } catch (error) {
+                        alert("Error deleting booking");
+                      }
+                    }}
+                    className="btn btn-sm btn-danger"
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             ))}

@@ -491,12 +491,16 @@ const ServicesPage: React.FC = () => {
                       ({service.reviewCount || 0} recensioni)
                     </span>
                   </div>
-                  
+
                   <div style={{ marginBottom: "10px" }}>
-                    <a 
+                    <a
                       href={`/provider/${service.providerId}`}
                       className="provider-profile-link"
-                      style={{ color: "#007bff", textDecoration: "none", fontSize: "0.9rem" }}
+                      style={{
+                        color: "#007bff",
+                        textDecoration: "none",
+                        fontSize: "0.9rem",
+                      }}
                       onClick={(e) => e.stopPropagation()}
                     >
                       👤 Vedi Profilo Fornitore
