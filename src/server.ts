@@ -572,21 +572,28 @@ app.get(
   "/api/me",
   authenticate,
   async (req: Request, res: Response): Promise<void> => {
-    const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user!.id },
+      });
+      if (!user) {
+        res.status(404).json({ error: "User not found" });
+        return;
+      }
+      res.json({
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        bio: user.bio,
+        avatarUrl: user.avatarUrl,
+        userType: user.userType,
+        isClient: user.isClient,
+        isProvider: user.isProvider,
+      });
+    } catch (error) {
+      console.error("Error in /api/me:", error);
+      res.status(500).json({ error: "Internal server error fetching user" });
     }
-    res.json({
-      id: user.id,
-      email: user.email,
-      displayName: user.displayName,
-      bio: user.bio,
-      avatarUrl: user.avatarUrl,
-      userType: user.userType,
-      isClient: user.isClient,
-      isProvider: user.isProvider,
-    });
   }
 );
 
@@ -829,61 +836,66 @@ app.post(
 app.get(
   "/api/services",
   async (_req: Request, res: Response): Promise<void> => {
-    // Filter out services from blocked providers
-    const services = await prisma.service.findMany({
-      where: {
-        provider: {
-          isBlocked: false,
+    try {
+      // Filter out services from blocked providers
+      const services = await prisma.service.findMany({
+        where: {
+          provider: {
+            isBlocked: false,
+          },
         },
-      },
-      include: {
-        reviews: true,
-      },
-    });
+        include: {
+          reviews: true,
+        },
+      });
 
-    const activeServices = services.map((service: any) => {
-      const reviewCount = service.reviews.length;
-      const averageRating =
-        reviewCount > 0
-          ? service.reviews.reduce((acc: number, r: any) => acc + r.rating, 0) /
-            reviewCount
-          : 0;
+      const activeServices = services.map((service: any) => {
+        const reviewCount = service.reviews.length;
+        const averageRating =
+          reviewCount > 0
+            ? service.reviews.reduce((acc: number, r: any) => acc + r.rating, 0) /
+              reviewCount
+            : 0;
 
-      // Parse JSON fields
-      let parsedProducts = [];
-      if (service.productsUsed) {
-        try {
-          parsedProducts =
-            typeof service.productsUsed === "string"
-              ? JSON.parse(service.productsUsed)
-              : service.productsUsed;
-        } catch (e) {
-          console.error("Error parsing productsUsed:", e);
-          parsedProducts = [];
+        // Parse JSON fields
+        let parsedProducts = [];
+        if (service.productsUsed) {
+          try {
+            parsedProducts =
+              typeof service.productsUsed === "string"
+                ? JSON.parse(service.productsUsed)
+                : service.productsUsed;
+          } catch (e) {
+            console.error("Error parsing productsUsed:", e);
+            parsedProducts = [];
+          }
         }
-      }
 
-      let parsedAvailability = null;
-      if (service.availability) {
-        try {
-          parsedAvailability =
-            typeof service.availability === "string"
-              ? JSON.parse(service.availability)
-              : service.availability;
-        } catch (e) {
-          console.error("Error parsing availability:", e);
+        let parsedAvailability = null;
+        if (service.availability) {
+          try {
+            parsedAvailability =
+              typeof service.availability === "string"
+                ? JSON.parse(service.availability)
+                : service.availability;
+          } catch (e) {
+            console.error("Error parsing availability:", e);
+          }
         }
-      }
 
-      return {
-        ...service,
-        productsUsed: parsedProducts,
-        availability: parsedAvailability,
-        reviewCount,
-        averageRating: parseFloat(averageRating.toFixed(1)),
-      };
-    });
-    res.json(activeServices);
+        return {
+          ...service,
+          productsUsed: parsedProducts,
+          availability: parsedAvailability,
+          reviewCount,
+          averageRating: parseFloat(averageRating.toFixed(1)),
+        };
+      });
+      res.json(activeServices);
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      res.status(500).json({ error: "Failed to fetch services" });
+    }
   }
 );
 
@@ -1222,7 +1234,51 @@ app.get(
   }
 );
 
-// Availability routes - REMOVED (Moved to Service)
+// Delete a service
+app.delete(
+  "/api/services/:id",
+  authenticate,
+  async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+
+    if (!user || !user.isProvider) {
+      res.status(403).json({ error: "Only providers can delete services" });
+      return;
+    }
+
+    const existingService = await prisma.service.findFirst({
+      where: { id, providerId: req.user!.id },
+    });
+
+    if (!existingService) {
+      res.status(404).json({ error: "Service not found or unauthorized" });
+      return;
+    }
+
+    // Check if there are active bookings
+    const activeBookings = await prisma.booking.findMany({
+      where: {
+        serviceId: id,
+        status: { in: ["pending", "confirmed", "paid"] },
+      },
+    });
+
+    if (activeBookings.length > 0) {
+      res.status(400).json({
+        error:
+          "Cannot delete service with active bookings. Please cancel them first.",
+      });
+      return;
+    }
+
+    await prisma.service.delete({
+      where: { id },
+    });
+
+    res.json({ success: true });
+  }
+);
 
 // Booking routes
 
@@ -1788,56 +1844,6 @@ app.delete(
 
     await prisma.review.delete({ where: { id: reviewId } });
     res.json({ success: true });
-  }
-);
-
-// Reply to a review (provider only)
-app.post(
-  "/api/reviews/:reviewId/reply",
-  authenticate,
-  [
-    body("reply")
-      .trim()
-      .isLength({ min: 5, max: 1000 })
-      .withMessage("Reply must be between 5 and 1000 characters"),
-  ],
-  validate,
-  async (req: Request, res: Response) => {
-    const { reviewId } = req.params;
-    const { reply } = req.body;
-    const userId = req.user!.id;
-
-    const review = await prisma.review.findUnique({ where: { id: reviewId } });
-
-    if (!review) {
-      res.status(404).json({ error: "Review not found" });
-      return;
-    }
-
-    if (review.providerId !== userId) {
-      res
-        .status(403)
-        .json({ error: "You can only reply to reviews of your services" });
-      return;
-    }
-
-    const updatedReview = await prisma.review.update({
-      where: { id: reviewId },
-      data: {
-        providerReply: reply,
-        providerReplyCreatedAt: new Date(),
-      },
-    });
-
-    // Notify client
-    sendNotification(
-      review.clientId,
-      "Nuova Risposta",
-      `Il provider ha risposto alla tua recensione.`,
-      "info"
-    );
-
-    res.json(updatedReview);
   }
 );
 
@@ -2965,8 +2971,12 @@ io.on("connection", (socket) => {
 
 // Error handling middleware
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error("Error:", err);
-  res.status(500).json({ error: "Internal server error" });
+  console.error("Unhandled Error:", err);
+  res.status(500).json({
+    error: "Internal server error",
+    message: err.message,
+    stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+  });
 });
 
 // Start the server only if not in a test environment

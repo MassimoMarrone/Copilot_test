@@ -256,6 +256,33 @@ const ProviderDashboard: React.FC = () => {
     }
   };
 
+  const handleDeleteService = async (service: Service) => {
+    if (
+      !window.confirm(
+        `Sei sicuro di voler eliminare il servizio "${service.title}"? Questa azione è irreversibile.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/services/${service.id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        alert("Servizio eliminato con successo");
+        loadServices();
+      } else {
+        const data = await response.json();
+        alert(data.error || "Errore durante l'eliminazione del servizio");
+      }
+    } catch (error) {
+      console.error("Error deleting service:", error);
+      alert("Errore di connessione");
+    }
+  };
+
   return (
     <div className="provider-dashboard">
       <div className="dashboard-header">
@@ -284,6 +311,7 @@ const ProviderDashboard: React.FC = () => {
             setShowServiceModal(true);
           }}
           onCalendar={(service) => setAvailabilityService(service)}
+          onDelete={handleDeleteService}
         />
       </div>
 

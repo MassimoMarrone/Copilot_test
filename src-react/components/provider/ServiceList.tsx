@@ -6,12 +6,14 @@ interface ServiceListProps {
   services: Service[];
   onEdit: (service: Service) => void;
   onCalendar: (service: Service) => void;
+  onDelete: (service: Service) => void;
 }
 
 const ServiceList: React.FC<ServiceListProps> = ({
   services,
   onEdit,
   onCalendar,
+  onDelete,
 }) => {
   if (services.length === 0) {
     return (
@@ -87,6 +89,21 @@ const ServiceList: React.FC<ServiceListProps> = ({
               }}
             >
               ✏️ Modifica
+            </button>
+            <button
+              className="btn-delete-service"
+              onClick={() => onDelete(service)}
+              style={{
+                flex: 1,
+                backgroundColor: "#dc3545",
+                color: "white",
+                border: "none",
+                padding: "8px 16px",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              🗑️ Elimina
             </button>
           </div>
         </div>
