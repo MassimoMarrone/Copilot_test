@@ -42,7 +42,9 @@ export class AuthService {
       },
     });
 
-    const verificationLink = `${process.env.FRONTEND_URL || "http://localhost:3000"}/api/verify-email?token=${verificationToken}`;
+    const verificationLink = `${
+      process.env.FRONTEND_URL || "http://localhost:3000"
+    }/api/verify-email?token=${verificationToken}`;
 
     sendEmail(
       user.email,
@@ -50,7 +52,10 @@ export class AuthService {
       emailTemplates.verification(user.email.split("@")[0], verificationLink)
     );
 
-    return { message: "Registration successful. Please check your email to verify your account." };
+    return {
+      message:
+        "Registration successful. Please check your email to verify your account.",
+    };
   }
 
   async verifyEmail(token: string) {
