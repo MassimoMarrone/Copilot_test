@@ -10,9 +10,10 @@ const prisma = new PrismaClient();
 
 // Send a message in a booking chat
 router.post(
-  "/bookings/:bookingId/messages",
+  "/messages",
   authenticate,
   [
+    body("bookingId").isUUID().withMessage("Invalid booking ID"),
     body("message")
       .trim()
       .isLength({ min: 1, max: 1000 })
@@ -20,8 +21,7 @@ router.post(
   ],
   validate,
   async (req: Request, res: Response): Promise<void> => {
-    const { bookingId } = req.params;
-    const { message } = req.body;
+    const { bookingId, message } = req.body;
 
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
@@ -93,10 +93,15 @@ router.post(
 
 // Get all messages for a booking
 router.get(
-  "/bookings/:bookingId/messages",
+  "/messages",
   authenticate,
   async (req: Request, res: Response): Promise<void> => {
-    const { bookingId } = req.params;
+    const bookingId = req.query.bookingId as string;
+
+    if (!bookingId) {
+      res.status(400).json({ error: "Booking ID is required" });
+      return;
+    }
 
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
@@ -159,10 +164,15 @@ router.get(
 
 // Mark messages as read for a booking
 router.put(
-  "/bookings/:bookingId/messages/read",
+  "/messages/read",
   authenticate,
   async (req: Request, res: Response): Promise<void> => {
-    const { bookingId } = req.params;
+    const { bookingId } = req.body;
+
+    if (!bookingId) {
+      res.status(400).json({ error: "Booking ID is required" });
+      return;
+    }
     const userId = req.user!.id;
 
     const booking = await prisma.booking.findUnique({
