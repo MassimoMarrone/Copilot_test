@@ -4,7 +4,7 @@ services:
     name: Domy-Test-Server
     env: node
     plan: free
-    buildCommand: npm install && npx prisma generate && npm run build
+    buildCommand: npm install && npx prisma generate && npm run build && npx prisma migrate deploy
     startCommand: npm start
     envVars:
       - key: NODE_ENV
