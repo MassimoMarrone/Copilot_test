@@ -135,13 +135,18 @@ const VerifyEmailPage: React.FC = () => {
   return (
     <div className="verify-email-page">
       <div className="verify-email-container">
+        {/* Brand */}
+        <div className="verify-brand">
+          <span className="verify-brand-text">Domy</span>
+        </div>
+
         {status === "loading" && (
           <>
             <div className="verify-icon loading">
               <div className="spinner"></div>
             </div>
-            <h1>Verifica in corso...</h1>
-            <p>Stiamo verificando la tua email, attendere prego.</p>
+            <h1>Verifica in corso</h1>
+            <p className="verify-subtitle">Stiamo verificando la tua email, attendere prego.</p>
           </>
         )}
 
@@ -150,13 +155,25 @@ const VerifyEmailPage: React.FC = () => {
             <div className="verify-icon success">✓</div>
             <h1>Email Verificata!</h1>
             <p>{message}</p>
+            <p className="verify-subtitle">Ora puoi accedere a tutte le funzionalità di Domy.</p>
+            
+            <div className="countdown-progress">
+              <div 
+                className="countdown-progress-bar" 
+                style={{ width: `${(countdown / 5) * 100}%` }}
+              ></div>
+            </div>
             <p className="redirect-message">
-              Verrai reindirizzato alla home tra <strong>{countdown}</strong>{" "}
-              secondi...
+              Reindirizzamento alla home tra <strong>{countdown}</strong> secondi...
             </p>
+            
             <button className="btn btn-primary" onClick={() => navigate("/")}>
-              Vai alla Home
+              🏠 Vai alla Home
             </button>
+            
+            <div className="verify-footer">
+              <p>Hai bisogno di aiuto? <a href="mailto:support@domy.it">Contattaci</a></p>
+            </div>
           </>
         )}
 
@@ -168,22 +185,32 @@ const VerifyEmailPage: React.FC = () => {
 
             {!showResendForm ? (
               <>
-                <p className="redirect-message">
-                  Verrai reindirizzato alla home tra{" "}
-                  <strong>{countdown}</strong> secondi...
+                <p className="verify-subtitle">
+                  Il link potrebbe essere scaduto o non valido.
                 </p>
+                
+                <div className="countdown-progress">
+                  <div 
+                    className="countdown-progress-bar" 
+                    style={{ width: `${(countdown / 5) * 100}%` }}
+                  ></div>
+                </div>
+                <p className="redirect-message">
+                  Reindirizzamento alla home tra <strong>{countdown}</strong> secondi...
+                </p>
+                
                 <div className="button-group">
                   <button
                     className="btn btn-primary"
                     onClick={() => navigate("/")}
                   >
-                    Vai alla Home
+                    🏠 Vai alla Home
                   </button>
                   <button
                     className="btn btn-secondary"
                     onClick={() => setShowResendForm(true)}
                   >
-                    Richiedi nuovo link
+                    📧 Richiedi nuovo link
                   </button>
                 </div>
               </>
@@ -197,7 +224,7 @@ const VerifyEmailPage: React.FC = () => {
                     type="email"
                     value={resendEmail}
                     onChange={(e) => setResendEmail(e.target.value)}
-                    placeholder="La tua email"
+                    placeholder="esempio@email.com"
                     required
                     disabled={
                       resendStatus === "sending" || resendStatus === "sent"
@@ -211,8 +238,8 @@ const VerifyEmailPage: React.FC = () => {
                     }
                   >
                     {resendStatus === "sending"
-                      ? "Invio..."
-                      : "Invia nuovo link"}
+                      ? "⏳ Invio in corso..."
+                      : "📨 Invia nuovo link"}
                   </button>
                 </form>
 
@@ -224,10 +251,14 @@ const VerifyEmailPage: React.FC = () => {
                 )}
 
                 <button className="btn btn-link" onClick={() => navigate("/")}>
-                  Torna alla Home
+                  ← Torna alla Home
                 </button>
               </div>
             )}
+            
+            <div className="verify-footer">
+              <p>Hai bisogno di aiuto? <a href="mailto:support@domy.it">Contattaci</a></p>
+            </div>
           </>
         )}
       </div>
