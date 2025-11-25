@@ -16,7 +16,7 @@ router.post(
   "/services",
   authenticate,
   (req: Request, res: Response, next: NextFunction) => {
-    upload.single("image")(req, res, (err) => {
+    upload.single("image")(req, res, (err: any) => {
       if (err instanceof multer.MulterError) {
         if (err.code === "LIMIT_FILE_SIZE") {
           res
