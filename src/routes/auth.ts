@@ -9,7 +9,7 @@ const router = Router();
 
 // Register
 router.post(
-  "/auth/register",
+  "/register",
   authLimiter,
   [
     body("email")
@@ -29,7 +29,7 @@ router.get("/verify-email", authController.verifyEmail);
 
 // Login
 router.post(
-  "/auth/login",
+  "/login",
   authLimiter,
   [
     body("email")
