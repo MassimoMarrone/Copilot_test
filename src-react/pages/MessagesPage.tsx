@@ -114,6 +114,7 @@ const MessagesPage: React.FC = () => {
 
       // If message belongs to current chat, append it
       const currentSelected = selectedConversationRef.current;
+      let willMarkAsRead = false;
 
       if (currentSelected && message.bookingId === currentSelected.bookingId) {
         setMessages((prev) => {
@@ -122,8 +123,12 @@ const MessagesPage: React.FC = () => {
           return [...prev, message];
         });
         // Mark as read immediately if we are looking at it
-        if (message.senderId !== user.id) {
+        if (
+          message.senderId !== user.id &&
+          document.visibilityState === "visible"
+        ) {
           markAsRead(message.bookingId);
+          willMarkAsRead = true;
         }
       }
 
@@ -131,7 +136,7 @@ const MessagesPage: React.FC = () => {
       updateConversationList(message);
 
       // Refresh global unread count
-      if (message.senderId !== user.id) {
+      if (message.senderId !== user.id && !willMarkAsRead) {
         refreshUnreadCount();
       }
     });
@@ -164,7 +169,12 @@ const MessagesPage: React.FC = () => {
         currentSelected &&
         currentSelected.bookingId === message.bookingId
       ) {
-        updatedConv.unreadCount = 0;
+        // Only reset to 0 if we are actually reading it
+        if (document.visibilityState === "visible") {
+          updatedConv.unreadCount = 0;
+        } else {
+          updatedConv.unreadCount += 1;
+        }
       }
 
       const newConversations = [...prev];
@@ -409,4 +419,4 @@ const MessagesPage: React.FC = () => {
 };
 
 export default MessagesPage;
-// test append
+
