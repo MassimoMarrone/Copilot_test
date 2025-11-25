@@ -47,7 +47,7 @@ export class AuthService {
       process.env.FRONTEND_URL ||
       "http://localhost:3000"
     ).replace(/\/$/, ""); // Remove trailing slash if present
-    const verificationLink = `${baseUrl}/api/verify-email?token=${verificationToken}`;
+    const verificationLink = `${baseUrl}/verify-email?token=${verificationToken}`;
 
     // Await email sending to ensure it works before returning success
     // or at least catch errors to log them properly

@@ -16,7 +16,7 @@ export class AuthController {
     try {
       const { token } = req.query;
       if (!token || typeof token !== "string") {
-        res.status(400).json({ error: "Invalid verification token" });
+        res.status(400).json({ error: "Token di verifica non valido" });
         return;
       }
 
@@ -32,15 +32,22 @@ export class AuthController {
         maxAge: 24 * 60 * 60 * 1000,
       });
 
-      // Redirect to frontend dashboard or login page
-      res.redirect("/client-dashboard?verified=true");
+      // Return JSON for API calls, redirect for direct browser access
+      const acceptHeader = req.headers.accept || "";
+      if (acceptHeader.includes("application/json")) {
+        res.json({ success: true, message: "Email verificata con successo" });
+      } else {
+        // Direct browser access - redirect to frontend verify page
+        res.redirect(`/verify-email?token=${token}&verified=true`);
+      }
     } catch (error: any) {
       console.error("Email verification error:", error);
-      res.status(400).send(`
-        <h1>Verification Failed</h1>
-        <p>${error.message}</p>
-        <a href="/login">Go to Login</a>
-      `);
+      const acceptHeader = req.headers.accept || "";
+      if (acceptHeader.includes("application/json")) {
+        res.status(400).json({ error: error.message || "Verifica fallita" });
+      } else {
+        res.redirect(`/verify-email?error=${encodeURIComponent(error.message)}`);
+      }
     }
   }
 

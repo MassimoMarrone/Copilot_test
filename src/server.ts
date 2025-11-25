@@ -164,7 +164,7 @@ const serveSpa = (_req: Request, res: Response) => {
 };
 
 app.get(
-  ["/", "/login", "/register", "/client-dashboard", "/provider-dashboard"],
+  ["/", "/login", "/register", "/client-dashboard", "/provider-dashboard", "/verify-email", "/profile", "/services", "/bookings", "/messages"],
   pageLimiter,
   serveSpa
 );
