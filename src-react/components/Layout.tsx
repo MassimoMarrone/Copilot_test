@@ -30,7 +30,7 @@ const Layout: React.FC = () => {
     if (user) {
       fetchUnreadCount();
 
-      const socket = io({
+      const socket = io(import.meta.env.VITE_API_URL || window.location.origin, {
         transports: ["websocket"],
         path: "/socket.io/",
       });
