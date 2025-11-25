@@ -8,13 +8,16 @@ const initEmailService = async () => {
   // Check if SMTP configuration is provided in environment variables
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
     // Configure real SMTP
+    // Remove spaces from password if present (common copy-paste issue with Google App Passwords)
+    const pass = process.env.SMTP_PASS.replace(/\s+/g, "");
+
     transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || "587"),
-      secure: process.env.SMTP_SECURE === "true",
+      secure: process.env.SMTP_SECURE === "true", // true for 465, false for other ports
       auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        pass: pass,
       },
     });
     console.log("📧 Email Service Initialized (SMTP)");
