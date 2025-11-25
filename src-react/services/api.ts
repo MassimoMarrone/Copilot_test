@@ -5,11 +5,25 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
 // Helper to handle response errors
+class ApiError extends Error {
+  code?: string;
+  status: number;
+
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+  }
+}
+
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      errorData.error || `HTTP error! status: ${response.status}`
+    throw new ApiError(
+      errorData.error || `HTTP error! status: ${response.status}`,
+      response.status,
+      errorData.code
     );
   }
 

@@ -54,14 +54,11 @@ const LoginModal: React.FC<LoginModalProps> = ({
       }
     } catch (error: any) {
       // If api.ts throws for non-200, we need to check if it's the TERMS_REQUIRED case.
-      // The current api.ts throws an Error with the message from the server.
-      // If the server returns { code: "TERMS_REQUIRED" }, api.ts might not expose the code easily unless I parse the error message or update api.ts.
-      // However, let's assume for now we handle standard errors.
-      // If the backend sends 200 OK but with a flag, that's different.
-      // Let's check src/routes/auth.ts for google login.
       if (
         error.code === "TERMS_REQUIRED" ||
-        error.message === "TERMS_REQUIRED"
+        error.message === "TERMS_REQUIRED" ||
+        (error.message &&
+          error.message.includes("Devi accettare i Termini e Condizioni"))
       ) {
         setPendingToken(credentialResponse.credential);
         setShowTermsStep(true);
