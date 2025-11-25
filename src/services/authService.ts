@@ -42,9 +42,11 @@ export class AuthService {
       },
     });
 
-    const verificationLink = `${
-      process.env.FRONTEND_URL || "http://localhost:3000"
-    }/api/verify-email?token=${verificationToken}`;
+    const baseUrl =
+      process.env.APP_URL ||
+      process.env.FRONTEND_URL ||
+      "http://localhost:3000";
+    const verificationLink = `${baseUrl}/api/verify-email?token=${verificationToken}`;
 
     // Await email sending to ensure it works before returning success
     // or at least catch errors to log them properly
