@@ -48,18 +48,18 @@
     "react-router-dom": "^7.9.6",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
-    "stripe": "^20.0.0"
+    "stripe": "^20.0.0",
+    "@types/express": "^5.0.5",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.10.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.10",
-    "@types/express": "^5.0.5",
     "@types/google.maps": "^3.58.1",
     "@types/helmet": "^0.0.48",
     "@types/jest": "^29.5.12",
-    "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.0.0",
-    "@types/node": "^24.10.1",
     "@types/nodemailer": "^7.0.4",
     "@types/react": "^19.2.6",
     "@types/react-dom": "^19.2.3",

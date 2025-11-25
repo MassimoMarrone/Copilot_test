@@ -87,7 +87,7 @@ app.use(
 );
 
 // CORS
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   const allowedOrigins = [
     "http://localhost:5173", // Vite dev server
     "http://localhost:3000", // Local backend (if serving static)
