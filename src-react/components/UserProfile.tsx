@@ -98,17 +98,6 @@ const UserProfile: React.FC = () => {
 
   return (
     <div className="profile-page">
-      <div className="profile-header">
-        <div className="container">
-          <h1>🏠 Servizi di Pulizia</h1>
-          <UserMenu
-            userEmail={user.email}
-            userType={user.userType}
-            isProvider={user.isProvider}
-          />
-        </div>
-      </div>
-
       <div className="profile-container">
         <div className="container">
           <div className="profile-card">
