@@ -3,6 +3,7 @@ import { body } from "express-validator";
 import { validate } from "../middleware/validation";
 import { authenticate } from "../middleware/auth";
 import { bookingController } from "../controllers/bookingController";
+import { chatService } from "../services/chatService";
 
 const router = Router();
 
@@ -70,22 +71,31 @@ router.get(
 );
 
 // Handle legacy mark as read: PUT /bookings/:id/messages/read
-router.put("/bookings/:id/messages/read", authenticate, (_req, res) => {
+router.put("/bookings/:id/messages/read", authenticate, async (req, res) => {
   console.log("Legacy PUT /bookings/:id/messages/read called");
-  // We can assume success or try to call the actual service if we extract bookingId from params
-  // Since the controller expects bookingId in body usually, we might need to adapt.
-  // But for now, just returning success stops the 404 error.
-  res.json({ success: true });
+  try {
+    const bookingId = req.params.id;
+    await chatService.markAsRead(bookingId, req.user!.id);
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("Error in legacy markAsRead:", error);
+    res.status(500).json({ error: "Failed to mark as read" });
+  }
 });
 
 // Handle PUT /bookings/:id which seems to be used by some frontend version to mark as read
-router.put("/bookings/:id", authenticate, (req, res) => {
+router.put("/bookings/:id", authenticate, async (req, res) => {
   console.log("Legacy PUT /bookings/:id called with body:", req.body);
   // If it looks like a "mark as read" request, handle it
   if (req.body.read === true || req.body.bookingId) {
-    // We can just return success here as the user will likely refresh or the socket will handle it
-    // Or we can try to actually mark it as read if we have the logic
-    res.json({ success: true });
+    try {
+      const bookingId = req.params.id;
+      await chatService.markAsRead(bookingId, req.user!.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error in legacy markAsRead (generic PUT):", error);
+      res.status(500).json({ error: "Failed to mark as read" });
+    }
   } else {
     // Otherwise, it might be an update to the booking itself?
     // For now, just return 200 to stop the error
