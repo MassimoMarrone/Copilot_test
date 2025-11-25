@@ -14,11 +14,14 @@ const initEmailService = async () => {
     transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || "587"),
-      secure: process.env.SMTP_SECURE === "true", // true for 465, false for other ports
+      secure:
+        process.env.SMTP_SECURE === "true" || process.env.SMTP_PORT === "465",
       auth: {
         user: process.env.SMTP_USER,
         pass: pass,
       },
+      // Force IPv4 to avoid timeouts with IPv6 on some cloud providers
+      family: 4,
     });
     console.log("📧 Email Service Initialized (SMTP)");
     console.log(`   Host: ${process.env.SMTP_HOST}`);
