@@ -42,12 +42,13 @@ const MessagesPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    let newSocket: Socket | null = null;
     if (user) {
       loadConversations();
-      setupSocket();
+      newSocket = setupSocket();
     }
     return () => {
-      if (socket) socket.disconnect();
+      if (newSocket) newSocket.disconnect();
     };
   }, [user]);
 
@@ -84,8 +85,8 @@ const MessagesPage: React.FC = () => {
 
   const processedMessageIds = useRef<Set<string>>(new Set());
 
-  const setupSocket = () => {
-    if (!user) return;
+  const setupSocket = (): Socket | null => {
+    if (!user) return null;
 
     const newSocket = io({
       transports: ["websocket"],
@@ -142,6 +143,7 @@ const MessagesPage: React.FC = () => {
     });
 
     setSocket(newSocket);
+    return newSocket;
   };
 
   const updateConversationList = (message: ChatMessage) => {
@@ -419,4 +421,3 @@ const MessagesPage: React.FC = () => {
 };
 
 export default MessagesPage;
-
