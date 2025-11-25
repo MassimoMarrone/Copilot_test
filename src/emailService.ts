@@ -22,7 +22,7 @@ const initEmailService = async () => {
       },
       // Force IPv4 to avoid timeouts with IPv6 on some cloud providers
       family: 4,
-    });
+    } as any);
     console.log("📧 Email Service Initialized (SMTP)");
     console.log(`   Host: ${process.env.SMTP_HOST}`);
     console.log(`   User: ${process.env.SMTP_USER}`);
