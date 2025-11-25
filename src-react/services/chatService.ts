@@ -23,6 +23,7 @@ export interface Conversation {
 export const chatService = {
   // Get messages for a booking
   getMessages: async (bookingId: string): Promise<ChatMessage[]> => {
+    console.log("Fetching messages via /api/messages for:", bookingId);
     return get<ChatMessage[]>(`/api/messages?bookingId=${bookingId}`);
   },
 
@@ -31,11 +32,13 @@ export const chatService = {
     bookingId: string,
     message: string
   ): Promise<ChatMessage> => {
+    console.log("Sending message via /api/messages for:", bookingId);
     return post<ChatMessage>("/api/messages", { bookingId, message });
   },
 
   // Mark messages as read
   markAsRead: async (bookingId: string): Promise<{ success: boolean }> => {
+    console.log("Marking as read via /api/messages/read for:", bookingId);
     return put<{ success: boolean }>("/api/messages/read", { bookingId });
   },
 

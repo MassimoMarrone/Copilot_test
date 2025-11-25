@@ -46,11 +46,20 @@ export class AuthService {
       process.env.FRONTEND_URL || "http://localhost:3000"
     }/api/verify-email?token=${verificationToken}`;
 
-    sendEmail(
-      user.email,
-      "Verifica la tua email - Domy",
-      emailTemplates.verification(user.email.split("@")[0], verificationLink)
-    );
+    // Await email sending to ensure it works before returning success
+    // or at least catch errors to log them properly
+    try {
+      await sendEmail(
+        user.email,
+        "Verifica la tua email - Domy",
+        emailTemplates.verification(user.email.split("@")[0], verificationLink)
+      );
+    } catch (emailError) {
+      console.error("Failed to send verification email:", emailError);
+      // Optionally, we could delete the user if email fails, but for now let's just log it
+      // await prisma.user.delete({ where: { id: user.id } });
+      // throw new Error("Failed to send verification email. Please try again.");
+    }
 
     return {
       message:

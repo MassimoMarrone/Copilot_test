@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { bookingService } from "../services/bookingService";
+import { chatService } from "../services/chatService";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -117,6 +118,51 @@ export const bookingController = {
         res.status(400).json({ error: error.message });
       } else {
         res.status(500).json({ error: "Failed to complete booking" });
+      }
+    }
+  },
+
+  // Legacy/Compatibility routes for messages
+  async getBookingMessages(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params; // bookingId
+      const messages = await chatService.getMessages(id, req.user!.id);
+      res.json(messages);
+    } catch (error: any) {
+      console.error("Error fetching booking messages:", error);
+      if (error.message === "Booking not found") {
+        res.status(404).json({ error: error.message });
+      } else if (error.message === "You do not have access to this chat") {
+        res.status(403).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Failed to fetch messages" });
+      }
+    }
+  },
+
+  async sendBookingMessage(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params; // bookingId
+      const { message } = req.body;
+
+      const result = await chatService.sendMessage(
+        req.user!.id,
+        req.user!.email,
+        req.user!.userType,
+        {
+          bookingId: id,
+          message,
+        }
+      );
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error sending booking message:", error);
+      if (error.message === "Booking not found") {
+        res.status(404).json({ error: error.message });
+      } else if (error.message === "You do not have access to this chat") {
+        res.status(403).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Failed to send message" });
       }
     }
   },

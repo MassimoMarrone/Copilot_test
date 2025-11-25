@@ -42,6 +42,7 @@ export async function get<T>(url: string): Promise<T> {
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
   });
   return handleResponse<T>(response);
 }
@@ -54,6 +55,7 @@ export async function post<T>(url: string, data: any): Promise<T> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(data),
+    credentials: "include",
   });
   return handleResponse<T>(response);
 }
@@ -66,6 +68,7 @@ export async function put<T>(url: string, data: any): Promise<T> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(data),
+    credentials: "include",
   });
   return handleResponse<T>(response);
 }
@@ -77,6 +80,7 @@ export async function del<T>(url: string): Promise<T> {
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
   });
   return handleResponse<T>(response);
 }
@@ -91,6 +95,7 @@ export async function upload<T>(
     method: method,
     // Content-Type header is automatically set by browser for FormData with boundary
     body: formData,
+    credentials: "include",
   });
   return handleResponse<T>(response);
 }
