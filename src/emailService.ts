@@ -11,18 +11,29 @@ const initEmailService = async () => {
     // Remove spaces from password if present (common copy-paste issue with Google App Passwords)
     const pass = process.env.SMTP_PASS.replace(/\s+/g, "");
 
-    transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || "587"),
-      secure:
-        process.env.SMTP_SECURE === "true" || process.env.SMTP_PORT === "465",
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: pass,
-      },
-      // Force IPv4 to avoid timeouts with IPv6 on some cloud providers
-      family: 4,
-    } as any);
+    // Use 'gmail' service preset if host is smtp.gmail.com to simplify config
+    if (process.env.SMTP_HOST === "smtp.gmail.com") {
+      transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: pass,
+        },
+      } as any);
+    } else {
+      transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: parseInt(process.env.SMTP_PORT || "587"),
+        secure:
+          process.env.SMTP_SECURE === "true" || process.env.SMTP_PORT === "465",
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: pass,
+        },
+        // Force IPv4 to avoid timeouts with IPv6 on some cloud providers
+        family: 4,
+      } as any);
+    }
     console.log("📧 Email Service Initialized (SMTP)");
     console.log(`   Host: ${process.env.SMTP_HOST}`);
     console.log(`   User: ${process.env.SMTP_USER}`);
