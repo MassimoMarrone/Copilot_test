@@ -1,93 +1,46 @@
-import nodemailer from "nodemailer";
+import axios from "axios";
 
 // Create a transporter using Ethereal (fake SMTP service) for development
 // In production, you would use a real service like SendGrid, Mailgun, or Gmail
-let transporter: nodemailer.Transporter;
-
-const initEmailService = async () => {
-  // Check if SMTP configuration is provided in environment variables
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-    // Configure real SMTP
-    // Remove spaces from password if present (common copy-paste issue with Google App Passwords)
-    const pass = process.env.SMTP_PASS.replace(/\s+/g, "");
-
-    // Use 'gmail' service preset if host is smtp.gmail.com to simplify config
-    if (process.env.SMTP_HOST === "smtp.gmail.com") {
-      transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: pass,
-        },
-      } as any);
-    } else {
-      transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: parseInt(process.env.SMTP_PORT || "587"),
-        secure:
-          process.env.SMTP_SECURE === "true" || process.env.SMTP_PORT === "465",
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: pass,
-        },
-        // Force IPv4 to avoid timeouts with IPv6 on some cloud providers
-        family: 4,
-      } as any);
-    }
-    console.log("📧 Email Service Initialized (SMTP)");
-    console.log(`   Host: ${process.env.SMTP_HOST}`);
-    console.log(`   User: ${process.env.SMTP_USER}`);
-  } else if (process.env.NODE_ENV !== "production") {
-    // Use Ethereal for development if no SMTP config provided
-    const testAccount = await nodemailer.createTestAccount();
-
-    transporter = nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
-      secure: false,
-      auth: {
-        user: testAccount.user,
-        pass: testAccount.pass,
-      },
-    });
-
-    console.log("📧 Email Service Initialized (Ethereal - Mock)");
-    console.log(`   User: ${testAccount.user}`);
-    console.log(`   Pass: ${testAccount.pass}`);
-  } else {
-    console.warn(
-      "⚠️ Email service not initialized: Missing SMTP configuration in production."
-    );
-  }
-};
-
-// Initialize the service
-// initEmailService().catch(console.error);
 
 export const sendEmail = async (
   to: string,
   subject: string,
   html: string
 ): Promise<void> => {
-  if (!transporter) {
-    await initEmailService();
+  const apiKey = process.env.BREVO_API_KEY;
+  const senderEmail = process.env.MAIL_FROM;
+  const senderName = process.env.MAIL_FROM_NAME || "Domy Platform";
+
+  if (!apiKey || !senderEmail) {
+    console.error("❌ Brevo API key o mittente non configurati.");
+    return;
   }
 
-  try {
-    const info = await transporter.sendMail({
-      from: '"Domy Platform" <noreply@domy.com>',
-      to,
-      subject,
-      html,
-    });
+  const data = {
+    sender: { name: senderName, email: senderEmail },
+    to: [{ email: to }],
+    subject,
+    htmlContent: html,
+  };
 
-    console.log(`📧 Email sent: ${info.messageId}`);
-    // Preview only available when using Ethereal
-    if (process.env.NODE_ENV !== "production") {
-      console.log(`   Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
-    }
-  } catch (error) {
-    console.error("❌ Error sending email:", error);
+  try {
+    const response = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      data,
+      {
+        headers: {
+          "api-key": apiKey,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    console.log("📧 Email inviata via Brevo API:", response.data);
+  } catch (error: any) {
+    console.error(
+      "❌ Errore invio email via Brevo API:",
+      error.response?.data || error.message
+    );
   }
 };
 
