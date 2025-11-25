@@ -20,6 +20,8 @@ model User {
   isProvider            Boolean   @default(false)
   isAdmin               Boolean   @default(false)
   isBlocked             Boolean   @default(false)
+  isDeleted             Boolean   @default(false)
+  deletedAt             DateTime?
   acceptedTerms         Boolean   @default(false)
   acceptedProviderTerms Boolean   @default(false)
   isVerified            Boolean   @default(false)

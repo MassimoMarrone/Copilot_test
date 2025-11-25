@@ -86,64 +86,59 @@ export class UserService {
     // Prevent deleting the last admin if the user is an admin
     if (user.userType === "admin") {
       const adminCount = await prisma.user.count({
-        where: { userType: "admin" },
+        where: { userType: "admin", isDeleted: false },
       });
       if (adminCount <= 1) {
         throw new Error("Cannot delete the last admin");
       }
     }
 
-    // Cancel all pending bookings for this user (as client or provider)
-    await prisma.booking.updateMany({
-      where: {
-        OR: [{ clientId: userId }, { providerId: userId }],
-        status: "pending",
-      },
-      data: {
-        status: "cancelled",
-      },
-    });
-
-    // Use a transaction to ensure all data is deleted or nothing is
+    // Use a transaction to ensure all operations succeed or none
     await prisma.$transaction(async (tx) => {
-      // 1. Delete ChatMessages related to user's bookings (as client or provider)
-      // We need to find bookings first to delete their messages
-      const userBookings = await tx.booking.findMany({
-        where: { OR: [{ clientId: userId }, { providerId: userId }] },
-        select: { id: true },
+      // 1. Cancel all pending bookings for this user (as client or provider)
+      await tx.booking.updateMany({
+        where: {
+          OR: [{ clientId: userId }, { providerId: userId }],
+          status: "pending",
+        },
+        data: {
+          status: "cancelled",
+        },
       });
-      const bookingIds = userBookings.map((b) => b.id);
 
-      if (bookingIds.length > 0) {
-        await tx.chatMessage.deleteMany({
-          where: { bookingId: { in: bookingIds } },
-        });
-      }
-
-      // 1b. Safety check: Delete any other messages sent by this user
-      // (This handles cases where data might be inconsistent)
+      // 2. Delete ChatMessages sent by this user (privacy)
       await tx.chatMessage.deleteMany({
         where: { senderId: userId },
       });
 
-      // 2. Delete Reviews related to user (given or received)
-      await tx.review.deleteMany({
-        where: { OR: [{ clientId: userId }, { providerId: userId }] },
-      });
-
-      // 3. Delete Bookings (as client or provider)
-      await tx.booking.deleteMany({
-        where: { OR: [{ clientId: userId }, { providerId: userId }] },
-      });
-
-      // 4. Delete Services (if provider)
+      // 3. Delete Services (if provider) - removes their active offerings
       await tx.service.deleteMany({ where: { providerId: userId } });
 
-      // 5. Delete Notifications
+      // 4. Delete Notifications
       await tx.notification.deleteMany({ where: { userId: userId } });
 
-      // 6. Finally, remove user
-      await tx.user.delete({ where: { id: userId } });
+      // 5. Mark email as deleted but preserve original for reference
+      // Format: deleted_[timestamp]_[originalEmail] - frees up the email for re-registration
+      const deletedEmail = `deleted_${Date.now()}_${user.email}`;
+
+      // 6. Soft delete: Mark user as deleted but KEEP ALL DATA for legal/dispute purposes
+      // - Bookings history preserved (for invoicing/disputes)
+      // - Reviews preserved (given and received)
+      // - Personal info preserved (for legal reference)
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          email: deletedEmail, // Free up original email
+          password: "", // Invalidate password
+          googleId: null, // Remove OAuth link
+          verificationToken: null,
+          verificationTokenExpires: null,
+          isDeleted: true,
+          deletedAt: new Date(),
+          isBlocked: true, // Prevent any login attempts
+          // KEEP: displayName, bio, avatarUrl, all booking/review relations
+        },
+      });
     });
 
     return { success: true };
