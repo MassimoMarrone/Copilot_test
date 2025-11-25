@@ -13,6 +13,25 @@ export const initSocket = (httpServer: HttpServer): Server => {
       credentials: true,
     },
   });
+
+  io.on("connection", (socket) => {
+    console.log("New socket connection:", socket.id);
+
+    socket.on("join_user_room", (userId: string) => {
+      console.log(`Socket ${socket.id} joining user room: user_${userId}`);
+      socket.join(`user_${userId}`);
+    });
+
+    socket.on("join_booking", (bookingId: string) => {
+      console.log(`Socket ${socket.id} joining booking room: ${bookingId}`);
+      socket.join(bookingId);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Socket disconnected:", socket.id);
+    });
+  });
+
   return io;
 };
 
