@@ -2,6 +2,7 @@ import React, { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { authService } from "../services/authService";
+import { useAuth } from "../context/AuthContext";
 import "../styles/Modal.css";
 
 interface LoginModalProps {
@@ -24,6 +25,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
   const navigate = useNavigate();
+  const { checkAuth } = useAuth();
 
   if (!isOpen) return null;
 
@@ -34,11 +36,12 @@ const LoginModal: React.FC<LoginModalProps> = ({
       const data = await authService.googleLogin(credentialResponse.credential);
 
       if (data.success) {
+        await checkAuth(); // Update auth state immediately
         onClose();
         if (data.userType === "admin") {
           navigate("/admin-dashboard");
         } else if (data.userType === "client") {
-          window.location.href = "/services";
+          navigate("/services");
         } else {
           navigate("/provider-dashboard");
         }
@@ -86,11 +89,12 @@ const LoginModal: React.FC<LoginModalProps> = ({
       const data = await authService.googleLogin(pendingToken, true);
 
       if (data.success) {
+        await checkAuth(); // Update auth state immediately
         onClose();
         if (data.userType === "admin") {
           navigate("/admin-dashboard");
         } else if (data.userType === "client") {
-          window.location.href = "/services";
+          navigate("/services");
         } else {
           navigate("/provider-dashboard");
         }
@@ -113,6 +117,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
       const data = await authService.login({ email, password });
 
       if (data.success) {
+        await checkAuth(); // Update auth state immediately
         onClose(); // Chiudi il modale
         // Redirect based on user type
         if (data.userType === "admin") {
@@ -120,7 +125,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
         } else if (data.userType === "client") {
           // Stay on the current page (Home/Search) for clients
           // navigate("/client-dashboard");
-          window.location.href = "/services"; // Reload to update auth state
+          navigate("/services");
         } else {
           navigate("/provider-dashboard");
         }

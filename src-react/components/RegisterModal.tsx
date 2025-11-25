@@ -2,6 +2,7 @@ import React, { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { authService } from "../services/authService";
+import { useAuth } from "../context/AuthContext";
 import "../styles/Modal.css";
 
 interface RegisterModalProps {
@@ -22,6 +23,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { checkAuth } = useAuth();
 
   if (!isOpen) return null;
 
@@ -42,6 +44,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
       );
 
       if (data.success) {
+        await checkAuth(); // Update auth state immediately
         onClose();
         if (data.userType === "admin") {
           navigate("/admin-dashboard");
