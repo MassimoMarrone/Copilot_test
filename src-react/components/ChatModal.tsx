@@ -49,11 +49,14 @@ const ChatModal: React.FC<ChatModalProps> = ({
       // Initialize Socket.IO connection
       // Use relative path so it works both on localhost and via tunnel
       // Force websocket transport to avoid polling issues with tunnels
-      socketRef.current = io(import.meta.env.VITE_API_URL || window.location.origin, {
-        transports: ["websocket"],
-        path: "/socket.io/",
-        reconnectionAttempts: 5,
-      });
+      socketRef.current = io(
+        import.meta.env.VITE_API_URL || window.location.origin,
+        {
+          transports: ["websocket"],
+          path: "/socket.io/",
+          reconnectionAttempts: 5,
+        }
+      );
 
       socketRef.current.on("connect", () => {
         console.log("Connected to socket server:", socketRef.current?.id);

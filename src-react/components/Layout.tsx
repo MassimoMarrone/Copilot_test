@@ -30,10 +30,13 @@ const Layout: React.FC = () => {
     if (user) {
       fetchUnreadCount();
 
-      const socket = io(import.meta.env.VITE_API_URL || window.location.origin, {
-        transports: ["websocket"],
-        path: "/socket.io/",
-      });
+      const socket = io(
+        import.meta.env.VITE_API_URL || window.location.origin,
+        {
+          transports: ["websocket"],
+          path: "/socket.io/",
+        }
+      );
 
       socket.on("connect", () => {
         socket.emit("join_user_room", user.id);
