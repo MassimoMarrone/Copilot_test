@@ -1,7 +1,7 @@
 services:
   # Il Backend + Frontend (Node.js)
   - type: web
-    name: domy-app
+    name: Domy-Test-Server
     env: node
     plan: free
     buildCommand: npm install && npx prisma generate && npm run build
