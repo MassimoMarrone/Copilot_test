@@ -230,7 +230,11 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
               type="email"
               id="register-email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setSuccessMessage("");
+                setErrorMessage("");
+              }}
               required
               disabled={isLoading}
             />
@@ -242,7 +246,11 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
               type="password"
               id="register-password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setSuccessMessage("");
+                setErrorMessage("");
+              }}
               required
               disabled={isLoading}
               minLength={8}

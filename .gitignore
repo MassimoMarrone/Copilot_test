@@ -10,6 +10,7 @@ public/uploads/*.gif
 !public/uploads/.gitkeep
 *.log
 .env
+render.env
 
 # SQLite database
 *.db
