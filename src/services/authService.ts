@@ -42,10 +42,11 @@ export class AuthService {
       },
     });
 
-    const baseUrl =
+    const baseUrl = (
       process.env.APP_URL ||
       process.env.FRONTEND_URL ||
-      "http://localhost:3000";
+      "http://localhost:3000"
+    ).replace(/\/$/, ""); // Remove trailing slash if present
     const verificationLink = `${baseUrl}/api/verify-email?token=${verificationToken}`;
 
     // Await email sending to ensure it works before returning success
