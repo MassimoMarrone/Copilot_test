@@ -1,281 +1,119 @@
-# Servizi di Pulizia - AirBnB Style Booking App
+﻿# Domy - Piattaforma di Prenotazione Servizi di Pulizia
 
-Applicazione web per la prenotazione di servizi di pulizia con sistema di pagamento escrow.
+Applicazione web moderna per la prenotazione di servizi di pulizia con sistema di pagamento escrow, chat in tempo reale e dashboard dedicate.
 
-## Funzionalità
+## Funzionalità Principali
 
-### Autenticazione & Legale
+### 🔐 Autenticazione & Sicurezza
 
-- ✅ Registrazione con accettazione obbligatoria dei Termini & Condizioni
-- ✅ Login separato per Clienti e Fornitori
-- ✅ Termini e Condizioni completi visualizzati durante la registrazione
-- ✅ **Nuova UI React**: Login e registrazione tramite modal popup nella navbar
-- ✅ **Navbar persistente**: Accesso rapido a login/registrazione da qualsiasi punto della pagina
+- **Registrazione & Login**: Accesso separato per Clienti e Fornitori con autenticazione JWT sicura.
+- **Protezione Dati**: Password hashate con bcrypt, cookie HTTP-only, e protezione CSRF/XSS.
+- **Termini e Condizioni**: Accettazione obbligatoria durante la registrazione.
 
-### Dashboard Separate
+### 👥 Dashboard Utenti
 
-#### Dashboard Cliente
+- **Dashboard Cliente**:
+  - 🔍 Ricerca avanzata servizi con filtri e mappa interattiva.
+  - 📅 Prenotazione servizi con selezione data e orario.
+  - 💬 Chat in tempo reale con i fornitori.
+  - 📋 Gestione prenotazioni e stato pagamenti.
+- **Dashboard Fornitore**:
+  - ➕ Creazione e gestione servizi offerti.
+  - 📅 Calendario prenotazioni e gestione disponibilità.
+  - 💬 Chat in tempo reale con i clienti.
+  - ✅ Completamento servizi con upload prova fotografica.
+- **Dashboard Amministratore**:
+  - 🛡️ Gestione completa di utenti, servizi e prenotazioni.
+  - 🚫 Moderazione contenuti e risoluzione dispute.
 
-- 🔍 Ricerca e visualizzazione di tutti i servizi disponibili
-- 📅 Prenotazione servizi con selezione data
-- 📋 Visualizzazione delle proprie prenotazioni
-- 💰 Monitoraggio stato pagamenti (Escrow/Rilasciato)
-- 📸 Visualizzazione prove fotografiche dei servizi completati
+### 💬 Sistema di Chat in Tempo Reale
 
-#### Dashboard Fornitore
+- **Socket.IO**: Comunicazione istantanea tra cliente e fornitore.
+- **Notifiche**: Contatore messaggi non letti in tempo reale.
+- **Storico**: Salvataggio conversazioni nel database.
+- **Supporto Legacy**: Compatibilità garantita con vecchie chiamate API.
 
-- ➕ Creazione e gestione servizi offerti
-- 📅 Visualizzazione prenotazioni ricevute
-- ❌ Cancellazione prenotazioni (con rimborso automatico se pagate)
-- ✅ Pulsante "Completa Servizio & Rilascia Payout"
-- 📸 Upload obbligatorio di prova fotografica per rilascio pagamento
-- 💰 Monitoraggio stato pagamenti
+### 💳 Sistema di Pagamento Escrow (Simulato/Stripe Ready)
 
-#### Dashboard Amministratore (Nuovo)
+- **Sicurezza**: I fondi vengono trattenuti fino al completamento del servizio.
+- **Rilascio**: Pagamento sbloccato solo dopo conferma e prova fotografica.
+- **Rimborso**: Gestione automatica rimborsi in caso di cancellazione.
 
-- 🛡️ Accesso esclusivo per gestione piattaforma
-- 👥 Gestione Utenti: Visualizzazione, eliminazione e blocco/sblocco utenti
-- 🚫 Blocco Utenti: Nasconde i servizi dell'utente e cancella le prenotazioni pendenti
-- 🛠️ Gestione Servizi: Monitoraggio ed eliminazione servizi inappropriati
-- 📅 Gestione Prenotazioni: Visualizzazione completa e cancellazione d'ufficio (con rimborso)
+## Stack Tecnologico
 
-### Sistema di Pagamento Escrow
+- **Frontend**: React 19, Vite, TypeScript, CSS Modules.
+- **Backend**: Node.js, Express, TypeScript.
+- **Database**: Prisma ORM (SQLite per dev, PostgreSQL ready).
+- **Real-time**: Socket.IO.
+- **Sicurezza**: Helmet, Rate Limiting, Express Validator, BCrypt.
 
-- 💳 Al momento della prenotazione, i fondi vengono trattenuti in escrow
-- 🔒 Il pagamento rimane bloccato fino al completamento del servizio
-- 📸 Il fornitore deve caricare una foto prova del lavoro completato
-- ✅ Solo dopo l'upload della foto, il pagamento viene rilasciato al fornitore
-- � **Rimborso**: In caso di cancellazione (da parte del fornitore o admin), i fondi vengono rimborsati automaticamente
-- �🔐 Protezione per entrambe le parti della transazione
+## Installazione e Avvio
 
-### Sicurezza e Architettura
+### Prerequisiti
 
-- 🔐 **Autenticazione JWT**: Accesso sicuro basato su token con scadenza
-- 🛡️ **Role-Based Access Control (RBAC)**: Permessi differenziati per Client, Provider e Admin
-- 🚦 **Rate Limiting**: Protezione contro abusi e attacchi DDoS su API e login
-- 🔒 **Helmet**: Header di sicurezza HTTP configurati
-- 🧼 **Input Validation**: Validazione rigorosa dei dati in ingresso
-- ⚡ **Architettura Scalabile**: Backend Node.js/Express e Frontend React/Vite
-- 🏗️ **Pattern Controller-Service**: Separazione netta tra logica di business e gestione delle richieste HTTP per una migliore manutenibilità e testabilità.
-
-## Requisiti
-
-- Node.js (v14 o superiore)
+- Node.js (v18+)
 - npm
-- Database SQL (SQLite per sviluppo, PostgreSQL per produzione)
 
-## Installazione
+### Setup Iniziale
 
-1. Clona il repository:
+1. **Clona il repository:**
 
-```bash
-git clone https://github.com/MassimoMarrone/Copilot_test.git
-cd Copilot_test
-```
+   ```bash
+   git clone https://github.com/MassimoMarrone/Copilot_test.git
+   cd Copilot_test
+   ```
 
-2. Installa le dipendenze:
+2. **Installa le dipendenze:**
 
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
-3. (Opzionale) Configura le variabili d'ambiente:
+3. **Configura l'ambiente:**
+   Copia il file `.env.example` in `.env` e configura le variabili necessarie (Database, JWT Secret, ecc.).
 
-```bash
-cp .env.example .env
-# Modifica .env con le tue configurazioni
-```
+4. **Inizializza il Database:**
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
 
-4. Inizializza il database Prisma:
+### Avvio Applicazione
 
-```bash
-npx prisma generate
-npx prisma db push
-```
-
-5. Compila il codice TypeScript:
+Per avviare l'intero stack (Backend + Frontend) in modalità sviluppo:
 
 ```bash
-npm run build
+npm run dev:full
 ```
 
-6. Avvia il server:
+- **Frontend**: http://localhost:5173
+- **Backend**: http://localhost:3000
 
-```bash
-npm start
-```
+### Altri Comandi Utili
 
-7. Apri il browser e vai a:
+- `npm run build`: Compila tutto il progetto per produzione.
+- `npm start`: Avvia il server di produzione.
+- `npx prisma studio`: Interfaccia grafica per esplorare il database.
 
-```
-http://localhost:3000
-```
+## Stato del Progetto
 
-### Script Disponibili
+**Versione Attuale**: v1.0.0 (Stable)
 
-- `npm run build` - Compila backend TypeScript e frontend React
-- `npm run build:backend` - Compila solo il backend TypeScript
-- `npm run build:react` - Compila solo il frontend React con Vite
-- `npm start` - Avvia il server (richiede build precedente)
-- `npm run dev` - Compila e avvia il backend in un solo comando
-- `npm run dev:react` - Avvia il server di sviluppo Vite per React
-- `npm run clean` - Pulisce le cartelle dist e public/react
-- `npx prisma studio` - Apre l'interfaccia grafica per gestire il database
+### ✅ Funzionalità Completate
 
-## Utilizzo
+- [x] Autenticazione completa (JWT, Cookie).
+- [x] CRUD Servizi e Prenotazioni.
+- [x] Chat in tempo reale (Socket.IO) con notifiche.
+- [x] Dashboard Admin completa.
+- [x] Upload immagini (Multer).
+- [x] UI/UX Moderna e Responsiva.
+- [x] Gestione errori e logging.
 
-### Per i Clienti
+### 🚧 Roadmap Futura
 
-1. Registrati selezionando "Cliente" come tipo di account
-2. Accetta i Termini e Condizioni (obbligatorio)
-3. Accedi alla Dashboard Cliente
-4. Sfoglia i servizi disponibili
-5. Prenota un servizio selezionando una data
-6. Il pagamento sarà trattenuto in escrow
-7. Monitora lo stato della tua prenotazione
-8. Visualizza la prova fotografica quando il servizio è completato
-
-### Per i Fornitori
-
-1. Registrati selezionando "Fornitore" come tipo di account
-2. Accetta i Termini e Condizioni (obbligatorio)
-3. Accedi alla Dashboard Fornitore
-4. Crea i tuoi servizi (titolo, descrizione, prezzo)
-5. Visualizza le prenotazioni ricevute
-6. Quando completi un servizio, clicca "Completa Servizio & Rilascia Payout"
-7. Carica una foto prova del lavoro completato (obbligatorio)
-8. Il pagamento verrà automaticamente rilasciato dall'escrow
-9. Possibilità di cancellare prenotazioni in caso di imprevisti (con rimborso al cliente)
-
-### Per gli Amministratori
-
-1. Accesso tramite credenziali dedicate (configurabili in `.env`)
-2. Monitoraggio globale di utenti, servizi e prenotazioni
-3. Intervento in caso di dispute o contenuti inappropriati
-4. Blocco utenti malevoli e cancellazione prenotazioni problematiche
-
-## Sicurezza
-
-### Implementazioni di Sicurezza Applicate
-
-- ✅ **Password hashate con bcrypt** (12 rounds)
-- ✅ **Autenticazione tramite JWT** con scadenza token (24h)
-- ✅ **Cookie HTTP-only, Secure e SameSite** per prevenire XSS e CSRF
-- ✅ **Helmet.js** per header di sicurezza HTTP
-- ✅ **Rate Limiting** su tutte le route API (100 richieste/15min)
-- ✅ **Rate Limiting Aggressivo** per autenticazione (5 tentativi/15min)
-- ✅ **Validazione Input** con express-validator su tutti i campi
-- ✅ **Upload File Sicuri** con validazione MIME type e limite dimensione (5MB)
-- ✅ **TypeScript** per type safety e riduzione errori runtime
-- ✅ **Validazione obbligatoria** dei termini e condizioni
-- ✅ **Upload foto obbligatorio** prima del rilascio pagamento
-- ✅ **Content Security Policy** (CSP) configurata
-- ✅ **Sanitizzazione Email** con normalizzazione
-
-### Buone Pratiche di Sicurezza
-
-- Password minima 8 caratteri
-- Token JWT con scadenza
-- ID univoci generati in modo sicuro
-- Gestione errori centralizzata
-- Logging degli errori
-
-## Tecnologie Utilizzate
-
-- **Backend**: Node.js, Express.js con TypeScript
-- **Database**: Prisma ORM (SQLite/PostgreSQL)
-- **Architettura**: Controller-Service Pattern
-- **Autenticazione**: JWT, bcryptjs
-- **Upload File**: Multer con validazione
-- **Sicurezza**: Helmet.js, express-rate-limit, express-validator
-- **Configurazione**: dotenv
-- **Frontend**: React 19 con TypeScript, Vite
-- **UI/UX**: Modal-based login/registration, responsive navbar
-- **Storage**: File system (Uploads) e Database Relazionale
-
-## Note
-
-### Versione React con UI Moderna
-
-Questa versione include:
-
-- ✅ **Frontend React 19**: Interfaccia utente moderna e reattiva
-- ✅ **Modal-based Authentication**: Login e registrazione tramite modal popup invece di pagine separate
-- ✅ **Navbar persistente**: Accesso rapido all'autenticazione da qualsiasi sezione della pagina
-- ✅ **Modal Switching**: Passaggio fluido tra login e registrazione senza chiudere il modal
-- ✅ **Backend TypeScript**: Sicurezza e manutenibilità migliorata
-- ✅ **Rate limiting**: Protezione contro abusi
-- ✅ **Validazione input**: Validazione su tutti i campi
-- ✅ **Header di sicurezza**: Helmet.js configurato
-- ✅ **Gestione errori**: Gestione robusta degli errori
-
-### Ulteriori Miglioramenti per Produzione
-
-- In produzione, utilizzare PostgreSQL invece di SQLite
-- Implementare un sistema di pagamento reale (Stripe, PayPal, etc.)
-- Aggiungere SSL/HTTPS obbligatorio
-- Aggiungere validazione email con conferma via email
-- Implementare sistema di notifiche (email, push)
-- Aggiungere protezione CSRF più robusta
-- Aggiungere logging strutturato e monitoring
-- Implementare backup automatici dei dati
-
-## Considerazioni sulla Sicurezza
-
-**📖 Per la documentazione completa sulla sicurezza, vedere [SECURITY.md](SECURITY.md)**
-
-### Sicurezza Implementata ✅
-
-1. ✅ **Rate Limiting**: Implementato su tutte le route (API, auth, pages)
-2. ✅ **CSRF Protection**: SameSite='strict' cookies + httpOnly
-3. ✅ **JWT Secret**: Configurabile via variabili d'ambiente
-4. ✅ **Validazione Input**: express-validator su tutti i campi
-5. ✅ **File Upload**: Validazione MIME type e limite dimensione (5MB)
-6. ✅ **TypeScript**: Type safety per prevenire errori runtime
-7. ✅ **Helmet.js**: Security headers (CSP, XSS, etc.)
-
-### Raccomandazioni per Produzione ⚠️
-
-1. **Database**: Usare PostgreSQL gestito (es. AWS RDS, Supabase)
-2. **HTTPS**: Configurare SSL/TLS con certificati validi
-3. **Secrets Management**: Usare servizi dedicati (AWS Secrets Manager, etc.)
-4. **Email Verification**: Implementare verifica email utenti
-5. **Audit Logging**: Logging strutturato e audit trail completo
-
-Vedi [SECURITY.md](SECURITY.md) per l'analisi completa e le raccomandazioni.
-
-## Roadmap & Stato Sviluppo
-
-### ✅ Completato di Recente
-
-- **Refactoring Backend**: Adozione del pattern Controller-Service per una migliore organizzazione del codice.
-- **Integrazione Prisma ORM**: Sostituzione dei file JSON con un database relazionale robusto.
-- **Admin Dashboard**: Interfaccia completa per gestione utenti, servizi e prenotazioni.
-- **Sistema Email (SMTP)**: Integrazione Nodemailer con supporto SMTP reale (Gmail) e template HTML.
-- **Rebranding**: Aggiornamento nome applicazione da "TimeShare" a "Domy".
-- **Fix**: Correzione inizializzazione servizio email (lazy loading) per garantire il caricamento delle variabili d'ambiente.
-
-### 🚧 In Corso / Da Fare (To-Do)
-
-1. **Integrazione Pagamenti Reale (Stripe)**
-
-   - Implementazione flusso Escrow completo con Stripe Connect.
-   - Gestione webhook per aggiornamenti stato pagamento.
-
-2. **Verifica Email Utente**
-
-   - Invio link di conferma alla registrazione.
-   - Blocco login per utenti non verificati.
-
-3. **Sistema di Recensioni**
-
-   - UI per lasciare feedback (stelle + commento) dopo il completamento del servizio.
-   - Visualizzazione media recensioni nel profilo fornitore.
-
-4. **Chat in Tempo Reale**
-   - Miglioramento UX chat.
-   - Supporto invio immagini in chat.
-   - Notifiche visive nuovi messaggi.
+- [ ] Integrazione completa Stripe Connect per pagamenti reali.
+- [ ] Sistema di recensioni e rating avanzato.
+- [ ] App mobile (React Native).
 
 ## Licenza
 
