@@ -20,7 +20,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
   const [password, setPassword] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { checkAuth } = useAuth();
@@ -30,6 +30,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
   const handleGoogleSuccess = async (credentialResponse: any) => {
     setIsLoading(true);
     setErrorMessage("");
+    setSuccessMessage("");
 
     if (!acceptedTerms) {
       setErrorMessage("Devi accettare i Termini e Condizioni per continuare.");
@@ -76,6 +77,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
+    setSuccessMessage("");
 
     if (!acceptedTerms) {
       setErrorMessage("Devi accettare i Termini e Condizioni per continuare.");
@@ -92,14 +94,13 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
       });
 
       if (data.success) {
-        onClose(); // Chiudi il modale
-        // All users are now registered as clients
-        navigate("/client-dashboard");
+        setSuccessMessage(
+          "Registrazione avvenuta con successo! Controlla la tua email per verificare l'account."
+        );
+        // Don't close immediately, let user read the message
+        // onClose();
+        // navigate("/client-dashboard");
       } else {
-        // Handle express-validator errors array or single error message
-        // authService.register returns AuthResponse which has error string.
-        // If the backend returns errors array, api.ts might not expose it easily in AuthResponse unless we type it.
-        // But let's assume data.error contains the message.
         setErrorMessage(data.error || "Registrazione fallita");
       }
     } catch (error: any) {
@@ -251,11 +252,27 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
             <div className="error-message show">{errorMessage}</div>
           )}
 
+          {successMessage && (
+            <div
+              className="success-message show"
+              style={{
+                backgroundColor: "#d4edda",
+                color: "#155724",
+                padding: "10px",
+                borderRadius: "5px",
+                marginBottom: "1rem",
+                textAlign: "center",
+              }}
+            >
+              {successMessage}
+            </div>
+          )}
+
           <div className="button-group">
             <button
               type="submit"
               className="btn btn-primary"
-              disabled={isLoading}
+              disabled={isLoading || !!successMessage}
             >
               {isLoading ? "Registrazione..." : "Registrati"}
             </button>
