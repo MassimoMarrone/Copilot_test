@@ -103,6 +103,56 @@ export class AuthService {
     return { user: updatedUser, token: authToken };
   }
 
+  async resendVerificationEmail(email: string) {
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      // Don't reveal if email exists or not for security
+      return {
+        message: "Se l'email esiste, riceverai un nuovo link di verifica.",
+      };
+    }
+
+    if (user.isVerified) {
+      throw new Error(
+        "Questo account è già verificato. Puoi effettuare il login."
+      );
+    }
+
+    if (user.isDeleted) {
+      throw new Error("Questo account non esiste più.");
+    }
+
+    // Generate new verification token
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        verificationToken,
+        verificationTokenExpires,
+      },
+    });
+
+    const baseUrl = (
+      process.env.APP_URL ||
+      process.env.FRONTEND_URL ||
+      "http://localhost:3000"
+    ).replace(/\/$/, "");
+    const verificationLink = `${baseUrl}/verify-email?token=${verificationToken}`;
+
+    await sendEmail(
+      user.email,
+      "Verifica la tua email - Domy",
+      emailTemplates.verification(user.email.split("@")[0], verificationLink)
+    );
+
+    return {
+      message: "Se l'email esiste, riceverai un nuovo link di verifica.",
+    };
+  }
+
   async login(data: any) {
     const { email, password } = data;
     const user = await prisma.user.findUnique({ where: { email } });

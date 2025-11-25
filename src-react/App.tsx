@@ -21,7 +21,7 @@ function App() {
         <Routes>
           {/* Verify email page - outside Layout for cleaner look */}
           <Route path="/verify-email" element={<VerifyEmailPage />} />
-          
+
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
             <Route path="/services" element={<ServicesPage />} />

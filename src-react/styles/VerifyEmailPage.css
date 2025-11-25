@@ -95,3 +95,70 @@
   color: white;
   border: none;
 }
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.verify-email-container .btn-secondary {
+  background: #f0f0f0;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.verify-email-container .btn-link {
+  background: none;
+  border: none;
+  color: #667eea;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-top: 15px;
+}
+
+.resend-form {
+  margin-top: 20px;
+}
+
+.resend-form p {
+  margin-bottom: 15px;
+}
+
+.resend-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.resend-form input {
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.resend-form input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.resend-success {
+  color: #28a745;
+  background: #d4edda;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
+.resend-error {
+  color: #dc3545;
+  background: #f8d7da;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 15px;
+}

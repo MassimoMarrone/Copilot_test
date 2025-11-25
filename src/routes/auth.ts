@@ -27,6 +27,20 @@ router.post(
 // Verify Email
 router.get("/verify-email", authController.verifyEmail);
 
+// Resend Verification Email
+router.post(
+  "/resend-verification",
+  authLimiter,
+  [
+    body("email")
+      .isEmail()
+      .normalizeEmail()
+      .withMessage("Email valida richiesta"),
+  ],
+  validate,
+  authController.resendVerificationEmail
+);
+
 // Login
 router.post(
   "/login",

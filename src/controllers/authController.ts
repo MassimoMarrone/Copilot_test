@@ -46,8 +46,28 @@ export class AuthController {
       if (acceptHeader.includes("application/json")) {
         res.status(400).json({ error: error.message || "Verifica fallita" });
       } else {
-        res.redirect(`/verify-email?error=${encodeURIComponent(error.message)}`);
+        res.redirect(
+          `/verify-email?error=${encodeURIComponent(error.message)}`
+        );
       }
+    }
+  }
+
+  async resendVerificationEmail(req: Request, res: Response): Promise<void> {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        res.status(400).json({ error: "Email richiesta" });
+        return;
+      }
+
+      const result = await authService.resendVerificationEmail(email);
+      res.json({ success: true, message: result.message });
+    } catch (error: any) {
+      console.error("Resend verification error:", error);
+      res
+        .status(400)
+        .json({ error: error.message || "Errore durante l'invio" });
     }
   }
 

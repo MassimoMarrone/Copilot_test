@@ -7,13 +7,11 @@ import App from "./App";
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <GoogleOAuthProvider
-      clientId={clientId || "YOUR_GOOGLE_CLIENT_ID_PLACEHOLDER"}
-    >
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </GoogleOAuthProvider>
-  </React.StrictMode>
+  <GoogleOAuthProvider
+    clientId={clientId || "YOUR_GOOGLE_CLIENT_ID_PLACEHOLDER"}
+  >
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </GoogleOAuthProvider>
 );
