@@ -117,9 +117,8 @@ export class UserService {
       // 4. Delete Notifications
       await tx.notification.deleteMany({ where: { userId: userId } });
 
-      // 5. Mark email as deleted but preserve original for reference
-      // Format: deleted_[timestamp]_[originalEmail] - frees up the email for re-registration
-      const deletedEmail = `deleted_${Date.now()}_${user.email}`;
+      // 5. Generate placeholder email to free up the original
+      const deletedEmail = `deleted_${userId}@deleted.local`;
 
       // 6. Soft delete: Mark user as deleted but KEEP ALL DATA for legal/dispute purposes
       // - Bookings history preserved (for invoicing/disputes)
@@ -128,7 +127,8 @@ export class UserService {
       await tx.user.update({
         where: { id: userId },
         data: {
-          email: deletedEmail, // Free up original email
+          originalEmail: user.email, // Save original email for reference
+          email: deletedEmail, // Free up original email for re-registration
           password: "", // Invalidate password
           googleId: null, // Remove OAuth link
           verificationToken: null,

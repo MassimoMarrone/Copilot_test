@@ -14,6 +14,7 @@ datasource db {
 model User {
   id                    String    @id @default(uuid())
   email                 String    @unique
+  originalEmail         String?   // Preserved when account is deleted
   password              String
   userType              String    // "client", "provider", "admin"
   isClient              Boolean   @default(true)
