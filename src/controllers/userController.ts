@@ -39,7 +39,14 @@ export class UserController {
     try {
       const userId = req.user!.id;
       await userService.deleteAccount(userId);
-      res.clearCookie("token");
+      res.clearCookie("token", {
+        httpOnly: true,
+        secure:
+          process.env.NODE_ENV === "production" ||
+          req.secure ||
+          req.headers["x-forwarded-proto"] === "https",
+        sameSite: "lax",
+      });
       res.json({ success: true });
     } catch (error: any) {
       console.error("Delete account error:", error);

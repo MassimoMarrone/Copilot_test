@@ -104,40 +104,47 @@ export class UserService {
       },
     });
 
-    // Delete related data in correct order to avoid foreign key constraints
-
-    // 1. Delete ChatMessages related to user's bookings (as client or provider)
-    // We need to find bookings first to delete their messages
-    const userBookings = await prisma.booking.findMany({
-      where: { OR: [{ clientId: userId }, { providerId: userId }] },
-      select: { id: true },
-    });
-    const bookingIds = userBookings.map((b) => b.id);
-
-    if (bookingIds.length > 0) {
-      await prisma.chatMessage.deleteMany({
-        where: { bookingId: { in: bookingIds } },
+    // Use a transaction to ensure all data is deleted or nothing is
+    await prisma.$transaction(async (tx) => {
+      // 1. Delete ChatMessages related to user's bookings (as client or provider)
+      // We need to find bookings first to delete their messages
+      const userBookings = await tx.booking.findMany({
+        where: { OR: [{ clientId: userId }, { providerId: userId }] },
+        select: { id: true },
       });
-    }
+      const bookingIds = userBookings.map((b) => b.id);
 
-    // 2. Delete Reviews related to user (given or received)
-    await prisma.review.deleteMany({
-      where: { OR: [{ clientId: userId }, { providerId: userId }] },
+      if (bookingIds.length > 0) {
+        await tx.chatMessage.deleteMany({
+          where: { bookingId: { in: bookingIds } },
+        });
+      }
+
+      // 1b. Safety check: Delete any other messages sent by this user
+      // (This handles cases where data might be inconsistent)
+      await tx.chatMessage.deleteMany({
+        where: { senderId: userId },
+      });
+
+      // 2. Delete Reviews related to user (given or received)
+      await tx.review.deleteMany({
+        where: { OR: [{ clientId: userId }, { providerId: userId }] },
+      });
+
+      // 3. Delete Bookings (as client or provider)
+      await tx.booking.deleteMany({
+        where: { OR: [{ clientId: userId }, { providerId: userId }] },
+      });
+
+      // 4. Delete Services (if provider)
+      await tx.service.deleteMany({ where: { providerId: userId } });
+
+      // 5. Delete Notifications
+      await tx.notification.deleteMany({ where: { userId: userId } });
+
+      // 6. Finally, remove user
+      await tx.user.delete({ where: { id: userId } });
     });
-
-    // 3. Delete Bookings (as client or provider)
-    await prisma.booking.deleteMany({
-      where: { OR: [{ clientId: userId }, { providerId: userId }] },
-    });
-
-    // 4. Delete Services (if provider)
-    await prisma.service.deleteMany({ where: { providerId: userId } });
-
-    // 5. Delete Notifications
-    await prisma.notification.deleteMany({ where: { userId: userId } });
-
-    // 6. Finally, remove user
-    await prisma.user.delete({ where: { id: userId } });
 
     return { success: true };
   }

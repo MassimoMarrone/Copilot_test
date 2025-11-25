@@ -94,8 +94,15 @@ export class AuthController {
     }
   }
 
-  async logout(_req: Request, res: Response): Promise<void> {
-    res.clearCookie("token");
+  async logout(req: Request, res: Response): Promise<void> {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure:
+        process.env.NODE_ENV === "production" ||
+        req.secure ||
+        req.headers["x-forwarded-proto"] === "https",
+      sameSite: "lax",
+    });
     res.json({ success: true });
   }
 
