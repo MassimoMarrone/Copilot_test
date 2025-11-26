@@ -65,7 +65,10 @@ const BookingsPage: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="loading-spinner">Caricamento...</div>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <span className="loading-text">Caricamento...</span>
+        </div>
       ) : (
         <div className="bookings-list">
           {bookings.length === 0 ? (

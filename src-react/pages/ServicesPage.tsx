@@ -260,7 +260,10 @@ const ServicesPage: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="loading-spinner">Caricamento...</div>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <span className="loading-text">Caricamento...</span>
+        </div>
       ) : viewMode === "map" ? (
         <ServiceMap services={filteredServices} onBook={openBookingModal} />
       ) : (

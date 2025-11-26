@@ -54,7 +54,10 @@ const ServiceReviewsModal: React.FC<ServiceReviewsModalProps> = ({
         <h2>Recensioni per {serviceTitle}</h2>
 
         {loading ? (
-          <div className="loading-spinner">Caricamento recensioni...</div>
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <span className="loading-text">Caricamento recensioni...</span>
+          </div>
         ) : error ? (
           <div className="error-message">{error}</div>
         ) : reviews.length === 0 ? (
