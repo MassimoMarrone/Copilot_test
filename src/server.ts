@@ -61,6 +61,9 @@ app.use(
           "https://maps.googleapis.com",
           "https://maps.gstatic.com",
           "https://*.googleusercontent.com",
+          "https://*.basemaps.cartocdn.com",
+          "https://*.tile.openstreetmap.org",
+          "https://unpkg.com",
         ],
         connectSrc: [
           "'self'",

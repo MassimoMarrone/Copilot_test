@@ -48,7 +48,7 @@
 
 .provider-reply {
   background-color: #f9f9f9;
-  border-left: 3px solid #667eea;
+  border-left: 3px solid #1a1a1a;
   padding: 15px;
   border-radius: 0 8px 8px 0;
   margin-top: 10px;
@@ -62,7 +62,7 @@
 }
 
 .reply-header strong {
-  color: #667eea;
+  color: #1a1a1a;
 }
 
 .reply-date {

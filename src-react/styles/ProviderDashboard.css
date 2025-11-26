@@ -54,7 +54,7 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1a1a1a;
   color: white;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
@@ -123,22 +123,22 @@
 }
 
 .stat-icon-blue {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1a1a1a;
   color: white;
 }
 
 .stat-icon-orange {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: #404040;
   color: white;
 }
 
 .stat-icon-green {
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  background: #2d8a6e;
   color: white;
 }
 
 .stat-icon-purple {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: #5a5a5a;
   color: white;
 }
 
@@ -199,7 +199,7 @@
 }
 
 .tab-btn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1a1a1a;
   color: white;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
@@ -234,7 +234,7 @@
 .section-header h2 svg {
   width: 24px;
   height: 24px;
-  color: #667eea;
+  color: #1a1a1a;
 }
 
 .average-rating-badge {
@@ -556,7 +556,7 @@
 
 /* Chat button styling */
 .btn-chat {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1a1a1a;
   color: white;
   border: none;
   padding: 10px 20px;

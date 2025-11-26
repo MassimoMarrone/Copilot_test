@@ -40,7 +40,7 @@
 
 .search-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #1a1a1a;
 }
 
 /* Location Group */
@@ -125,15 +125,15 @@
 
 .filter-toggle-btn:hover,
 .filter-toggle-btn.active {
-  background: #eef2ff;
-  border-color: #667eea;
-  color: #667eea;
+  background: #f5f5f5;
+  border-color: #1a1a1a;
+  color: #1a1a1a;
 }
 
 /* Search Button */
 .search-button {
   padding: 10px 18px;
-  background: #667eea;
+  background: #1a1a1a;
   color: white;
   border: none;
   border-radius: 8px;
@@ -144,7 +144,7 @@
 }
 
 .search-button:hover {
-  background: #5568d3;
+  background: #333;
 }
 
 /* Filters Dropdown */
@@ -217,7 +217,7 @@
 .slider-range {
   position: absolute;
   height: 6px;
-  background: #667eea;
+  background: #1a1a1a;
   border-radius: 3px;
   z-index: 2;
 }
@@ -239,7 +239,7 @@
   width: 20px;
   height: 20px;
   background: white;
-  border: 2px solid #667eea;
+  border: 2px solid #1a1a1a;
   border-radius: 50%;
   cursor: pointer;
   pointer-events: all;
@@ -253,7 +253,7 @@
   width: 20px;
   height: 20px;
   background: white;
-  border: 2px solid #667eea;
+  border: 2px solid #1a1a1a;
   border-radius: 50%;
   cursor: pointer;
   pointer-events: all;

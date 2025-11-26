@@ -104,7 +104,7 @@
   font-size: 1.15rem;
   font-weight: 600;
   border-radius: 60px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1a1a1a;
   color: white;
   border: none;
   cursor: pointer;
@@ -149,7 +149,7 @@
 
 .btn-hero-primary {
   background: white;
-  color: #667eea;
+  color: #1a1a1a;
   padding: 16px 40px;
   border-radius: 12px;
   font-size: 1.1rem;
@@ -236,7 +236,7 @@
   display: block;
   width: 80px;
   height: 4px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1a1a1a;
   margin: 20px auto 0;
   border-radius: 2px;
 }
@@ -320,7 +320,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1a1a1a;
   transform: scaleX(0);
   transition: transform 0.3s ease;
 }
@@ -343,7 +343,7 @@
   width: 70px;
   height: 70px;
   margin: 0 auto 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1a1a1a;
   border-radius: 16px;
   color: white;
 }
@@ -365,7 +365,7 @@
   width: 50px;
   height: 50px;
   background: white;
-  color: #667eea;
+  color: #1a1a1a;
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -377,7 +377,7 @@
 
 .step-arrow {
   font-size: 2rem;
-  color: #667eea;
+  color: #1a1a1a;
   text-align: center;
   font-weight: 700;
 }
@@ -427,7 +427,7 @@
 }
 
 .cta-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1a1a1a;
   padding: 60px 40px;
   border-radius: 24px;
   text-align: center;
@@ -456,7 +456,7 @@
 
 .btn-cta-primary {
   background: white;
-  color: #667eea;
+  color: #1a1a1a;
   padding: 16px 40px;
   border-radius: 12px;
   font-size: 1.1rem;
@@ -541,14 +541,14 @@
 .service-price {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #667eea;
+  color: #1a1a1a;
   margin: 16px 0;
 }
 
 .btn-book {
   width: 100%;
   padding: 12px 24px;
-  background: #667eea;
+  background: #1a1a1a;
   color: white;
   border: none;
   border-radius: 8px;
@@ -593,7 +593,7 @@
 }
 
 .btn-primary {
-  background: #667eea;
+  background: #1a1a1a;
   color: white;
   padding: 12px 32px;
   border: none;
@@ -611,9 +611,9 @@
 
 .btn-secondary {
   background: white;
-  color: #667eea;
+  color: #1a1a1a;
   padding: 12px 32px;
-  border: 2px solid #667eea;
+  border: 2px solid #1a1a1a;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;

@@ -75,22 +75,22 @@
 }
 
 .stat-icon-blue {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1a1a1a;
   color: white;
 }
 
 .stat-icon-orange {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: #404040;
   color: white;
 }
 
 .stat-icon-green {
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  background: #2d8a6e;
   color: white;
 }
 
 .stat-icon-purple {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: #5a5a5a;
   color: white;
 }
 
@@ -151,14 +151,14 @@
 }
 
 .tab-btn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1a1a1a;
   color: white;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .btn-provider {
   padding: 10px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1a1a1a;
   color: white;
   border: none;
   border-radius: 8px;
@@ -166,12 +166,13 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .btn-provider:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  background: #333;
 }
 
 .btn-logout {
@@ -205,7 +206,7 @@
 }
 
 .btn-action.pay {
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  background: #2d8a6e;
   color: white;
 }
 
@@ -215,7 +216,7 @@
 }
 
 .btn-action.review {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: #404040;
   color: white;
 }
 
@@ -225,7 +226,7 @@
 }
 
 .btn-action.chat {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1a1a1a;
   color: white;
 }
 
@@ -363,7 +364,7 @@
 }
 
 .provider-name svg {
-  color: #667eea;
+  color: #1a1a1a;
 }
 
 .booking-status-badges {
@@ -439,7 +440,7 @@
 .booking-detail svg {
   width: 16px;
   height: 16px;
-  color: #667eea;
+  color: #1a1a1a;
   flex-shrink: 0;
 }
 
@@ -453,7 +454,7 @@
 .booking-detail .price {
   font-size: 22px;
   font-weight: 700;
-  color: #667eea;
+  color: #1a1a1a;
 }
 
 .booking-notes {
@@ -506,7 +507,7 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1a1a1a;
   color: white;
 }
 
@@ -525,7 +526,7 @@
 }
 
 .btn-chat {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: #5a5a5a;
   color: white;
 }
 
@@ -535,7 +536,7 @@
 }
 
 .btn-review {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: #404040;
   color: white;
 }
 
@@ -642,7 +643,7 @@
   width: 50px;
   height: 50px;
   border: 4px solid #f0f0f0;
-  border-top-color: #667eea;
+  border-top-color: #1a1a1a;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -913,7 +914,7 @@
 
 /* Chat button styling */
 .btn-chat {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1a1a1a;
   color: white;
   border: none;
   padding: 10px 20px;

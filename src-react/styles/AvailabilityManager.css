@@ -81,7 +81,7 @@
 
 .date-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #1a1a1a;
 }
 
 .blocked-dates-list {
