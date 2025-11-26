@@ -1,6 +1,7 @@
 # ❌ Cancellazione e Rimborsi
 
 ## Panoramica
+
 Il sistema gestisce automaticamente la cancellazione delle prenotazioni e il rimborso al cliente tramite Stripe.
 
 ## Flusso Cancellazione
@@ -121,7 +122,7 @@ async cancelBooking(bookingId: string, userId: string): Promise<Booking> {
 
   // 4. Processo rimborso se c'è un pagamento
   let refundId: string | null = null;
-  
+
   if (booking.paymentIntentId) {
     try {
       const refund = await stripe.refunds.create({
@@ -178,13 +179,19 @@ async cancelBooking(bookingId: string): Promise<void> {
 ```tsx
 // ClientDashboard.tsx
 const handleCancelBooking = async (bookingId: string) => {
-  if (!confirm("Sei sicuro di voler cancellare questa prenotazione? Il rimborso sarà automatico.")) {
+  if (
+    !confirm(
+      "Sei sicuro di voler cancellare questa prenotazione? Il rimborso sarà automatico."
+    )
+  ) {
     return;
   }
 
   try {
     await bookingService.cancelBooking(bookingId);
-    toast.success("Prenotazione cancellata con successo! Il rimborso è in elaborazione.");
+    toast.success(
+      "Prenotazione cancellata con successo! Il rimborso è in elaborazione."
+    );
     loadBookings(); // Refresh lista
   } catch (error) {
     toast.error(error.message);
@@ -192,14 +199,16 @@ const handleCancelBooking = async (bookingId: string) => {
 };
 
 // Bottone cancella (solo per prenotazioni pending/confirmed)
-{booking.status === "pending" || booking.status === "confirmed" ? (
-  <button 
-    onClick={() => handleCancelBooking(booking.id)}
-    className="btn-cancel"
-  >
-    Cancella
-  </button>
-) : null}
+{
+  booking.status === "pending" || booking.status === "confirmed" ? (
+    <button
+      onClick={() => handleCancelBooking(booking.id)}
+      className="btn-cancel"
+    >
+      Cancella
+    </button>
+  ) : null;
+}
 ```
 
 ## Stati Prenotazione
@@ -221,12 +230,12 @@ const handleCancelBooking = async (bookingId: string) => {
   └──────────────────────┘
 ```
 
-| Stato | Descrizione | Cancellabile | Rimborso |
-|-------|-------------|--------------|----------|
-| `pending` | In attesa conferma fornitore | ✅ Sì | ✅ 100% |
-| `confirmed` | Confermato dal fornitore | ✅ Sì | ✅ 100% |
-| `completed` | Servizio completato | ❌ No | ❌ No |
-| `cancelled` | Cancellato | ❌ Già cancellato | - |
+| Stato       | Descrizione                  | Cancellabile      | Rimborso |
+| ----------- | ---------------------------- | ----------------- | -------- |
+| `pending`   | In attesa conferma fornitore | ✅ Sì             | ✅ 100%  |
+| `confirmed` | Confermato dal fornitore     | ✅ Sì             | ✅ 100%  |
+| `completed` | Servizio completato          | ❌ No             | ❌ No    |
+| `cancelled` | Cancellato                   | ❌ Già cancellato | -        |
 
 ## Stripe Refund API
 
@@ -245,11 +254,11 @@ const refund = await stripe.refunds.create({
 
 ## Tempi di Rimborso
 
-| Metodo Pagamento | Tempo Stimato |
-|------------------|---------------|
+| Metodo Pagamento | Tempo Stimato          |
+| ---------------- | ---------------------- |
 | Carta di credito | 5-10 giorni lavorativi |
-| Carta di debito | 5-10 giorni lavorativi |
-| SEPA | 5-8 giorni lavorativi |
+| Carta di debito  | 5-10 giorni lavorativi |
+| SEPA             | 5-8 giorni lavorativi  |
 
 ## Policy di Cancellazione (Futura)
 
@@ -280,15 +289,15 @@ await prisma.transactionLog.create({
     metadata: {
       reason: "customer_requested",
       originalPaymentIntent: booking.paymentIntentId,
-    }
-  }
+    },
+  },
 });
 ```
 
 ## Error Handling
 
-| Errore Stripe | Azione |
-|---------------|--------|
-| `charge_already_refunded` | Ignora, già rimborsato |
-| `insufficient_funds` | Notifica admin |
+| Errore Stripe              | Azione                     |
+| -------------------------- | -------------------------- |
+| `charge_already_refunded`  | Ignora, già rimborsato     |
+| `insufficient_funds`       | Notifica admin             |
 | `expired_or_canceled_card` | Notifica cliente via email |

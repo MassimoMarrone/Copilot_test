@@ -1,6 +1,7 @@
 # 🏠 Prenotazione Intelligente
 
 ## Panoramica
+
 Il sistema di prenotazione intelligente calcola automaticamente la durata e il prezzo del servizio basandosi sulle caratteristiche dell'appartamento.
 
 ## Flusso Logico Completo
@@ -176,17 +177,17 @@ Il sistema di prenotazione intelligente calcola automaticamente la durata e il p
 // src/services/schedulingService.ts
 
 const SQUARE_METERS_DURATION: Record<string, number> = {
-  "0-50": 120,   // 2 ore - Monolocale/Studio
-  "50-80": 180,  // 3 ore - Bilocale
+  "0-50": 120, // 2 ore - Monolocale/Studio
+  "50-80": 180, // 3 ore - Bilocale
   "80-120": 240, // 4 ore - Trilocale
-  "120+": 300,   // 5 ore - Appartamento grande
+  "120+": 300, // 5 ore - Appartamento grande
 };
 
 const WINDOWS_TIME_ADJUSTMENT: Record<string, number> = {
-  "0": 0,        // Nessuna finestra: +0
-  "1-4": 30,     // Poche finestre: +30 min
-  "4-6": 60,     // Medie finestre: +1 ora
-  "6-10": 120,   // Molte finestre: +2 ore
+  "0": 0, // Nessuna finestra: +0
+  "1-4": 30, // Poche finestre: +30 min
+  "4-6": 60, // Medie finestre: +1 ora
+  "6-10": 120, // Molte finestre: +2 ore
 };
 
 function calculateDuration(squareMeters: string, windows: string): number {
@@ -198,19 +199,20 @@ function calculateDuration(squareMeters: string, windows: string): number {
 
 ## File Coinvolti
 
-| Layer | File | Funzione |
-|-------|------|----------|
-| Frontend | `src-react/components/SmartBookingForm.tsx` | Form 3 step |
-| Frontend | `src-react/services/schedulingService.ts` | API calls |
-| Frontend | `src-react/styles/SmartBookingForm.css` | Stili |
-| Backend | `src/services/schedulingService.ts` | Calcoli |
-| Backend | `src/controllers/schedulingController.ts` | Controller |
-| Backend | `src/routes/scheduling.ts` | Routes API |
-| Backend | `src/services/bookingService.ts` | Creazione booking |
+| Layer    | File                                        | Funzione          |
+| -------- | ------------------------------------------- | ----------------- |
+| Frontend | `src-react/components/SmartBookingForm.tsx` | Form 3 step       |
+| Frontend | `src-react/services/schedulingService.ts`   | API calls         |
+| Frontend | `src-react/styles/SmartBookingForm.css`     | Stili             |
+| Backend  | `src/services/schedulingService.ts`         | Calcoli           |
+| Backend  | `src/controllers/schedulingController.ts`   | Controller        |
+| Backend  | `src/routes/scheduling.ts`                  | Routes API        |
+| Backend  | `src/services/bookingService.ts`            | Creazione booking |
 
 ## API Endpoints
 
 ### GET /api/scheduling/estimate-duration
+
 ```typescript
 // Request
 {
@@ -229,6 +231,7 @@ function calculateDuration(squareMeters: string, windows: string): number {
 ```
 
 ### GET /api/scheduling/available-slots
+
 ```typescript
 // Request
 {
@@ -269,12 +272,12 @@ model Booking {
 
 ```typescript
 // Controllo overlap
-const hasOverlap = existingBookings.some(booking => {
+const hasOverlap = existingBookings.some((booking) => {
   const existingStart = timeToMinutes(booking.startTime);
   const existingEnd = timeToMinutes(booking.endTime);
   const newStart = timeToMinutes(startTime);
   const newEnd = timeToMinutes(endTime);
-  
+
   // Overlap se: newStart < existingEnd AND newEnd > existingStart
   return newStart < existingEnd && newEnd > existingStart;
 });

@@ -3,7 +3,9 @@ import { useAuth } from "../context/AuthContext";
 import ServiceReviewsModal from "../components/ServiceReviewsModal";
 import SearchBar from "../components/SearchBar";
 import ServiceMap from "../components/ServiceMap";
-import SmartBookingForm, { SmartBookingData } from "../components/SmartBookingForm";
+import SmartBookingForm, {
+  SmartBookingData,
+} from "../components/SmartBookingForm";
 import { servicesService, Service } from "../services/servicesService";
 import { bookingService } from "../services/bookingService";
 import "../styles/ServicesPage.css";
@@ -356,7 +358,10 @@ const ServicesPage: React.FC = () => {
       {/* Booking Modal with Smart Booking Form */}
       {showBookingModal && selectedService && (
         <div className="modal-overlay" onClick={closeBookingModal}>
-          <div className="modal-content smart-booking-modal" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="modal-content smart-booking-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button className="modal-close" onClick={closeBookingModal}>
               &times;
             </button>

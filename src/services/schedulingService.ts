@@ -12,10 +12,10 @@ const SQUARE_METERS_DURATION: Record<string, number> = {
 
 // Windows adjustment in minutes based on count
 const WINDOWS_TIME_ADJUSTMENT: Record<number, number> = {
-  0: 0,     // 0 finestre: tempo base invariato
-  2: 30,    // 1-4 finestre: +30 min
-  5: 60,    // 4-6 finestre: +1 ora
-  8: 120,   // 6-10 finestre: +2 ore
+  0: 0, // 0 finestre: tempo base invariato
+  2: 30, // 1-4 finestre: +30 min
+  5: 60, // 4-6 finestre: +1 ora
+  8: 120, // 6-10 finestre: +2 ore
 };
 
 export interface TimeSlot {

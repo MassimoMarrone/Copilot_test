@@ -1,6 +1,7 @@
 # 🗺️ Ricerca Geografica e Mappa
 
 ## Panoramica
+
 Il sistema utilizza Google Maps API e PostGIS per la ricerca geografica dei servizi, permettendo agli utenti di trovare fornitori nella loro area.
 
 ## Architettura
@@ -42,13 +43,18 @@ interface Props {
   placeholder?: string;
 }
 
-const AddressAutocomplete: React.FC<Props> = ({ value, onChange, placeholder }) => {
+const AddressAutocomplete: React.FC<Props> = ({
+  value,
+  onChange,
+  placeholder,
+}) => {
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_KEY,
     libraries: ["places"],
   });
 
-  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+  const [autocomplete, setAutocomplete] =
+    useState<google.maps.places.Autocomplete | null>(null);
 
   const onPlaceChanged = () => {
     if (autocomplete) {
@@ -88,7 +94,12 @@ const AddressAutocomplete: React.FC<Props> = ({ value, onChange, placeholder }) 
 
 ```tsx
 // src-react/components/ServiceMap.tsx
-import { GoogleMap, MarkerF, InfoWindowF, CircleF } from "@react-google-maps/api";
+import {
+  GoogleMap,
+  MarkerF,
+  InfoWindowF,
+  CircleF,
+} from "@react-google-maps/api";
 
 interface Props {
   services: Service[];
@@ -97,7 +108,12 @@ interface Props {
   onServiceSelect?: (service: Service) => void;
 }
 
-const ServiceMap: React.FC<Props> = ({ services, center, radius, onServiceSelect }) => {
+const ServiceMap: React.FC<Props> = ({
+  services,
+  center,
+  radius,
+  onServiceSelect,
+}) => {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
 
   const mapOptions = {
@@ -154,16 +170,18 @@ const ServiceMap: React.FC<Props> = ({ services, center, radius, onServiceSelect
       {/* Info Window */}
       {selectedService && (
         <InfoWindowF
-          position={{ 
-            lat: selectedService.location.lat, 
-            lng: selectedService.location.lng 
+          position={{
+            lat: selectedService.location.lat,
+            lng: selectedService.location.lng,
           }}
           onCloseClick={() => setSelectedService(null)}
         >
           <div className="map-info-window">
             <img src={selectedService.images[0]} alt="" />
             <h4>{selectedService.name}</h4>
-            <p>€{selectedService.price}/ora • ⭐{selectedService.rating}</p>
+            <p>
+              €{selectedService.price}/ora • ⭐{selectedService.rating}
+            </p>
             <button onClick={() => onServiceSelect?.(selectedService)}>
               Prenota
             </button>
@@ -213,10 +231,14 @@ async function searchByLocation(params: GeoSearchParams) {
         ${radiusMeters}
       )
       ${category ? Prisma.sql`AND s.category = ${category}` : Prisma.empty}
-      ${query ? Prisma.sql`AND (
+      ${
+        query
+          ? Prisma.sql`AND (
         s.name ILIKE ${`%${query}%`} 
         OR s.description ILIKE ${`%${query}%`}
-      )` : Prisma.empty}
+      )`
+          : Prisma.empty
+      }
     ORDER BY "distanceKm" ASC
   `;
 
@@ -284,8 +306,8 @@ async function searchByLocation(params: GeoSearchParams) {
 ```typescript
 // Verifica se il fornitore copre una determinata posizione
 async function providerCoversLocation(
-  serviceId: string, 
-  clientLat: number, 
+  serviceId: string,
+  clientLat: number,
   clientLng: number
 ): Promise<boolean> {
   const result = await prisma.$queryRaw<[{ covers: boolean }]>`
@@ -309,16 +331,16 @@ async function providerCoversLocation(
 CREATE EXTENSION IF NOT EXISTS postgis;
 
 -- Creare colonna geography
-ALTER TABLE "Service" 
+ALTER TABLE "Service"
 ADD COLUMN location geography(Point, 4326);
 
 -- Indice spaziale per performance
-CREATE INDEX idx_service_location 
-ON "Service" 
+CREATE INDEX idx_service_location
+ON "Service"
 USING GIST (location);
 
 -- Aggiornare location da lat/lng esistenti
-UPDATE "Service" 
+UPDATE "Service"
 SET location = ST_SetSRID(ST_MakePoint(lng, lat), 4326)::geography
 WHERE lat IS NOT NULL AND lng IS NOT NULL;
 ```
@@ -334,15 +356,11 @@ function getCurrentPosition(): Promise<GeolocationPosition> {
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      resolve,
-      reject,
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 300000, // Cache 5 minuti
-      }
-    );
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 300000, // Cache 5 minuti
+    });
   });
 }
 

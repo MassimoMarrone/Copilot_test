@@ -1,6 +1,7 @@
 # ⭐ Sistema Recensioni
 
 ## Panoramica
+
 Il sistema recensioni permette ai clienti di valutare i servizi ricevuti e ai fornitori di ricevere feedback per migliorare.
 
 ## Flusso Recensione
@@ -76,35 +77,39 @@ interface ReviewModalProps {
   onSubmit: (review: ReviewData) => void;
 }
 
-const ReviewModal: React.FC<ReviewModalProps> = ({ booking, onClose, onSubmit }) => {
+const ReviewModal: React.FC<ReviewModalProps> = ({
+  booking,
+  onClose,
+  onSubmit,
+}) => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
-  const [comment, setComment] = useState('');
+  const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (rating === 0) {
-      showToast({ type: 'error', message: 'Seleziona un punteggio' });
+      showToast({ type: "error", message: "Seleziona un punteggio" });
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await api.post('/reviews', {
+      await api.post("/reviews", {
         bookingId: booking.id,
         serviceId: booking.serviceId,
         providerId: booking.service.providerId,
         rating,
         comment,
       });
-      
-      showToast({ type: 'success', message: 'Recensione pubblicata!' });
+
+      showToast({ type: "success", message: "Recensione pubblicata!" });
       onSubmit({ rating, comment });
       onClose();
     } catch (error) {
-      showToast({ type: 'error', message: 'Errore durante l\'invio' });
+      showToast({ type: "error", message: "Errore durante l'invio" });
     } finally {
       setIsSubmitting(false);
     }
@@ -112,11 +117,16 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ booking, onClose, onSubmit })
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content review-modal" onClick={e => e.stopPropagation()}>
-        <button className="close-button" onClick={onClose}>×</button>
-        
+      <div
+        className="modal-content review-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button className="close-button" onClick={onClose}>
+          ×
+        </button>
+
         <h2>Lascia una recensione</h2>
-        
+
         <div className="service-info">
           <img src={booking.service.images[0]} alt="" />
           <div>
@@ -135,20 +145,20 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ booking, onClose, onSubmit })
                 <button
                   key={star}
                   type="button"
-                  className={`star ${star <= (hoverRating || rating) ? 'active' : ''}`}
+                  className={`star ${
+                    star <= (hoverRating || rating) ? "active" : ""
+                  }`}
                   onClick={() => setRating(star)}
                   onMouseEnter={() => setHoverRating(star)}
                   onMouseLeave={() => setHoverRating(0)}
                 >
                   <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                   </svg>
                 </button>
               ))}
             </div>
-            <span className="rating-label">
-              {getRatingLabel(rating)}
-            </span>
+            <span className="rating-label">{getRatingLabel(rating)}</span>
           </div>
 
           {/* Comment */}
@@ -164,12 +174,12 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ booking, onClose, onSubmit })
             <span className="char-count">{comment.length}/500</span>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="submit-button"
             disabled={rating === 0 || isSubmitting}
           >
-            {isSubmitting ? 'Invio...' : 'Pubblica Recensione'}
+            {isSubmitting ? "Invio..." : "Pubblica Recensione"}
           </button>
         </form>
       </div>
@@ -179,12 +189,12 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ booking, onClose, onSubmit })
 
 function getRatingLabel(rating: number): string {
   const labels = {
-    0: '',
-    1: 'Pessimo',
-    2: 'Scarso',
-    3: 'Nella media',
-    4: 'Buono',
-    5: 'Eccellente',
+    0: "",
+    1: "Pessimo",
+    2: "Scarso",
+    3: "Nella media",
+    4: "Buono",
+    5: "Eccellente",
   };
   return labels[rating as keyof typeof labels];
 }
@@ -214,24 +224,30 @@ const ServiceReviewsModal: React.FC<Props> = ({ serviceId, onClose }) => {
       {stats && (
         <div className="reviews-stats">
           <div className="overall-rating">
-            <span className="rating-number">{stats.averageRating.toFixed(1)}</span>
+            <span className="rating-number">
+              {stats.averageRating.toFixed(1)}
+            </span>
             <StarRating rating={stats.averageRating} />
-            <span className="total-reviews">{stats.totalReviews} recensioni</span>
+            <span className="total-reviews">
+              {stats.totalReviews} recensioni
+            </span>
           </div>
 
           <div className="rating-breakdown">
             {[5, 4, 3, 2, 1].map((star) => (
-              <div 
-                key={star} 
-                className={`rating-bar ${filter === star ? 'active' : ''}`}
+              <div
+                key={star}
+                className={`rating-bar ${filter === star ? "active" : ""}`}
                 onClick={() => setFilter(filter === star ? null : star)}
               >
                 <span>{star}⭐</span>
                 <div className="bar">
-                  <div 
-                    className="fill" 
-                    style={{ 
-                      width: `${(stats.distribution[star] / stats.totalReviews) * 100}%` 
+                  <div
+                    className="fill"
+                    style={{
+                      width: `${
+                        (stats.distribution[star] / stats.totalReviews) * 100
+                      }%`,
                     }}
                   />
                 </div>
@@ -247,16 +263,18 @@ const ServiceReviewsModal: React.FC<Props> = ({ serviceId, onClose }) => {
         {reviews.map((review) => (
           <div key={review.id} className="review-item">
             <div className="review-header">
-              <img 
-                src={review.user.avatar || '/default-avatar.png'} 
-                alt="" 
+              <img
+                src={review.user.avatar || "/default-avatar.png"}
+                alt=""
                 className="reviewer-avatar"
               />
               <div>
                 <span className="reviewer-name">{review.user.name}</span>
                 <StarRating rating={review.rating} size="small" />
               </div>
-              <span className="review-date">{formatDate(review.createdAt)}</span>
+              <span className="review-date">
+                {formatDate(review.createdAt)}
+              </span>
             </div>
             {review.comment && (
               <p className="review-comment">{review.comment}</p>
@@ -286,15 +304,16 @@ interface CreateReviewParams {
 
 export const reviewService = {
   async createReview(params: CreateReviewParams) {
-    const { bookingId, serviceId, providerId, userId, rating, comment } = params;
+    const { bookingId, serviceId, providerId, userId, rating, comment } =
+      params;
 
     // Verifica che la prenotazione esista e sia completata
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
     });
 
-    if (!booking || booking.status !== 'completed') {
-      throw new Error('Prenotazione non valida o non completata');
+    if (!booking || booking.status !== "completed") {
+      throw new Error("Prenotazione non valida o non completata");
     }
 
     // Verifica che non esista già una recensione
@@ -303,7 +322,7 @@ export const reviewService = {
     });
 
     if (existingReview) {
-      throw new Error('Hai già recensito questo servizio');
+      throw new Error("Hai già recensito questo servizio");
     }
 
     // Crea recensione
@@ -324,9 +343,9 @@ export const reviewService = {
     // Notifica fornitore
     await notificationService.createNotification({
       userId: providerId,
-      title: 'Nuova recensione!',
+      title: "Nuova recensione!",
       message: `Hai ricevuto una recensione ${rating}⭐`,
-      type: 'info',
+      type: "info",
     });
 
     return review;
@@ -361,11 +380,11 @@ export const reviewService = {
           select: { name: true, avatar: true },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     const stats = await prisma.review.groupBy({
-      by: ['rating'],
+      by: ["rating"],
       where: { serviceId },
       _count: { rating: true },
     });
@@ -387,12 +406,12 @@ model Review {
   rating     Int      // 1-5
   comment    String?
   createdAt  DateTime @default(now())
-  
+
   booking    Booking  @relation(fields: [bookingId])
   service    Service  @relation(fields: [serviceId])
   provider   User     @relation("ProviderReviews", fields: [providerId])
   user       User     @relation("UserReviews", fields: [userId])
-  
+
   @@index([serviceId])
   @@index([providerId])
 }
@@ -400,12 +419,12 @@ model Review {
 
 ## API Endpoints
 
-| Metodo | Endpoint | Descrizione |
-|--------|----------|-------------|
-| POST | `/api/reviews` | Crea nuova recensione |
-| GET | `/api/reviews/service/:id` | Recensioni di un servizio |
-| GET | `/api/reviews/provider/:id` | Recensioni di un fornitore |
-| GET | `/api/reviews/my-reviews` | Le mie recensioni |
+| Metodo | Endpoint                    | Descrizione                |
+| ------ | --------------------------- | -------------------------- |
+| POST   | `/api/reviews`              | Crea nuova recensione      |
+| GET    | `/api/reviews/service/:id`  | Recensioni di un servizio  |
+| GET    | `/api/reviews/provider/:id` | Recensioni di un fornitore |
+| GET    | `/api/reviews/my-reviews`   | Le mie recensioni          |
 
 ## Componente StarRating
 
@@ -413,14 +432,14 @@ model Review {
 // src-react/components/StarRating.tsx
 interface StarRatingProps {
   rating: number;
-  size?: 'small' | 'medium' | 'large';
+  size?: "small" | "medium" | "large";
   showNumber?: boolean;
 }
 
-const StarRating: React.FC<StarRatingProps> = ({ 
-  rating, 
-  size = 'medium',
-  showNumber = false 
+const StarRating: React.FC<StarRatingProps> = ({
+  rating,
+  size = "medium",
+  showNumber = false,
 }) => {
   const fullStars = Math.floor(rating);
   const hasHalfStar = rating % 1 >= 0.5;
@@ -443,10 +462,10 @@ const StarRating: React.FC<StarRatingProps> = ({
           viewBox="0 0 24 24"
           className={`star ${
             star <= fullStars
-              ? 'full'
+              ? "full"
               : star === fullStars + 1 && hasHalfStar
-              ? 'half'
-              : 'empty'
+              ? "half"
+              : "empty"
           }`}
         >
           <path
@@ -455,9 +474,7 @@ const StarRating: React.FC<StarRatingProps> = ({
           />
         </svg>
       ))}
-      {showNumber && (
-        <span className="rating-number">{rating.toFixed(1)}</span>
-      )}
+      {showNumber && <span className="rating-number">{rating.toFixed(1)}</span>}
     </div>
   );
 };

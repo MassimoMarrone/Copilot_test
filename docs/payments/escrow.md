@@ -1,6 +1,7 @@
 # 🔒 Sistema Escrow
 
 ## Panoramica
+
 Il sistema escrow trattiene i fondi del cliente fino a quando il servizio non viene completato e verificato. Questo protegge sia il cliente che il fornitore.
 
 ## Come Funziona l'Escrow
@@ -62,13 +63,13 @@ Il sistema escrow trattiene i fondi del cliente fino a quando il servizio non vi
                   └──────────┘
 ```
 
-| Stato | Descrizione | Fondi |
-|-------|-------------|-------|
-| `created` | Payment Intent creato | Non addebitati |
-| `paid` | Pagamento completato | In escrow (Stripe) |
-| `captured` | Servizio completato | In transito |
-| `released` | Fondi rilasciati | Al fornitore |
-| `refunded` | Rimborso effettuato | Tornati al cliente |
+| Stato      | Descrizione           | Fondi              |
+| ---------- | --------------------- | ------------------ |
+| `created`  | Payment Intent creato | Non addebitati     |
+| `paid`     | Pagamento completato  | In escrow (Stripe) |
+| `captured` | Servizio completato   | In transito        |
+| `released` | Fondi rilasciati      | Al fornitore       |
+| `refunded` | Rimborso effettuato   | Tornati al cliente |
 
 ## Flusso Dettagliato
 
@@ -232,21 +233,21 @@ Scenario: Cliente contesta senza motivo
 ```prisma
 model Booking {
   id               String   @id @default(cuid())
-  
+
   // Payment info
   paymentIntentId  String?  // Stripe Payment Intent
   paymentStatus    String   @default("pending")
   totalAmount      Float
-  
+
   // Completion info
   completionPhoto  String?  // URL foto prova
   completionNotes  String?
   completedAt      DateTime?
-  
+
   // Refund info
   refundId         String?  // Stripe Refund ID
   cancelledAt      DateTime?
-  
+
   status           String   @default("pending")
 }
 ```
@@ -255,7 +256,7 @@ model Booking {
 
 ```typescript
 // Esempio calcolo fee
-const totalAmount = 52.50;
+const totalAmount = 52.5;
 const platformFee = totalAmount * 0.05; // 5%
 const providerAmount = totalAmount - platformFee;
 

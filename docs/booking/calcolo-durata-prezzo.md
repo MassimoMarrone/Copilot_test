@@ -1,6 +1,7 @@
 # ⏱️ Calcolo Durata e Prezzo
 
 ## Panoramica
+
 Il sistema calcola automaticamente la durata del servizio e il prezzo finale basandosi sulle caratteristiche dell'appartamento e la tariffa oraria del fornitore.
 
 ## Formula di Calcolo
@@ -34,21 +35,21 @@ Il sistema calcola automaticamente la durata del servizio e il prezzo finale bas
 
 ### Durata Base per Metratura
 
-| Range | Descrizione | Durata Base | Motivazione |
-|-------|-------------|-------------|-------------|
-| 0-50 m² | Monolocale/Studio | 2 ore (120 min) | Spazi ridotti, pulizia veloce |
-| 50-80 m² | Bilocale | 3 ore (180 min) | Standard medio |
-| 80-120 m² | Trilocale | 4 ore (240 min) | Più stanze e bagni |
-| 120+ m² | Grande appartamento | 5 ore (300 min) | Spazi ampi, più superfici |
+| Range     | Descrizione         | Durata Base     | Motivazione                   |
+| --------- | ------------------- | --------------- | ----------------------------- |
+| 0-50 m²   | Monolocale/Studio   | 2 ore (120 min) | Spazi ridotti, pulizia veloce |
+| 50-80 m²  | Bilocale            | 3 ore (180 min) | Standard medio                |
+| 80-120 m² | Trilocale           | 4 ore (240 min) | Più stanze e bagni            |
+| 120+ m²   | Grande appartamento | 5 ore (300 min) | Spazi ampi, più superfici     |
 
 ### Extra Tempo per Finestre
 
-| Range Finestre | Tempo Extra | Motivazione |
-|----------------|-------------|-------------|
-| 0 | +0 min | Nessuna finestra da pulire |
-| 1-4 | +30 min | Poche finestre standard |
-| 4-6 | +1 ora (60 min) | Numero medio di finestre |
-| 6-10 | +2 ore (120 min) | Molte finestre/vetrate |
+| Range Finestre | Tempo Extra      | Motivazione                |
+| -------------- | ---------------- | -------------------------- |
+| 0              | +0 min           | Nessuna finestra da pulire |
+| 1-4            | +30 min          | Poche finestre standard    |
+| 4-6            | +1 ora (60 min)  | Numero medio di finestre   |
+| 6-10           | +2 ore (120 min) | Molte finestre/vetrate     |
 
 ## Flusso di Calcolo
 
@@ -140,6 +141,7 @@ Il sistema calcola automaticamente la durata del servizio e il prezzo finale bas
 ## Codice Implementazione
 
 ### Backend - schedulingService.ts
+
 ```typescript
 const SQUARE_METERS_DURATION: Record<string, number> = {
   "0-50": 120,
@@ -150,9 +152,9 @@ const SQUARE_METERS_DURATION: Record<string, number> = {
 
 const WINDOWS_TIME_ADJUSTMENT: Record<number, number> = {
   0: 0,
-  2: 30,   // Rappresenta range "1-4"
-  5: 60,   // Rappresenta range "4-6"
-  8: 120,  // Rappresenta range "6-10"
+  2: 30, // Rappresenta range "1-4"
+  5: 60, // Rappresenta range "4-6"
+  8: 120, // Rappresenta range "6-10"
 };
 
 function calculateEstimatedDuration(
@@ -161,7 +163,7 @@ function calculateEstimatedDuration(
 ): EstimatedDuration {
   const baseDuration = SQUARE_METERS_DURATION[squareMetersRange] || 180;
   const windowsAdjustment = WINDOWS_TIME_ADJUSTMENT[windowsCount] || 0;
-  
+
   const totalMinutes = Math.max(60, baseDuration + windowsAdjustment);
   const hours = Math.floor(totalMinutes / 60);
   const remainingMinutes = totalMinutes % 60;
@@ -169,9 +171,8 @@ function calculateEstimatedDuration(
   return {
     minutes: totalMinutes,
     hours: totalMinutes / 60,
-    formatted: remainingMinutes > 0 
-      ? `${hours}h ${remainingMinutes}min` 
-      : `${hours}h`,
+    formatted:
+      remainingMinutes > 0 ? `${hours}h ${remainingMinutes}min` : `${hours}h`,
   };
 }
 
@@ -194,16 +195,22 @@ function calculatePrice(
 
 function getAverageSqm(range: string): number {
   switch (range) {
-    case "0-50": return 35;
-    case "50-80": return 65;
-    case "80-120": return 100;
-    case "120+": return 150;
-    default: return 65;
+    case "0-50":
+      return 35;
+    case "50-80":
+      return 65;
+    case "80-120":
+      return 100;
+    case "120+":
+      return 150;
+    default:
+      return 65;
   }
 }
 ```
 
 ### Frontend - SmartBookingForm.tsx
+
 ```typescript
 // Calcolo locale (per preview immediata)
 useEffect(() => {
@@ -228,11 +235,11 @@ const fetchEstimate = async () => {
 
 ## Tipi di Prezzo Supportati
 
-| Tipo | Descrizione | Formula |
-|------|-------------|---------|
-| `hourly` | Tariffa oraria | `price × hours` |
-| `fixed` | Prezzo fisso | `price` (invariato) |
-| `per_sqm` | Prezzo al m² | `price × avgSqm` |
+| Tipo      | Descrizione    | Formula             |
+| --------- | -------------- | ------------------- |
+| `hourly`  | Tariffa oraria | `price × hours`     |
+| `fixed`   | Prezzo fisso   | `price` (invariato) |
+| `per_sqm` | Prezzo al m²   | `price × avgSqm`    |
 
 ## Edge Cases
 

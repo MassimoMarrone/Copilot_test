@@ -1,6 +1,7 @@
 # 👨‍💼 Dashboard Fornitore
 
 ## Panoramica
+
 La dashboard fornitore è il centro di controllo per chi offre servizi sulla piattaforma. Permette di gestire prenotazioni, servizi, guadagni e comunicazioni.
 
 ## Struttura Dashboard
@@ -97,27 +98,27 @@ Response:
 // ProviderDashboard.tsx
 const BookingActions: React.FC<{ booking: Booking }> = ({ booking }) => {
   const handleConfirm = async () => {
-    await api.put(`/bookings/${booking.id}/status`, { status: 'confirmed' });
+    await api.put(`/bookings/${booking.id}/status`, { status: "confirmed" });
     // Notifica al cliente
-    showToast({ type: 'success', message: 'Prenotazione confermata!' });
+    showToast({ type: "success", message: "Prenotazione confermata!" });
   };
 
   const handleComplete = async () => {
-    await api.put(`/bookings/${booking.id}/status`, { status: 'completed' });
+    await api.put(`/bookings/${booking.id}/status`, { status: "completed" });
     // Trigger rilascio pagamento escrow
   };
 
   const handleCancel = async (reason: string) => {
-    await api.put(`/bookings/${booking.id}/status`, { 
-      status: 'cancelled',
-      reason 
+    await api.put(`/bookings/${booking.id}/status`, {
+      status: "cancelled",
+      reason,
     });
     // Trigger rimborso automatico
   };
 
   return (
     <div className="booking-actions">
-      {booking.status === 'pending' && (
+      {booking.status === "pending" && (
         <>
           <button onClick={handleConfirm} className="btn-confirm">
             ✓ Conferma
@@ -128,7 +129,7 @@ const BookingActions: React.FC<{ booking: Booking }> = ({ booking }) => {
         </>
       )}
 
-      {booking.status === 'confirmed' && (
+      {booking.status === "confirmed" && (
         <>
           <button onClick={handleComplete} className="btn-complete">
             🎉 Completato
@@ -149,14 +150,14 @@ const BookingActions: React.FC<{ booking: Booking }> = ({ booking }) => {
 // Vista calendario settimanale/mensile delle prenotazioni
 const ProviderCalendar: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [view, setView] = useState<'week' | 'month'>('week');
+  const [view, setView] = useState<"week" | "month">("week");
 
   // Colori per stato
   const statusColors = {
-    pending: '#f59e0b',    // Arancione
-    confirmed: '#22c55e',  // Verde
-    completed: '#3b82f6',  // Blu
-    cancelled: '#ef4444',  // Rosso
+    pending: "#f59e0b", // Arancione
+    confirmed: "#22c55e", // Verde
+    completed: "#3b82f6", // Blu
+    cancelled: "#ef4444", // Rosso
   };
 
   return (
@@ -164,22 +165,22 @@ const ProviderCalendar: React.FC = () => {
       <div className="calendar-header">
         <h3>Il Mio Calendario</h3>
         <div className="view-toggle">
-          <button 
-            className={view === 'week' ? 'active' : ''} 
-            onClick={() => setView('week')}
+          <button
+            className={view === "week" ? "active" : ""}
+            onClick={() => setView("week")}
           >
             Settimana
           </button>
-          <button 
-            className={view === 'month' ? 'active' : ''} 
-            onClick={() => setView('month')}
+          <button
+            className={view === "month" ? "active" : ""}
+            onClick={() => setView("month")}
           >
             Mese
           </button>
         </div>
       </div>
 
-      <CalendarGrid 
+      <CalendarGrid
         bookings={bookings}
         view={view}
         statusColors={statusColors}
@@ -232,35 +233,45 @@ const ProviderCalendar: React.FC = () => {
 
 ```tsx
 // AvailabilityManager.tsx
-const AvailabilityManager: React.FC<{ serviceId: string }> = ({ serviceId }) => {
-  const days = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
+const AvailabilityManager: React.FC<{ serviceId: string }> = ({
+  serviceId,
+}) => {
+  const days = [
+    "Lunedì",
+    "Martedì",
+    "Mercoledì",
+    "Giovedì",
+    "Venerdì",
+    "Sabato",
+    "Domenica",
+  ];
   const [availability, setAvailability] = useState<DayAvailability[]>([]);
 
   return (
     <div className="availability-manager">
       <h3>Gestisci Disponibilità</h3>
-      
+
       {days.map((day, index) => {
-        const dayData = availability.find(a => a.day === index + 1);
-        
+        const dayData = availability.find((a) => a.day === index + 1);
+
         return (
           <div key={day} className="day-row">
             <div className="day-toggle">
-              <Switch 
+              <Switch
                 checked={dayData?.enabled ?? false}
                 onChange={(enabled) => updateDay(index + 1, { enabled })}
               />
               <span>{day}</span>
             </div>
-            
+
             {dayData?.enabled && (
               <div className="time-range">
-                <TimePicker 
+                <TimePicker
                   value={dayData.startTime}
                   onChange={(time) => updateDay(index + 1, { startTime: time })}
                 />
                 <span>-</span>
-                <TimePicker 
+                <TimePicker
                   value={dayData.endTime}
                   onChange={(time) => updateDay(index + 1, { endTime: time })}
                 />
@@ -284,50 +295,52 @@ const AvailabilityManager: React.FC<{ serviceId: string }> = ({ serviceId }) => 
 
 ## API Dashboard Provider
 
-| Metodo | Endpoint | Descrizione |
-|--------|----------|-------------|
-| GET | `/api/provider/stats` | Statistiche generali |
-| GET | `/api/provider/bookings` | Lista prenotazioni |
-| GET | `/api/provider/earnings` | Storico guadagni |
-| GET | `/api/provider/reviews` | Recensioni ricevute |
-| PUT | `/api/bookings/:id/status` | Aggiorna stato prenotazione |
-| POST | `/api/services` | Crea nuovo servizio |
-| PUT | `/api/services/:id` | Modifica servizio |
-| DELETE | `/api/services/:id` | Elimina servizio |
+| Metodo | Endpoint                   | Descrizione                 |
+| ------ | -------------------------- | --------------------------- |
+| GET    | `/api/provider/stats`      | Statistiche generali        |
+| GET    | `/api/provider/bookings`   | Lista prenotazioni          |
+| GET    | `/api/provider/earnings`   | Storico guadagni            |
+| GET    | `/api/provider/reviews`    | Recensioni ricevute         |
+| PUT    | `/api/bookings/:id/status` | Aggiorna stato prenotazione |
+| POST   | `/api/services`            | Crea nuovo servizio         |
+| PUT    | `/api/services/:id`        | Modifica servizio           |
+| DELETE | `/api/services/:id`        | Elimina servizio            |
 
 ## Componente Principale
 
 ```tsx
 // src-react/components/ProviderDashboard.tsx
 const ProviderDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'services' | 'earnings'>('overview');
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "bookings" | "services" | "earnings"
+  >("overview");
   const [stats, setStats] = useState<ProviderStats | null>(null);
 
   return (
     <div className="provider-dashboard">
       <aside className="sidebar">
         <nav>
-          <button 
-            className={activeTab === 'overview' ? 'active' : ''} 
-            onClick={() => setActiveTab('overview')}
+          <button
+            className={activeTab === "overview" ? "active" : ""}
+            onClick={() => setActiveTab("overview")}
           >
             📊 Panoramica
           </button>
-          <button 
-            className={activeTab === 'bookings' ? 'active' : ''} 
-            onClick={() => setActiveTab('bookings')}
+          <button
+            className={activeTab === "bookings" ? "active" : ""}
+            onClick={() => setActiveTab("bookings")}
           >
             📅 Prenotazioni
           </button>
-          <button 
-            className={activeTab === 'services' ? 'active' : ''} 
-            onClick={() => setActiveTab('services')}
+          <button
+            className={activeTab === "services" ? "active" : ""}
+            onClick={() => setActiveTab("services")}
           >
             🔧 I Miei Servizi
           </button>
-          <button 
-            className={activeTab === 'earnings' ? 'active' : ''} 
-            onClick={() => setActiveTab('earnings')}
+          <button
+            className={activeTab === "earnings" ? "active" : ""}
+            onClick={() => setActiveTab("earnings")}
           >
             💰 Guadagni
           </button>
@@ -335,10 +348,10 @@ const ProviderDashboard: React.FC = () => {
       </aside>
 
       <main className="content">
-        {activeTab === 'overview' && <OverviewTab stats={stats} />}
-        {activeTab === 'bookings' && <BookingsTab />}
-        {activeTab === 'services' && <ServicesTab />}
-        {activeTab === 'earnings' && <EarningsTab />}
+        {activeTab === "overview" && <OverviewTab stats={stats} />}
+        {activeTab === "bookings" && <BookingsTab />}
+        {activeTab === "services" && <ServicesTab />}
+        {activeTab === "earnings" && <EarningsTab />}
       </main>
     </div>
   );

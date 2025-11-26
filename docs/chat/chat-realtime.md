@@ -1,6 +1,7 @@
 # 💬 Chat Real-time
 
 ## Panoramica
+
 Il sistema di chat permette comunicazione istantanea tra clienti e fornitori utilizzando Socket.IO.
 
 ## Architettura
@@ -80,25 +81,25 @@ CLIENTE                    SERVER                    FORNITORE
 
 ### Client → Server
 
-| Evento | Payload | Descrizione |
-|--------|---------|-------------|
-| `authenticate` | `{ token }` | Autentica connessione |
-| `joinRoom` | `{ conversationId }` | Entra in una conversazione |
-| `leaveRoom` | `{ conversationId }` | Esce dalla conversazione |
-| `sendMessage` | `{ to, content, bookingId? }` | Invia messaggio |
-| `markAsRead` | `{ conversationId }` | Segna messaggi come letti |
-| `typing` | `{ conversationId, isTyping }` | Indicatore digitazione |
+| Evento         | Payload                        | Descrizione                |
+| -------------- | ------------------------------ | -------------------------- |
+| `authenticate` | `{ token }`                    | Autentica connessione      |
+| `joinRoom`     | `{ conversationId }`           | Entra in una conversazione |
+| `leaveRoom`    | `{ conversationId }`           | Esce dalla conversazione   |
+| `sendMessage`  | `{ to, content, bookingId? }`  | Invia messaggio            |
+| `markAsRead`   | `{ conversationId }`           | Segna messaggi come letti  |
+| `typing`       | `{ conversationId, isTyping }` | Indicatore digitazione     |
 
 ### Server → Client
 
-| Evento | Payload | Descrizione |
-|--------|---------|-------------|
-| `authenticated` | `{ success, userId }` | Conferma autenticazione |
-| `newMessage` | `{ message }` | Nuovo messaggio ricevuto |
-| `messageSent` | `{ messageId, timestamp }` | Conferma invio |
-| `messagesRead` | `{ conversationId, readBy }` | Notifica lettura |
-| `userTyping` | `{ userId, isTyping }` | Utente sta scrivendo |
-| `error` | `{ message }` | Errore |
+| Evento          | Payload                      | Descrizione              |
+| --------------- | ---------------------------- | ------------------------ |
+| `authenticated` | `{ success, userId }`        | Conferma autenticazione  |
+| `newMessage`    | `{ message }`                | Nuovo messaggio ricevuto |
+| `messageSent`   | `{ messageId, timestamp }`   | Conferma invio           |
+| `messagesRead`  | `{ conversationId, readBy }` | Notifica lettura         |
+| `userTyping`    | `{ userId, isTyping }`       | Utente sta scrivendo     |
+| `error`         | `{ message }`                | Errore                   |
 
 ## Implementazione Server
 
@@ -264,7 +265,7 @@ model Conversation {
   bookingId      String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
-  
+
   participant1   User      @relation("ConversationParticipant1")
   participant2   User      @relation("ConversationParticipant2")
   booking        Booking?
@@ -278,7 +279,7 @@ model Message {
   content        String
   read           Boolean      @default(false)
   createdAt      DateTime     @default(now())
-  
+
   conversation   Conversation @relation(fields: [conversationId])
   sender         User         @relation(fields: [senderId])
 }
@@ -295,11 +296,11 @@ const ChatModal: React.FC<Props> = ({ recipientId, bookingId, onClose }) => {
   useEffect(() => {
     // Carica storico messaggi
     loadMessages();
-    
+
     // Setup socket listener
     socketService.onNewMessage = (data) => {
       if (data.conversationId === conversationId) {
-        setMessages(prev => [...prev, data.message]);
+        setMessages((prev) => [...prev, data.message]);
       }
     };
 
@@ -320,20 +321,23 @@ const ChatModal: React.FC<Props> = ({ recipientId, bookingId, onClose }) => {
         <h3>Chat con {recipientName}</h3>
         <button onClick={onClose}>×</button>
       </div>
-      
+
       <div className="chat-messages">
-        {messages.map(msg => (
-          <div key={msg.id} className={msg.senderId === myId ? "sent" : "received"}>
+        {messages.map((msg) => (
+          <div
+            key={msg.id}
+            className={msg.senderId === myId ? "sent" : "received"}
+          >
             {msg.content}
           </div>
         ))}
       </div>
-      
+
       <div className="chat-input">
         <input
           value={newMessage}
-          onChange={e => setNewMessage(e.target.value)}
-          onKeyPress={e => e.key === "Enter" && handleSend()}
+          onChange={(e) => setNewMessage(e.target.value)}
+          onKeyPress={(e) => e.key === "Enter" && handleSend()}
         />
         <button onClick={handleSend}>Invia</button>
       </div>
@@ -349,10 +353,7 @@ const ChatModal: React.FC<Props> = ({ recipientId, bookingId, onClose }) => {
 const unreadCount = await prisma.message.count({
   where: {
     conversation: {
-      OR: [
-        { participant1Id: userId },
-        { participant2Id: userId },
-      ],
+      OR: [{ participant1Id: userId }, { participant2Id: userId }],
     },
     senderId: { not: userId },
     read: false,
@@ -363,7 +364,7 @@ const unreadCount = await prisma.message.count({
 <Link to="/messages">
   Messaggi
   {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
-</Link>
+</Link>;
 ```
 
 ## Performance

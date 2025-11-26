@@ -1,6 +1,7 @@
 # 📅 Gestione Slot Orari
 
 ## Panoramica
+
 Il sistema genera dinamicamente gli slot orari disponibili basandosi sull'orario di lavoro del fornitore e sulle prenotazioni esistenti.
 
 ## Flusso Logico
@@ -144,12 +145,12 @@ async getAvailableSlots(
   date: string,
   requiredDurationMinutes: number
 ): Promise<TimeSlot[]> {
-  
+
   // 1. Fetch service config
   const service = await prisma.service.findUnique({
     where: { id: serviceId },
   });
-  
+
   const workStart = service.workingHoursStart || "08:00";
   const workEnd = service.workingHoursEnd || "18:00";
   const slotDuration = service.slotDurationMinutes || 30;
@@ -174,14 +175,14 @@ async getAvailableSlots(
     startMinutes += slotDuration
   ) {
     const endMinutes = startMinutes + requiredDurationMinutes;
-    
+
     // 4. Check overlap
     const isAvailable = !existingBookings.some((booking) => {
       if (!booking.startTime || !booking.endTime) return true; // Legacy
-      
+
       const bookingStart = timeToMinutes(booking.startTime);
       const bookingEnd = timeToMinutes(booking.endTime);
-      
+
       return startMinutes < bookingEnd && endMinutes > bookingStart;
     });
 
@@ -218,7 +219,7 @@ async validateSlotAvailability(
   startTime: string,
   endTime: string
 ): Promise<boolean> {
-  
+
   const existingBookings = await prisma.booking.findMany({
     where: {
       serviceId,
@@ -232,10 +233,10 @@ async validateSlotAvailability(
 
   for (const booking of existingBookings) {
     if (!booking.startTime || !booking.endTime) return false;
-    
+
     const existingStart = timeToMinutes(booking.startTime);
     const existingEnd = timeToMinutes(booking.endTime);
-    
+
     if (newStart < existingEnd && newEnd > existingStart) {
       return false; // Overlap detected!
     }
@@ -277,26 +278,29 @@ interface Availability {
 
 ```typescript
 // Frontend - SmartBookingForm.tsx
-{availableSlots
-  .filter(slot => slot.available)  // ← Mostra SOLO disponibili
-  .map((slot, index) => (
-    <button
-      key={index}
-      className={`time-slot ${selectedSlot?.startTime === slot.startTime ? "selected" : ""}`}
-      onClick={() => setSelectedSlot(slot)}
-    >
-      {slot.startTime} - {slot.endTime}
-    </button>
-  ))
+{
+  availableSlots
+    .filter((slot) => slot.available) // ← Mostra SOLO disponibili
+    .map((slot, index) => (
+      <button
+        key={index}
+        className={`time-slot ${
+          selectedSlot?.startTime === slot.startTime ? "selected" : ""
+        }`}
+        onClick={() => setSelectedSlot(slot)}
+      >
+        {slot.startTime} - {slot.endTime}
+      </button>
+    ));
 }
 ```
 
 ## Edge Cases Gestiti
 
-| Caso | Comportamento |
-|------|---------------|
-| Nessuno slot disponibile | Messaggio "Nessun orario disponibile per questa data" |
-| Booking legacy (no startTime/endTime) | Blocca tutto il giorno |
-| Giorno non lavorativo | Array vuoto |
-| Data bloccata | Array vuoto |
-| Race condition | Validazione server-side al momento del booking |
+| Caso                                  | Comportamento                                         |
+| ------------------------------------- | ----------------------------------------------------- |
+| Nessuno slot disponibile              | Messaggio "Nessun orario disponibile per questa data" |
+| Booking legacy (no startTime/endTime) | Blocca tutto il giorno                                |
+| Giorno non lavorativo                 | Array vuoto                                           |
+| Data bloccata                         | Array vuoto                                           |
+| Race condition                        | Validazione server-side al momento del booking        |

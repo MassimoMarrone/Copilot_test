@@ -35,7 +35,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
               Il modo più semplice per prenotare servizi di pulizia
               professionali
             </p>
-            <button 
+            <button
               className="btn btn-primary btn-large hero-cta"
               onClick={() => navigate("/services")}
             >
@@ -52,9 +52,18 @@ const LandingPage: React.FC<LandingPageProps> = ({
           <div className="steps-grid">
             <div className="step-card">
               <div className="step-icon">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8"/>
-                  <path d="m21 21-4.35-4.35"/>
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
                 </svg>
               </div>
               <h3>1. Cerca</h3>
@@ -62,11 +71,20 @@ const LandingPage: React.FC<LandingPageProps> = ({
             </div>
             <div className="step-card">
               <div className="step-icon">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                  <line x1="16" y1="2" x2="16" y2="6"/>
-                  <line x1="8" y1="2" x2="8" y2="6"/>
-                  <line x1="3" y1="10" x2="21" y2="10"/>
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
                 </svg>
               </div>
               <h3>2. Prenota</h3>
@@ -74,9 +92,18 @@ const LandingPage: React.FC<LandingPageProps> = ({
             </div>
             <div className="step-card">
               <div className="step-icon">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                  <polyline points="22 4 12 14.01 9 11.01"/>
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
               </div>
               <h3>3. Rilassati</h3>
@@ -93,10 +120,16 @@ const LandingPage: React.FC<LandingPageProps> = ({
             <h2>Pronto a iniziare?</h2>
             <p>Unisciti a migliaia di clienti soddisfatti</p>
             <div className="cta-buttons">
-              <button onClick={onRegisterClick} className="btn btn-primary btn-large">
+              <button
+                onClick={onRegisterClick}
+                className="btn btn-primary btn-large"
+              >
                 Registrati Gratis
               </button>
-              <button onClick={onLoginClick} className="btn btn-secondary btn-large">
+              <button
+                onClick={onLoginClick}
+                className="btn btn-secondary btn-large"
+              >
                 Accedi
               </button>
             </div>

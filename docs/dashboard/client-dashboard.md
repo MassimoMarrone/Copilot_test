@@ -1,6 +1,7 @@
 # 👤 Dashboard Cliente
 
 ## Panoramica
+
 La dashboard cliente permette agli utenti di gestire le proprie prenotazioni, visualizzare lo storico servizi, comunicare con i fornitori e lasciare recensioni.
 
 ## Struttura Dashboard
@@ -56,26 +57,33 @@ La dashboard cliente permette agli utenti di gestire le proprie prenotazioni, vi
 const ClientDashboard: React.FC = () => {
   const { user } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'history' | 'favorites'>('upcoming');
+  const [activeTab, setActiveTab] = useState<
+    "upcoming" | "history" | "favorites"
+  >("upcoming");
 
   useEffect(() => {
     loadBookings();
   }, []);
 
-  const upcomingBookings = bookings.filter(b => 
-    ['pending', 'confirmed'].includes(b.status) && 
-    new Date(b.date) >= new Date()
+  const upcomingBookings = bookings.filter(
+    (b) =>
+      ["pending", "confirmed"].includes(b.status) &&
+      new Date(b.date) >= new Date()
   );
 
-  const pastBookings = bookings.filter(b => 
-    b.status === 'completed' || new Date(b.date) < new Date()
+  const pastBookings = bookings.filter(
+    (b) => b.status === "completed" || new Date(b.date) < new Date()
   );
 
   return (
     <div className="client-dashboard">
       {/* Header Profilo */}
       <div className="profile-header">
-        <img src={user?.avatar || '/default-avatar.png'} alt="" className="avatar" />
+        <img
+          src={user?.avatar || "/default-avatar.png"}
+          alt=""
+          className="avatar"
+        />
         <div className="info">
           <h2>{user?.name}</h2>
           <p>{user?.email}</p>
@@ -83,28 +91,26 @@ const ClientDashboard: React.FC = () => {
             Membro da {formatDate(user?.createdAt)}
           </span>
         </div>
-        <button onClick={() => navigate('/profile')}>
-          Modifica Profilo
-        </button>
+        <button onClick={() => navigate("/profile")}>Modifica Profilo</button>
       </div>
 
       {/* Tabs */}
       <div className="dashboard-tabs">
-        <button 
-          className={activeTab === 'upcoming' ? 'active' : ''}
-          onClick={() => setActiveTab('upcoming')}
+        <button
+          className={activeTab === "upcoming" ? "active" : ""}
+          onClick={() => setActiveTab("upcoming")}
         >
           Prossime ({upcomingBookings.length})
         </button>
-        <button 
-          className={activeTab === 'history' ? 'active' : ''}
-          onClick={() => setActiveTab('history')}
+        <button
+          className={activeTab === "history" ? "active" : ""}
+          onClick={() => setActiveTab("history")}
         >
           Storico
         </button>
-        <button 
-          className={activeTab === 'favorites' ? 'active' : ''}
-          onClick={() => setActiveTab('favorites')}
+        <button
+          className={activeTab === "favorites" ? "active" : ""}
+          onClick={() => setActiveTab("favorites")}
         >
           Preferiti
         </button>
@@ -112,13 +118,11 @@ const ClientDashboard: React.FC = () => {
 
       {/* Contenuto Tab */}
       <div className="tab-content">
-        {activeTab === 'upcoming' && (
+        {activeTab === "upcoming" && (
           <UpcomingBookings bookings={upcomingBookings} />
         )}
-        {activeTab === 'history' && (
-          <BookingHistory bookings={pastBookings} />
-        )}
-        {activeTab === 'favorites' && <FavoriteServices />}
+        {activeTab === "history" && <BookingHistory bookings={pastBookings} />}
+        {activeTab === "favorites" && <FavoriteServices />}
       </div>
     </div>
   );
@@ -214,10 +218,10 @@ const BookingCard: React.FC<{ booking: Booking }> = ({ booking }) => {
   const [showChat, setShowChat] = useState(false);
 
   const statusConfig = {
-    pending: { label: 'In attesa', color: '#f59e0b', icon: '⏳' },
-    confirmed: { label: 'Confermata', color: '#22c55e', icon: '✅' },
-    completed: { label: 'Completata', color: '#3b82f6', icon: '🎉' },
-    cancelled: { label: 'Cancellata', color: '#ef4444', icon: '❌' },
+    pending: { label: "In attesa", color: "#f59e0b", icon: "⏳" },
+    confirmed: { label: "Confermata", color: "#22c55e", icon: "✅" },
+    completed: { label: "Completata", color: "#3b82f6", icon: "🎉" },
+    cancelled: { label: "Cancellata", color: "#ef4444", icon: "❌" },
   };
 
   const status = statusConfig[booking.status];
@@ -232,8 +236,8 @@ const BookingCard: React.FC<{ booking: Booking }> = ({ booking }) => {
             {booking.service.provider.name} • ⭐{booking.service.rating}
           </p>
         </div>
-        <span 
-          className="status-badge" 
+        <span
+          className="status-badge"
           style={{ backgroundColor: status.color }}
         >
           {status.icon} {status.label}
@@ -243,7 +247,9 @@ const BookingCard: React.FC<{ booking: Booking }> = ({ booking }) => {
       <div className="booking-details">
         <div className="detail">
           <span className="icon">📅</span>
-          <span>{formatDate(booking.date)}, {booking.timeSlot}</span>
+          <span>
+            {formatDate(booking.date)}, {booking.timeSlot}
+          </span>
         </div>
         <div className="detail">
           <span className="icon">📍</span>
@@ -260,15 +266,12 @@ const BookingCard: React.FC<{ booking: Booking }> = ({ booking }) => {
       </div>
 
       <div className="booking-actions">
-        <button 
-          onClick={() => setShowChat(true)}
-          className="btn-chat"
-        >
+        <button onClick={() => setShowChat(true)} className="btn-chat">
           💬 Chat
         </button>
-        
-        {['pending', 'confirmed'].includes(booking.status) && (
-          <button 
+
+        {["pending", "confirmed"].includes(booking.status) && (
+          <button
             onClick={() => cancelBooking(booking.id)}
             className="btn-cancel"
           >
@@ -276,8 +279,8 @@ const BookingCard: React.FC<{ booking: Booking }> = ({ booking }) => {
           </button>
         )}
 
-        {booking.status === 'completed' && !booking.hasReview && (
-          <button 
+        {booking.status === "completed" && !booking.hasReview && (
+          <button
             onClick={() => openReviewModal(booking)}
             className="btn-review"
           >
@@ -287,10 +290,7 @@ const BookingCard: React.FC<{ booking: Booking }> = ({ booking }) => {
       </div>
 
       {showChat && (
-        <ChatModal 
-          booking={booking}
-          onClose={() => setShowChat(false)}
-        />
+        <ChatModal booking={booking} onClose={() => setShowChat(false)} />
       )}
     </div>
   );
@@ -305,11 +305,11 @@ const FavoriteServices: React.FC = () => {
   const [favorites, setFavorites] = useState<Service[]>([]);
 
   const toggleFavorite = async (serviceId: string) => {
-    const isFav = favorites.some(f => f.id === serviceId);
-    
+    const isFav = favorites.some((f) => f.id === serviceId);
+
     if (isFav) {
       await api.delete(`/favorites/${serviceId}`);
-      setFavorites(favorites.filter(f => f.id !== serviceId));
+      setFavorites(favorites.filter((f) => f.id !== serviceId));
     } else {
       await api.post(`/favorites/${serviceId}`);
       // Ricarica lista
@@ -321,13 +321,11 @@ const FavoriteServices: React.FC = () => {
       {favorites.length === 0 ? (
         <div className="empty-state">
           <p>Non hai ancora servizi preferiti</p>
-          <button onClick={() => navigate('/search')}>
-            Cerca Servizi
-          </button>
+          <button onClick={() => navigate("/search")}>Cerca Servizi</button>
         </div>
       ) : (
-        favorites.map(service => (
-          <ServiceCard 
+        favorites.map((service) => (
+          <ServiceCard
             key={service.id}
             service={service}
             isFavorite={true}
@@ -342,36 +340,40 @@ const FavoriteServices: React.FC = () => {
 
 ## API Dashboard Cliente
 
-| Metodo | Endpoint | Descrizione |
-|--------|----------|-------------|
-| GET | `/api/bookings` | Lista prenotazioni cliente |
-| GET | `/api/bookings/:id` | Dettaglio prenotazione |
-| DELETE | `/api/bookings/:id` | Cancella prenotazione |
-| GET | `/api/favorites` | Lista servizi preferiti |
-| POST | `/api/favorites/:serviceId` | Aggiungi preferito |
-| DELETE | `/api/favorites/:serviceId` | Rimuovi preferito |
-| POST | `/api/reviews` | Crea recensione |
-| GET | `/api/user/profile` | Profilo utente |
-| PUT | `/api/user/profile` | Aggiorna profilo |
+| Metodo | Endpoint                    | Descrizione                |
+| ------ | --------------------------- | -------------------------- |
+| GET    | `/api/bookings`             | Lista prenotazioni cliente |
+| GET    | `/api/bookings/:id`         | Dettaglio prenotazione     |
+| DELETE | `/api/bookings/:id`         | Cancella prenotazione      |
+| GET    | `/api/favorites`            | Lista servizi preferiti    |
+| POST   | `/api/favorites/:serviceId` | Aggiungi preferito         |
+| DELETE | `/api/favorites/:serviceId` | Rimuovi preferito          |
+| POST   | `/api/reviews`              | Crea recensione            |
+| GET    | `/api/user/profile`         | Profilo utente             |
+| PUT    | `/api/user/profile`         | Aggiorna profilo           |
 
 ## Cancellazione Prenotazione
 
 ```tsx
 const cancelBooking = async (bookingId: string) => {
   const confirmed = await showConfirmDialog({
-    title: 'Cancella Prenotazione',
-    message: 'Sei sicuro di voler cancellare questa prenotazione? Riceverai un rimborso completo.',
-    confirmText: 'Sì, cancella',
-    cancelText: 'No, mantieni',
+    title: "Cancella Prenotazione",
+    message:
+      "Sei sicuro di voler cancellare questa prenotazione? Riceverai un rimborso completo.",
+    confirmText: "Sì, cancella",
+    cancelText: "No, mantieni",
   });
 
   if (confirmed) {
     try {
       await api.delete(`/bookings/${bookingId}`);
-      showToast({ type: 'success', message: 'Prenotazione cancellata. Rimborso in elaborazione.' });
+      showToast({
+        type: "success",
+        message: "Prenotazione cancellata. Rimborso in elaborazione.",
+      });
       loadBookings(); // Ricarica lista
     } catch (error) {
-      showToast({ type: 'error', message: 'Errore durante la cancellazione' });
+      showToast({ type: "error", message: "Errore durante la cancellazione" });
     }
   }
 };

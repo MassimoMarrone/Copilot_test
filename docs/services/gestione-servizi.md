@@ -1,6 +1,7 @@
 # 🔧 Gestione Servizi
 
 ## Panoramica
+
 I fornitori possono creare, modificare e gestire i propri servizi attraverso il sistema di gestione servizi.
 
 ## Struttura Servizio
@@ -12,16 +13,16 @@ interface Service {
   description: string;
   category: ServiceCategory;
   subcategory: string;
-  price: number;           // Prezzo base per ora
-  duration: number;        // Durata minima in minuti
-  images: string[];        // URL immagini
+  price: number; // Prezzo base per ora
+  duration: number; // Durata minima in minuti
+  images: string[]; // URL immagini
   providerId: string;
   location: {
     lat: number;
     lng: number;
     address: string;
     city: string;
-    maxDistance: number;   // Raggio copertura in km
+    maxDistance: number; // Raggio copertura in km
   };
   availability: DayAvailability[];
   rating: number;
@@ -29,7 +30,7 @@ interface Service {
   isActive: boolean;
 }
 
-type ServiceCategory = 
+type ServiceCategory =
   | "pulizie"
   | "giardinaggio"
   | "idraulica"
@@ -124,6 +125,7 @@ type ServiceCategory =
 ## API Servizi
 
 ### Creare Servizio
+
 ```http
 POST /api/services
 Authorization: Bearer <token>
@@ -151,6 +153,7 @@ Content-Type: multipart/form-data
 ```
 
 ### Lista Servizi Propri
+
 ```http
 GET /api/services/my-services
 Authorization: Bearer <token>
@@ -172,6 +175,7 @@ Response:
 ```
 
 ### Modifica Servizio
+
 ```http
 PUT /api/services/:id
 Authorization: Bearer <token>
@@ -183,6 +187,7 @@ Authorization: Bearer <token>
 ```
 
 ### Elimina Servizio
+
 ```http
 DELETE /api/services/:id
 Authorization: Bearer <token>
@@ -259,7 +264,7 @@ async function searchServices(params: SearchParams) {
     minRating,
     page = 1,
     limit = 20,
-    sortBy = 'relevance'
+    sortBy = "relevance",
   } = params;
 
   // Costruzione query dinamica
@@ -285,10 +290,14 @@ async function searchServices(params: SearchParams) {
       ${minPrice ? Prisma.sql`AND s.price >= ${minPrice}` : Prisma.empty}
       ${maxPrice ? Prisma.sql`AND s.price <= ${maxPrice}` : Prisma.empty}
       ${minRating ? Prisma.sql`AND s.rating >= ${minRating}` : Prisma.empty}
-      ${query ? Prisma.sql`AND (
+      ${
+        query
+          ? Prisma.sql`AND (
         s.name ILIKE ${`%${query}%`} 
         OR s.description ILIKE ${`%${query}%`}
-      )` : Prisma.empty}
+      )`
+          : Prisma.empty
+      }
     ORDER BY ${getSortOrder(sortBy)}
     LIMIT ${limit}
     OFFSET ${(page - 1) * limit}
@@ -302,17 +311,17 @@ async function searchServices(params: SearchParams) {
 
 ```typescript
 // src/config/upload.ts
-import multer from 'multer';
-import path from 'path';
+import multer from "multer";
+import path from "path";
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'public/uploads/services');
+    cb(null, "public/uploads/services");
   },
   filename: (req, file, cb) => {
     const uniqueName = `${Date.now()}-${Math.random().toString(36).substr(2)}`;
     cb(null, `${uniqueName}${path.extname(file.originalname)}`);
-  }
+  },
 });
 
 export const uploadServiceImages = multer({
@@ -322,14 +331,14 @@ export const uploadServiceImages = multer({
     const allowed = /jpeg|jpg|png|webp/;
     const ext = allowed.test(path.extname(file.originalname).toLowerCase());
     const mime = allowed.test(file.mimetype);
-    
+
     if (ext && mime) {
       cb(null, true);
     } else {
-      cb(new Error('Solo immagini JPG, PNG o WebP'));
+      cb(new Error("Solo immagini JPG, PNG o WebP"));
     }
-  }
-}).array('images', 5);
+  },
+}).array("images", 5);
 ```
 
 ## Schema Database
@@ -343,31 +352,31 @@ model Service {
   subcategory String?
   price       Float
   duration    Int      // minuti
-  
+
   // Localizzazione PostGIS
   location    Unsupported("geography(Point,4326)")?
   address     String
   city        String
   maxDistance Float    @default(10)
-  
+
   // Media
   images      String[]
-  
+
   // Stats
   rating      Float    @default(0)
   reviewCount Int      @default(0)
   isActive    Boolean  @default(true)
-  
+
   // Relazioni
   providerId  String
   provider    User     @relation(fields: [providerId])
   bookings    Booking[]
   reviews     Review[]
   availability DayAvailability[]
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@index([category])
   @@index([providerId])
 }
@@ -379,7 +388,7 @@ model DayAvailability {
   enabled   Boolean @default(true)
   startTime String  // "08:00"
   endTime   String  // "18:00"
-  
+
   service   Service @relation(fields: [serviceId])
 }
 ```
@@ -398,42 +407,40 @@ const ServiceList: React.FC = () => {
 
   const toggleActive = async (id: string, isActive: boolean) => {
     await api.put(`/services/${id}`, { isActive: !isActive });
-    setServices(services.map(s => 
-      s.id === id ? { ...s, isActive: !isActive } : s
-    ));
+    setServices(
+      services.map((s) => (s.id === id ? { ...s, isActive: !isActive } : s))
+    );
   };
 
   return (
     <div className="service-list">
       <div className="header">
         <h2>I Miei Servizi</h2>
-        <button onClick={() => setShowCreate(true)}>
-          + Nuovo Servizio
-        </button>
+        <button onClick={() => setShowCreate(true)}>+ Nuovo Servizio</button>
       </div>
 
-      {services.map(service => (
+      {services.map((service) => (
         <div key={service.id} className="service-card">
           <img src={service.images[0]} alt={service.name} />
-          
+
           <div className="info">
             <h3>{service.name}</h3>
             <div className="stats">
               <span>€{service.price}/ora</span>
-              <span>⭐ {service.rating} ({service.reviewCount})</span>
+              <span>
+                ⭐ {service.rating} ({service.reviewCount})
+              </span>
             </div>
           </div>
 
           <div className="actions">
-            <Switch 
+            <Switch
               checked={service.isActive}
               onChange={() => toggleActive(service.id, service.isActive)}
               label={service.isActive ? "Attivo" : "Disattivo"}
             />
-            <button onClick={() => editService(service.id)}>
-              Modifica
-            </button>
-            <button 
+            <button onClick={() => editService(service.id)}>Modifica</button>
+            <button
               className="danger"
               onClick={() => confirmDelete(service.id)}
             >
@@ -449,12 +456,12 @@ const ServiceList: React.FC = () => {
 
 ## Categorie Disponibili
 
-| Categoria | Icona | Sottocategorie |
-|-----------|-------|----------------|
-| pulizie | 🧹 | casa, ufficio, post-cantiere |
-| giardinaggio | 🌱 | manutenzione, potatura, irrigazione |
-| idraulica | 🔧 | riparazioni, installazione, emergenze |
-| elettricista | ⚡ | impianti, riparazioni, certificazioni |
-| traslochi | 📦 | locale, nazionale, sgomberi |
-| imbianchino | 🎨 | interni, esterni, decorativo |
-| altro | ⚙️ | personalizzato |
+| Categoria    | Icona | Sottocategorie                        |
+| ------------ | ----- | ------------------------------------- |
+| pulizie      | 🧹    | casa, ufficio, post-cantiere          |
+| giardinaggio | 🌱    | manutenzione, potatura, irrigazione   |
+| idraulica    | 🔧    | riparazioni, installazione, emergenze |
+| elettricista | ⚡    | impianti, riparazioni, certificazioni |
+| traslochi    | 📦    | locale, nazionale, sgomberi           |
+| imbianchino  | 🎨    | interni, esterni, decorativo          |
+| altro        | ⚙️    | personalizzato                        |

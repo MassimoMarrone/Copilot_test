@@ -1,6 +1,7 @@
 # 🔑 Login e Gestione Sessione
 
 ## Panoramica
+
 Il sistema di login utilizza JWT (JSON Web Token) con cookie HTTP-only per massima sicurezza.
 
 ## Flusso Logico
@@ -126,14 +127,14 @@ Il sistema di login utilizza JWT (JSON Web Token) con cookie HTTP-only per massi
 
 ## File Coinvolti
 
-| Layer | File | Funzione |
-|-------|------|----------|
-| Frontend | `src-react/components/LoginModal.tsx` | Form login |
-| Frontend | `src-react/context/AuthContext.tsx` | State management |
-| Frontend | `src-react/services/authService.ts` | API calls |
-| Backend | `src/routes/auth.ts` | Routes |
-| Backend | `src/controllers/authController.ts` | Controller |
-| Backend | `src/middleware/auth.ts` | JWT verification |
+| Layer    | File                                  | Funzione         |
+| -------- | ------------------------------------- | ---------------- |
+| Frontend | `src-react/components/LoginModal.tsx` | Form login       |
+| Frontend | `src-react/context/AuthContext.tsx`   | State management |
+| Frontend | `src-react/services/authService.ts`   | API calls        |
+| Backend  | `src/routes/auth.ts`                  | Routes           |
+| Backend  | `src/controllers/authController.ts`   | Controller       |
+| Backend  | `src/middleware/auth.ts`              | JWT verification |
 
 ## JWT Payload
 
@@ -142,8 +143,8 @@ interface JWTPayload {
   userId: string;
   email: string;
   userType: "client" | "provider" | "admin";
-  iat: number;      // Issued at
-  exp: number;      // Expiration (7 days)
+  iat: number; // Issued at
+  exp: number; // Expiration (7 days)
 }
 ```
 
@@ -151,10 +152,10 @@ interface JWTPayload {
 
 ```typescript
 res.cookie("token", token, {
-  httpOnly: true,           // Non accessibile da JavaScript
-  secure: true,             // Solo HTTPS
-  sameSite: "strict",       // Protezione CSRF
-  maxAge: 7 * 24 * 60 * 60 * 1000  // 7 giorni
+  httpOnly: true, // Non accessibile da JavaScript
+  secure: true, // Solo HTTPS
+  sameSite: "strict", // Protezione CSRF
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 giorni
 });
 ```
 

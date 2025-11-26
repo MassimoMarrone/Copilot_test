@@ -59,7 +59,9 @@ export const schedulingService = {
     windowsCount: number
   ): Promise<EstimatedDuration> => {
     return get<EstimatedDuration>(
-      `/api/scheduling/estimate-duration?squareMetersRange=${encodeURIComponent(squareMetersRange)}&windowsCount=${windowsCount}`
+      `/api/scheduling/estimate-duration?squareMetersRange=${encodeURIComponent(
+        squareMetersRange
+      )}&windowsCount=${windowsCount}`
     );
   },
 
@@ -91,7 +93,9 @@ export const schedulingService = {
     windowsCount: number
   ): Promise<PriceEstimateResponse> => {
     return get<PriceEstimateResponse>(
-      `/api/scheduling/services/${serviceId}/price-estimate?squareMetersRange=${encodeURIComponent(squareMetersRange)}&windowsCount=${windowsCount}`
+      `/api/scheduling/services/${serviceId}/price-estimate?squareMetersRange=${encodeURIComponent(
+        squareMetersRange
+      )}&windowsCount=${windowsCount}`
     );
   },
 };

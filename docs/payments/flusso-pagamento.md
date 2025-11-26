@@ -1,6 +1,7 @@
 # 💳 Flusso Pagamento Stripe
 
 ## Panoramica
+
 Il sistema utilizza Stripe Checkout per gestire i pagamenti in modo sicuro. I fondi vengono trattenuti in escrow fino al completamento del servizio.
 
 ## Flusso Completo
@@ -183,15 +184,15 @@ Il sistema utilizza Stripe Checkout per gestire i pagamenti in modo sicuro. I fo
 
 ## File Coinvolti
 
-| Layer | File | Funzione |
-|-------|------|----------|
-| Frontend | `src-react/components/SmartBookingForm.tsx` | Inizia checkout |
-| Frontend | `src-react/services/bookingService.ts` | API call |
-| Backend | `src/routes/bookings.ts` | Route POST /bookings |
-| Backend | `src/services/bookingService.ts` | Business logic |
-| Backend | `src/routes/payment.ts` | Webhook handler |
-| Backend | `src/services/paymentService.ts` | Stripe integration |
-| Backend | `src/config/stripe.ts` | Stripe config |
+| Layer    | File                                        | Funzione             |
+| -------- | ------------------------------------------- | -------------------- |
+| Frontend | `src-react/components/SmartBookingForm.tsx` | Inizia checkout      |
+| Frontend | `src-react/services/bookingService.ts`      | API call             |
+| Backend  | `src/routes/bookings.ts`                    | Route POST /bookings |
+| Backend  | `src/services/bookingService.ts`            | Business logic       |
+| Backend  | `src/routes/payment.ts`                     | Webhook handler      |
+| Backend  | `src/services/paymentService.ts`            | Stripe integration   |
+| Backend  | `src/config/stripe.ts`                      | Stripe config        |
 
 ## Configurazione Stripe
 
@@ -211,11 +212,12 @@ export const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!;
 
 ```typescript
 // src/routes/payment.ts
-app.post("/api/payment/webhook", 
+app.post(
+  "/api/payment/webhook",
   express.raw({ type: "application/json" }),
   async (req, res) => {
     const sig = req.headers["stripe-signature"]!;
-    
+
     let event: Stripe.Event;
     try {
       event = stripe.webhooks.constructEvent(
@@ -268,17 +270,17 @@ STRIPE_CANCEL_URL=http://localhost:5173/services
 
 ## Test Mode vs Live Mode
 
-| Ambiente | Secret Key | Carte Test |
-|----------|------------|------------|
-| Test | `sk_test_xxx` | 4242 4242 4242 4242 |
-| Live | `sk_live_xxx` | Carte reali |
+| Ambiente | Secret Key    | Carte Test          |
+| -------- | ------------- | ------------------- |
+| Test     | `sk_test_xxx` | 4242 4242 4242 4242 |
+| Live     | `sk_live_xxx` | Carte reali         |
 
 ### Carte di Test
 
-| Numero | Risultato |
-|--------|-----------|
-| 4242 4242 4242 4242 | Pagamento OK |
-| 4000 0000 0000 0002 | Carta rifiutata |
+| Numero              | Risultato           |
+| ------------------- | ------------------- |
+| 4242 4242 4242 4242 | Pagamento OK        |
+| 4000 0000 0000 0002 | Carta rifiutata     |
 | 4000 0000 0000 9995 | Fondi insufficienti |
 
 ## Error Handling

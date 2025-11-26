@@ -1,6 +1,7 @@
 # 📝 Registrazione Utente
 
 ## Panoramica
+
 Il processo di registrazione permette a nuovi utenti di creare un account come Cliente o Fornitore.
 
 ## Flusso Logico
@@ -79,15 +80,15 @@ Il processo di registrazione permette a nuovi utenti di creare un account come C
 
 ## File Coinvolti
 
-| Layer | File | Funzione |
-|-------|------|----------|
+| Layer    | File                                     | Funzione              |
+| -------- | ---------------------------------------- | --------------------- |
 | Frontend | `src-react/components/RegisterModal.tsx` | Form di registrazione |
-| Frontend | `src-react/services/authService.ts` | API call |
-| Backend | `src/routes/auth.ts` | Route `/register` |
-| Backend | `src/controllers/authController.ts` | Logica controller |
-| Backend | `src/services/authService.ts` | Business logic |
-| Backend | `src/emailService.ts` | Invio email |
-| Database | `prisma/schema.prisma` | Model `User` |
+| Frontend | `src-react/services/authService.ts`      | API call              |
+| Backend  | `src/routes/auth.ts`                     | Route `/register`     |
+| Backend  | `src/controllers/authController.ts`      | Logica controller     |
+| Backend  | `src/services/authService.ts`            | Business logic        |
+| Backend  | `src/emailService.ts`                    | Invio email           |
+| Database | `prisma/schema.prisma`                   | Model `User`          |
 
 ## Schema Database - User
 
@@ -111,36 +112,38 @@ model User {
 ## Validazioni
 
 ### Client-side (React)
+
 ```typescript
 // Email
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Password
-password.length >= 8
+password.length >= 8;
 
 // Conferma
-password === confirmPassword
+password === confirmPassword;
 
 // Termini
-acceptedTerms === true
+acceptedTerms === true;
 ```
 
 ### Server-side (Express Validator)
+
 ```typescript
-body("email").isEmail().normalizeEmail()
-body("password").isLength({ min: 8 })
-body("userType").isIn(["client", "provider"])
-body("acceptedTerms").equals("true")
+body("email").isEmail().normalizeEmail();
+body("password").isLength({ min: 8 });
+body("userType").isIn(["client", "provider"]);
+body("acceptedTerms").equals("true");
 ```
 
 ## Codici di Errore
 
-| Codice | Messaggio | Causa |
-|--------|-----------|-------|
-| 400 | "Email già registrata" | Email esistente |
-| 400 | "Password troppo corta" | < 8 caratteri |
-| 400 | "Devi accettare i termini" | Terms non accettati |
-| 500 | "Errore server" | Errore interno |
+| Codice | Messaggio                  | Causa               |
+| ------ | -------------------------- | ------------------- |
+| 400    | "Email già registrata"     | Email esistente     |
+| 400    | "Password troppo corta"    | < 8 caratteri       |
+| 400    | "Devi accettare i termini" | Terms non accettati |
+| 500    | "Errore server"            | Errore interno      |
 
 ## Sicurezza
 

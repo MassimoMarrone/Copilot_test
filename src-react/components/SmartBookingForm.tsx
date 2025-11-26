@@ -302,7 +302,8 @@ const SmartBookingForm: React.FC<SmartBookingFormProps> = ({
                   <span className="spinner"></span>
                   Caricamento orari disponibili...
                 </div>
-              ) : availableSlots.filter(slot => slot.available).length === 0 ? (
+              ) : availableSlots.filter((slot) => slot.available).length ===
+                0 ? (
                 <div className="no-slots">
                   <p>😔 Nessun orario disponibile per questa data</p>
                   <small>Prova a selezionare un'altra data</small>
@@ -310,7 +311,7 @@ const SmartBookingForm: React.FC<SmartBookingFormProps> = ({
               ) : (
                 <div className="time-slots-grid">
                   {availableSlots
-                    .filter(slot => slot.available)
+                    .filter((slot) => slot.available)
                     .map((slot, index) => (
                       <button
                         key={index}
@@ -376,7 +377,8 @@ const SmartBookingForm: React.FC<SmartBookingFormProps> = ({
               <div className="summary-item">
                 <span className="label">🪟 Finestre:</span>
                 <span className="value">
-                  {WINDOWS_COUNT_OPTIONS.find((o) => o.value === windowsCount)?.label || windowsCount}
+                  {WINDOWS_COUNT_OPTIONS.find((o) => o.value === windowsCount)
+                    ?.label || windowsCount}
                 </span>
               </div>
               <div className="summary-item">

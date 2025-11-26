@@ -1,6 +1,7 @@
 # ✉️ Verifica Email
 
 ## Panoramica
+
 Dopo la registrazione, l'utente deve verificare la propria email prima di poter accedere.
 
 ## Flusso Logico
@@ -134,46 +135,49 @@ Dopo la registrazione, l'utente deve verificare la propria email prima di poter 
 
 ## File Coinvolti
 
-| Layer | File | Funzione |
-|-------|------|----------|
-| Frontend | `src-react/pages/VerifyEmailPage.tsx` | Pagina verifica |
-| Frontend | `src-react/components/LoginModal.tsx` | Form reinvio |
-| Backend | `src/routes/auth.ts` | Routes |
-| Backend | `src/services/authService.ts` | Logica verifica |
-| Backend | `src/emailService.ts` | Invio email Resend |
+| Layer    | File                                  | Funzione           |
+| -------- | ------------------------------------- | ------------------ |
+| Frontend | `src-react/pages/VerifyEmailPage.tsx` | Pagina verifica    |
+| Frontend | `src-react/components/LoginModal.tsx` | Form reinvio       |
+| Backend  | `src/routes/auth.ts`                  | Routes             |
+| Backend  | `src/services/authService.ts`         | Logica verifica    |
+| Backend  | `src/emailService.ts`                 | Invio email Resend |
 
 ## Template Email
 
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <style>
-    .button {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 12px 30px;
-      text-decoration: none;
-      border-radius: 8px;
-    }
-  </style>
-</head>
-<body>
-  <h1>Benvenuto su Domy! 🏠</h1>
-  <p>Grazie per esserti registrato. Clicca il pulsante per verificare la tua email:</p>
-  <a href="{{verificationLink}}" class="button">Verifica Email</a>
-  <p>Il link scade tra 24 ore.</p>
-</body>
+  <head>
+    <style>
+      .button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 30px;
+        text-decoration: none;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Benvenuto su Domy! 🏠</h1>
+    <p>
+      Grazie per esserti registrato. Clicca il pulsante per verificare la tua
+      email:
+    </p>
+    <a href="{{verificationLink}}" class="button">Verifica Email</a>
+    <p>Il link scade tra 24 ore.</p>
+  </body>
 </html>
 ```
 
 ## Codici di Errore
 
-| Codice | Messaggio | Causa |
-|--------|-----------|-------|
-| 400 | "Token non valido o scaduto" | Token errato/expired |
-| 400 | "Email già verificata" | Utente già verificato |
-| 429 | "Attendi prima di richiedere" | Rate limit (1 min) |
+| Codice | Messaggio                     | Causa                 |
+| ------ | ----------------------------- | --------------------- |
+| 400    | "Token non valido o scaduto"  | Token errato/expired  |
+| 400    | "Email già verificata"        | Utente già verificato |
+| 429    | "Attendi prima di richiedere" | Rate limit (1 min)    |
 
 ## Configurazione Resend
 
@@ -187,7 +191,7 @@ await resend.emails.send({
   from: "Domy <noreply@domy.com>",
   to: userEmail,
   subject: "Verifica il tuo account Domy",
-  html: emailTemplate
+  html: emailTemplate,
 });
 ```
 

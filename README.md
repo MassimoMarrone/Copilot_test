@@ -95,6 +95,7 @@ Applicazione web moderna per la prenotazione di servizi di pulizia professionale
 
 3. **Configura l'ambiente:**
    Copia il file `.env.example` in `.env` e configura le variabili:
+
    ```env
    DATABASE_URL="postgresql://..."
    JWT_SECRET="your-secret"

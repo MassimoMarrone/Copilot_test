@@ -1,16 +1,17 @@
 # 🔔 Sistema Notifiche
 
 ## Panoramica
+
 Il sistema di notifiche informa gli utenti di eventi importanti come nuove prenotazioni, messaggi, completamenti e aggiornamenti.
 
 ## Tipi di Notifiche
 
-| Tipo | Icona | Colore | Esempio |
-|------|-------|--------|---------|
-| `success` | ✓ | Verde | "Prenotazione confermata!" |
-| `info` | ℹ | Blu | "Hai un nuovo messaggio" |
-| `warning` | ⚠ | Arancione | "Prenotazione cancellata" |
-| `error` | ✕ | Rosso | "Pagamento fallito" |
+| Tipo      | Icona | Colore    | Esempio                    |
+| --------- | ----- | --------- | -------------------------- |
+| `success` | ✓     | Verde     | "Prenotazione confermata!" |
+| `info`    | ℹ     | Blu       | "Hai un nuovo messaggio"   |
+| `warning` | ⚠     | Arancione | "Prenotazione cancellata"  |
+| `error`   | ✕     | Rosso     | "Pagamento fallito"        |
 
 ## Flusso Notifiche
 
@@ -137,25 +138,22 @@ const NotificationCenter: React.FC<{ userId: string }> = ({ userId }) => {
 
   useEffect(() => {
     loadNotifications();
-    
+
     // Real-time listener
     socketService.onNotification = (notification) => {
-      setNotifications(prev => [notification, ...prev]);
+      setNotifications((prev) => [notification, ...prev]);
       // Mostra toast
       showToast(notification);
     };
   }, []);
 
   useEffect(() => {
-    setUnreadCount(notifications.filter(n => !n.read).length);
+    setUnreadCount(notifications.filter((n) => !n.read).length);
   }, [notifications]);
 
   return (
     <div className="notification-center">
-      <button 
-        className="notification-bell"
-        onClick={() => setIsOpen(!isOpen)}
-      >
+      <button className="notification-bell" onClick={() => setIsOpen(!isOpen)}>
         <BellIcon />
         {unreadCount > 0 && (
           <span className="badge">{unreadCount > 9 ? "9+" : unreadCount}</span>
@@ -167,9 +165,7 @@ const NotificationCenter: React.FC<{ userId: string }> = ({ userId }) => {
           <div className="notification-header">
             <h3>Notifiche</h3>
             {unreadCount > 0 && (
-              <button onClick={markAllAsRead}>
-                Segna tutte come lette
-              </button>
+              <button onClick={markAllAsRead}>Segna tutte come lette</button>
             )}
           </div>
 
@@ -177,9 +173,9 @@ const NotificationCenter: React.FC<{ userId: string }> = ({ userId }) => {
             {notifications.length === 0 ? (
               <div className="empty">Nessuna notifica</div>
             ) : (
-              notifications.map(n => (
-                <div 
-                  key={n.id} 
+              notifications.map((n) => (
+                <div
+                  key={n.id}
                   className={`notification-item ${!n.read ? "unread" : ""}`}
                   onClick={() => handleClick(n)}
                 >
@@ -204,21 +200,21 @@ const NotificationCenter: React.FC<{ userId: string }> = ({ userId }) => {
 
 ### Per il Cliente
 
-| Evento | Titolo | Tipo |
-|--------|--------|------|
-| Prenotazione confermata | "Prenotazione confermata!" | success |
-| Servizio completato | "Servizio completato!" | success |
-| Nuovo messaggio | "Hai un nuovo messaggio" | info |
-| Prenotazione cancellata (dal provider) | "Prenotazione cancellata" | warning |
+| Evento                                 | Titolo                     | Tipo    |
+| -------------------------------------- | -------------------------- | ------- |
+| Prenotazione confermata                | "Prenotazione confermata!" | success |
+| Servizio completato                    | "Servizio completato!"     | success |
+| Nuovo messaggio                        | "Hai un nuovo messaggio"   | info    |
+| Prenotazione cancellata (dal provider) | "Prenotazione cancellata"  | warning |
 
 ### Per il Fornitore
 
-| Evento | Titolo | Tipo |
-|--------|--------|------|
-| Nuova prenotazione | "Nuova prenotazione!" | success |
-| Prenotazione cancellata (dal cliente) | "Prenotazione cancellata" | warning |
-| Nuovo messaggio | "Hai un nuovo messaggio" | info |
-| Nuova recensione | "Hai ricevuto una recensione" | info |
+| Evento                                | Titolo                        | Tipo    |
+| ------------------------------------- | ----------------------------- | ------- |
+| Nuova prenotazione                    | "Nuova prenotazione!"         | success |
+| Prenotazione cancellata (dal cliente) | "Prenotazione cancellata"     | warning |
+| Nuovo messaggio                       | "Hai un nuovo messaggio"      | info    |
+| Nuova recensione                      | "Hai ricevuto una recensione" | info    |
 
 ## Schema Database
 
@@ -232,7 +228,7 @@ model Notification {
   read      Boolean  @default(false)
   link      String?  // URL opzionale per click
   createdAt DateTime @default(now())
-  
+
   user      User     @relation(fields: [userId])
 }
 ```
@@ -257,7 +253,9 @@ const ToastNotification: React.FC<Props> = ({ notification, onClose }) => {
         <div className="toast-title">{notification.title}</div>
         <div className="toast-message">{notification.message}</div>
       </div>
-      <button className="toast-close" onClick={onClose}>×</button>
+      <button className="toast-close" onClick={onClose}>
+        ×
+      </button>
     </div>
   );
 };
@@ -265,12 +263,12 @@ const ToastNotification: React.FC<Props> = ({ notification, onClose }) => {
 
 ## API Endpoints
 
-| Metodo | Endpoint | Descrizione |
-|--------|----------|-------------|
-| GET | `/api/notifications` | Lista notifiche utente |
-| PUT | `/api/notifications/:id/read` | Segna come letta |
-| PUT | `/api/notifications/read-all` | Segna tutte come lette |
-| DELETE | `/api/notifications/:id` | Elimina notifica |
+| Metodo | Endpoint                      | Descrizione            |
+| ------ | ----------------------------- | ---------------------- |
+| GET    | `/api/notifications`          | Lista notifiche utente |
+| PUT    | `/api/notifications/:id/read` | Segna come letta       |
+| PUT    | `/api/notifications/read-all` | Segna tutte come lette |
+| DELETE | `/api/notifications/:id`      | Elimina notifica       |
 
 ## Icone SVG per Tipo
 
@@ -280,33 +278,33 @@ const NotificationIcon: React.FC<{ type: string }> = ({ type }) => {
     case "success":
       return (
         <svg viewBox="0 0 24 24" stroke="#22c55e">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-          <polyline points="22 4 12 14.01 9 11.01"/>
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <polyline points="22 4 12 14.01 9 11.01" />
         </svg>
       );
     case "error":
       return (
         <svg viewBox="0 0 24 24" stroke="#ef4444">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="15" y1="9" x2="9" y2="15"/>
-          <line x1="9" y1="9" x2="15" y2="15"/>
+          <circle cx="12" cy="12" r="10" />
+          <line x1="15" y1="9" x2="9" y2="15" />
+          <line x1="9" y1="9" x2="15" y2="15" />
         </svg>
       );
     case "warning":
       return (
         <svg viewBox="0 0 24 24" stroke="#f59e0b">
-          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-          <line x1="12" y1="9" x2="12" y2="13"/>
-          <line x1="12" y1="17" x2="12.01" y2="17"/>
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
       );
     case "info":
     default:
       return (
         <svg viewBox="0 0 24 24" stroke="#3b82f6">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="16" x2="12" y2="12"/>
-          <line x1="12" y1="8" x2="12.01" y2="8"/>
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="16" x2="12" y2="12" />
+          <line x1="12" y1="8" x2="12.01" y2="8" />
         </svg>
       );
   }

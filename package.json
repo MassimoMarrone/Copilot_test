@@ -12,7 +12,9 @@
     "dev:react": "vite",
     "dev:full": "concurrently \"npm run dev\" \"npm run dev:react\"",
     "clean": "rm -rf dist public/react",
-    "test": "cross-env NODE_ENV=test jest"
+    "test": "cross-env NODE_ENV=test jest",
+    "db:resolve": "npx prisma migrate resolve --applied 20251125230440_add_smart_booking_fields",
+    "db:deploy": "npx prisma migrate deploy"
   },
   "keywords": [],
   "author": "",
