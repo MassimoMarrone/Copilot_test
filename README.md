@@ -1,25 +1,37 @@
 ﻿# Domy - Piattaforma di Prenotazione Servizi di Pulizia
 
-Applicazione web moderna per la prenotazione di servizi di pulizia con sistema di pagamento escrow, chat in tempo reale e dashboard dedicate.
+Applicazione web moderna per la prenotazione di servizi di pulizia professionale con sistema di prenotazione intelligente, pagamento escrow, chat in tempo reale e dashboard dedicate.
 
-## Funzionalità Principali
+## 🌟 Funzionalità Principali
 
 ### 🔐 Autenticazione & Sicurezza
 
 - **Registrazione & Login**: Accesso separato per Clienti e Fornitori con autenticazione JWT sicura.
+- **Verifica Email**: Conferma email obbligatoria con possibilità di reinvio.
 - **Protezione Dati**: Password hashate con bcrypt, cookie HTTP-only, e protezione CSRF/XSS.
 - **Termini e Condizioni**: Accettazione obbligatoria durante la registrazione.
+
+### 📅 Sistema di Prenotazione Intelligente (NUOVO!)
+
+- **Stima Automatica Durata**: Calcolo intelligente basato su:
+  - Metratura appartamento (0-50m², 50-80m², 80-120m², 120+m²)
+  - Numero di finestre (0, 1-4, 4-6, 6-10)
+- **Prezzo Dinamico**: Calcolo automatico basato su tariffa oraria × durata stimata.
+- **Slot Orari**: Visualizzazione solo degli orari disponibili.
+- **Prevenzione Sovrapposizioni**: Validazione server-side delle prenotazioni.
+- **Calendario Moderno**: Date picker React in italiano con design elegante.
 
 ### 👥 Dashboard Utenti
 
 - **Dashboard Cliente**:
-  - 🔍 Ricerca avanzata servizi con filtri e mappa interattiva.
-  - 📅 Prenotazione servizi con selezione data e orario.
+  - 📋 Visualizzazione prenotazioni con stato e dettagli.
+  - 🔍 Ricerca servizi nella pagina dedicata "Esplora".
   - 💬 Chat in tempo reale con i fornitori.
-  - 📋 Gestione prenotazioni e stato pagamenti.
+  - ❌ Cancellazione prenotazioni con rimborso automatico.
 - **Dashboard Fornitore**:
   - ➕ Creazione e gestione servizi offerti.
   - 📅 Calendario prenotazioni e gestione disponibilità.
+  - ⏰ Configurazione orari di lavoro (inizio/fine giornata).
   - 💬 Chat in tempo reale con i clienti.
   - ✅ Completamento servizi con upload prova fotografica.
 - **Dashboard Amministratore**:
@@ -31,28 +43,40 @@ Applicazione web moderna per la prenotazione di servizi di pulizia con sistema d
 - **Socket.IO**: Comunicazione istantanea tra cliente e fornitore.
 - **Notifiche**: Contatore messaggi non letti in tempo reale.
 - **Storico**: Salvataggio conversazioni nel database.
-- **Supporto Legacy**: Compatibilità garantita con vecchie chiamate API.
 
-### 💳 Sistema di Pagamento Escrow (Simulato/Stripe Ready)
+### 💳 Sistema di Pagamento Escrow (Stripe)
 
 - **Sicurezza**: I fondi vengono trattenuti fino al completamento del servizio.
 - **Rilascio**: Pagamento sbloccato solo dopo conferma e prova fotografica.
-- **Rimborso**: Gestione automatica rimborsi in caso di cancellazione.
+- **Rimborso Automatico**: Gestione automatica rimborsi in caso di cancellazione.
 
-## Stack Tecnologico
+### 🎨 UI/UX Moderna
 
-- **Frontend**: React 19, Vite, TypeScript, CSS Modules.
+- **Landing Page Professionale**: Design con gradiente scuro e immagine hero.
+- **Icone SVG Minimal**: Stile coerente e professionale (Feather Icons style).
+- **Form Prenotazione 3 Step**: Wizard intuitivo per la prenotazione.
+- **Responsive Design**: Ottimizzato per desktop e mobile.
+- **Notifiche Toast**: Feedback visivo per le azioni utente.
+
+## 🛠️ Stack Tecnologico
+
+- **Frontend**: React 19, Vite, TypeScript, React DatePicker, CSS Modules.
 - **Backend**: Node.js, Express, TypeScript.
-- **Database**: Prisma ORM (SQLite per dev, PostgreSQL ready).
+- **Database**: PostgreSQL (Neon) con Prisma ORM.
 - **Real-time**: Socket.IO.
+- **Pagamenti**: Stripe API.
+- **Email**: Resend API.
 - **Sicurezza**: Helmet, Rate Limiting, Express Validator, BCrypt.
 
-## Installazione e Avvio
+## 🚀 Installazione e Avvio
 
 ### Prerequisiti
 
 - Node.js (v18+)
 - npm
+- Account PostgreSQL (es. Neon)
+- Account Stripe (per pagamenti)
+- Account Resend (per email)
 
 ### Setup Iniziale
 
@@ -70,7 +94,14 @@ Applicazione web moderna per la prenotazione di servizi di pulizia con sistema d
    ```
 
 3. **Configura l'ambiente:**
-   Copia il file `.env.example` in `.env` e configura le variabili necessarie (Database, JWT Secret, ecc.).
+   Copia il file `.env.example` in `.env` e configura le variabili:
+   ```env
+   DATABASE_URL="postgresql://..."
+   JWT_SECRET="your-secret"
+   STRIPE_SECRET_KEY="sk_..."
+   STRIPE_WEBHOOK_SECRET="whsec_..."
+   RESEND_API_KEY="re_..."
+   ```
 
 4. **Inizializza il Database:**
    ```bash
@@ -95,26 +126,47 @@ npm run dev:full
 - `npm start`: Avvia il server di produzione.
 - `npx prisma studio`: Interfaccia grafica per esplorare il database.
 
-## Stato del Progetto
+## 📊 Stato del Progetto
 
-**Versione Attuale**: v1.0.0 (Stable)
+**Versione Attuale**: v1.1.0
 
 ### ✅ Funzionalità Completate
 
-- [x] Autenticazione completa (JWT, Cookie).
+- [x] Autenticazione completa (JWT, Cookie, Verifica Email).
 - [x] CRUD Servizi e Prenotazioni.
+- [x] **Sistema di prenotazione intelligente** (stima durata, prezzo dinamico).
+- [x] **Gestione slot orari** con prevenzione sovrapposizioni.
 - [x] Chat in tempo reale (Socket.IO) con notifiche.
 - [x] Dashboard Admin completa.
 - [x] Upload immagini (Multer).
-- [x] UI/UX Moderna e Responsiva.
-- [x] Gestione errori e logging.
+- [x] Pagamenti Stripe con escrow e rimborsi automatici.
+- [x] UI/UX Moderna con icone SVG professionali.
+- [x] Calendario React DatePicker in italiano.
 
 ### 🚧 Roadmap Futura
 
-- [ ] Integrazione completa Stripe Connect per pagamenti reali.
 - [ ] Sistema di recensioni e rating avanzato.
+- [ ] Notifiche push.
 - [ ] App mobile (React Native).
+- [ ] Dashboard analytics per fornitori.
 
-## Licenza
+## 📁 Struttura Progetto
+
+```
+├── prisma/                 # Schema e migrazioni database
+├── src/                    # Backend (Node.js/Express)
+│   ├── controllers/        # Controller API
+│   ├── services/           # Logica business
+│   ├── routes/             # Route API
+│   └── middleware/         # Auth, validation, rate limiting
+├── src-react/              # Frontend (React/Vite)
+│   ├── components/         # Componenti React
+│   ├── pages/              # Pagine principali
+│   ├── services/           # API client services
+│   └── styles/             # CSS per componenti
+└── public/                 # Asset statici
+```
+
+## 📄 Licenza
 
 ISC
