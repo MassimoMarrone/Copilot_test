@@ -23,6 +23,12 @@ export interface Booking {
   notes?: string;
   address?: string;
   hasReview?: boolean;
+  // Smart booking fields
+  squareMetersRange?: string;
+  windowsCount?: number;
+  estimatedDuration?: number;
+  startTime?: string;
+  endTime?: string;
 }
 
 export interface CreateBookingData {
@@ -32,6 +38,12 @@ export interface CreateBookingData {
   preferredTime?: string;
   notes?: string;
   address?: string;
+  // Smart booking fields
+  squareMetersRange?: string;
+  windowsCount?: number;
+  estimatedDuration?: number;
+  startTime?: string;
+  endTime?: string;
 }
 
 export const bookingService = {

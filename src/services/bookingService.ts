@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { stripe, mockStripeSessions } from "../config/stripe";
 import { sendNotification } from "../utils/notification";
 import { sendEmail, emailTemplates } from "../emailService";
+import { schedulingService } from "./schedulingService";
 
 const prisma = new PrismaClient();
 
@@ -18,6 +19,11 @@ export const bookingService = {
       address?: string;
       protocol: string;
       host: string;
+      // New smart booking fields
+      squareMetersRange?: string;
+      windowsCount?: number;
+      startTime?: string;
+      endTime?: string;
     }
   ) {
     const {
@@ -29,6 +35,10 @@ export const bookingService = {
       address,
       protocol,
       host,
+      squareMetersRange,
+      windowsCount,
+      startTime,
+      endTime,
     } = data;
 
     const service = await prisma.service.findUnique({
@@ -85,32 +95,82 @@ export const bookingService = {
       }
     }
 
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
+    // Calculate estimated duration if apartment details provided
+    let estimatedDuration: number | null = null;
+    if (squareMetersRange && windowsCount !== undefined) {
+      const duration = schedulingService.calculateEstimatedDuration(
+        squareMetersRange,
+        windowsCount
+      );
+      estimatedDuration = duration.minutes;
+    }
 
-    const existingBooking = await prisma.booking.findFirst({
-      where: {
-        serviceId: serviceId,
-        status: { not: "cancelled" },
-        date: {
-          gte: startOfDay as any,
-          lte: endOfDay as any,
+    // Validate time slot availability if startTime/endTime provided
+    if (startTime && endTime) {
+      const isSlotAvailable = await schedulingService.validateSlotAvailability(
+        serviceId,
+        date,
+        startTime,
+        endTime
+      );
+      if (!isSlotAvailable) {
+        throw new Error(
+          "L'orario selezionato non è più disponibile. Per favore scegli un altro orario."
+        );
+      }
+    } else {
+      // Legacy check: block entire day if no time slot specified
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const existingBooking = await prisma.booking.findFirst({
+        where: {
+          serviceId: serviceId,
+          status: { not: "cancelled" },
+          date: {
+            gte: startOfDay as any,
+            lte: endOfDay as any,
+          },
         },
-      },
-    });
+      });
 
-    if (existingBooking) {
-      throw new Error(
-        "This service is already booked for the selected date. Please choose a different date."
+      if (existingBooking) {
+        throw new Error(
+          "This service is already booked for the selected date. Please choose a different date."
+        );
+      }
+    }
+
+    // Calculate price (dynamic if apartment details provided)
+    let finalPrice = service.price;
+    if (squareMetersRange && estimatedDuration) {
+      finalPrice = schedulingService.calculatePrice(
+        {
+          price: service.price,
+          priceType: (service as any).priceType || "fixed",
+        },
+        estimatedDuration,
+        squareMetersRange
       );
     }
 
-    if (service.price < 0.5) {
+    if (finalPrice < 0.5) {
       throw new Error(
         "Il prezzo del servizio è inferiore al minimo consentito per i pagamenti online (€0.50)."
       );
+    }
+
+    // Build booking description
+    let bookingDescription = `Prenotazione per ${new Date(
+      date
+    ).toLocaleDateString("it-IT")}`;
+    if (startTime && endTime) {
+      bookingDescription += ` dalle ${startTime} alle ${endTime}`;
+    }
+    if (squareMetersRange) {
+      bookingDescription += ` - ${squareMetersRange}m²`;
     }
 
     const safeMetadata = {
@@ -120,12 +180,18 @@ export const bookingService = {
       providerId: service.providerId,
       providerEmail: service.providerEmail.substring(0, 500),
       serviceTitle: service.title.substring(0, 500),
-      amount: service.price.toString(),
+      amount: finalPrice.toString(),
       date: date,
       clientPhone: (clientPhone || "").substring(0, 500),
       preferredTime: (preferredTime || "").substring(0, 500),
       notes: (notes || "").substring(0, 500),
       address: (address || "").substring(0, 500),
+      // New smart booking fields
+      squareMetersRange: (squareMetersRange || "").substring(0, 50),
+      windowsCount: (windowsCount || 0).toString(),
+      estimatedDuration: (estimatedDuration || 0).toString(),
+      startTime: (startTime || "").substring(0, 10),
+      endTime: (endTime || "").substring(0, 10),
     };
 
     let session;
@@ -158,11 +224,9 @@ export const bookingService = {
               currency: "eur",
               product_data: {
                 name: service.title,
-                description: `Service booking for ${new Date(
-                  date
-                ).toLocaleDateString("it-IT")}`,
+                description: bookingDescription,
               },
-              unit_amount: Math.round(service.price * 100),
+              unit_amount: Math.round(finalPrice * 100),
             },
             quantity: 1,
           },
@@ -226,33 +290,79 @@ export const bookingService = {
       throw new Error("Cannot cancel completed booking");
     }
 
+    // Handle refund if payment was made
+    let newPaymentStatus = booking.paymentStatus;
+    const needsRefund =
+      booking.paymentStatus === "authorized" ||
+      booking.paymentStatus === "held_in_escrow";
+
+    if (needsRefund && booking.paymentIntentId) {
+      try {
+        // Check if it's a mock payment (for testing)
+        if (booking.paymentIntentId.startsWith("pi_mock_")) {
+          console.log(
+            `Mock refund processed for booking ${booking.id}, paymentIntent: ${booking.paymentIntentId}`
+          );
+          newPaymentStatus = "refunded";
+        } else {
+          // Real Stripe refund
+          await stripe.refunds.create({
+            payment_intent: booking.paymentIntentId,
+          });
+          console.log(
+            `Stripe refund processed for booking ${booking.id}, paymentIntent: ${booking.paymentIntentId}`
+          );
+          newPaymentStatus = "refunded";
+        }
+      } catch (refundError: any) {
+        console.error("Refund failed:", refundError);
+        // If refund fails, we still cancel the booking but log the error
+        // The admin can manually process the refund later
+        console.error(
+          `MANUAL REFUND NEEDED for booking ${booking.id}: ${refundError.message}`
+        );
+      }
+    }
+
     const updatedBooking = await prisma.booking.update({
       where: { id: bookingId },
-      data: { status: "cancelled" },
+      data: {
+        status: "cancelled",
+        paymentStatus: newPaymentStatus,
+      },
     });
 
     // Notify the other party
     const recipientId =
       booking.clientId === userId ? booking.providerId : booking.clientId;
     const cancellerName =
-      booking.clientId === userId ? "The client" : "The provider";
+      booking.clientId === userId ? "Il cliente" : "Il fornitore";
+    const wasRefunded = newPaymentStatus === "refunded";
 
     await sendNotification(
       recipientId,
-      "Booking Cancelled",
-      `${cancellerName} has cancelled the booking for ${
+      "Prenotazione Cancellata",
+      `${cancellerName} ha cancellato la prenotazione per ${
         booking.service.title
-      } on ${new Date(booking.date).toISOString().split("T")[0]}`
+      } del ${new Date(booking.date).toLocaleDateString("it-IT")}${
+        wasRefunded ? ". Il pagamento è stato rimborsato." : ""
+      }`
     );
 
     // Send cancellation emails
+    const refundMessage = wasRefunded
+      ? " Il pagamento è stato rimborsato automaticamente."
+      : "";
+
     sendEmail(
       booking.clientEmail,
       "Prenotazione Cancellata",
       emailTemplates.bookingCancelled(
         booking.clientEmail.split("@")[0],
         booking.serviceTitle,
-        "Cancellata dal fornitore"
+        booking.clientId === userId
+          ? `Hai cancellato questa prenotazione.${refundMessage}`
+          : `Cancellata dal fornitore.${refundMessage}`
       )
     );
 
@@ -262,7 +372,9 @@ export const bookingService = {
       emailTemplates.bookingCancelled(
         booking.providerEmail.split("@")[0],
         booking.serviceTitle,
-        "Hai cancellato questa prenotazione"
+        booking.providerId === userId
+          ? `Hai cancellato questa prenotazione.${refundMessage}`
+          : `Cancellata dal cliente.${refundMessage}`
       )
     );
 

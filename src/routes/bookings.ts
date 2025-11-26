@@ -34,6 +34,23 @@ router.post(
       .trim()
       .isLength({ max: 500 })
       .withMessage("Address must be less than 500 characters"),
+    // Smart booking fields
+    body("squareMetersRange")
+      .optional()
+      .isIn(["0-50", "50-80", "80-120", "120+"])
+      .withMessage("Invalid square meters range"),
+    body("windowsCount")
+      .optional()
+      .isInt({ min: 0, max: 50 })
+      .withMessage("Windows count must be between 0 and 50"),
+    body("startTime")
+      .optional()
+      .matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)
+      .withMessage("Start time must be in HH:MM format"),
+    body("endTime")
+      .optional()
+      .matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)
+      .withMessage("End time must be in HH:MM format"),
   ],
   validate,
   bookingController.createBooking

@@ -146,7 +146,9 @@ const VerifyEmailPage: React.FC = () => {
               <div className="spinner"></div>
             </div>
             <h1>Verifica in corso</h1>
-            <p className="verify-subtitle">Stiamo verificando la tua email, attendere prego.</p>
+            <p className="verify-subtitle">
+              Stiamo verificando la tua email, attendere prego.
+            </p>
           </>
         )}
 
@@ -155,24 +157,30 @@ const VerifyEmailPage: React.FC = () => {
             <div className="verify-icon success">✓</div>
             <h1>Email Verificata!</h1>
             <p>{message}</p>
-            <p className="verify-subtitle">Ora puoi accedere a tutte le funzionalità di Domy.</p>
-            
+            <p className="verify-subtitle">
+              Ora puoi accedere a tutte le funzionalità di Domy.
+            </p>
+
             <div className="countdown-progress">
-              <div 
-                className="countdown-progress-bar" 
+              <div
+                className="countdown-progress-bar"
                 style={{ width: `${(countdown / 5) * 100}%` }}
               ></div>
             </div>
             <p className="redirect-message">
-              Reindirizzamento alla home tra <strong>{countdown}</strong> secondi...
+              Reindirizzamento alla home tra <strong>{countdown}</strong>{" "}
+              secondi...
             </p>
-            
+
             <button className="btn btn-primary" onClick={() => navigate("/")}>
               🏠 Vai alla Home
             </button>
-            
+
             <div className="verify-footer">
-              <p>Hai bisogno di aiuto? <a href="mailto:support@domy.it">Contattaci</a></p>
+              <p>
+                Hai bisogno di aiuto?{" "}
+                <a href="mailto:support@domy.it">Contattaci</a>
+              </p>
             </div>
           </>
         )}
@@ -188,17 +196,18 @@ const VerifyEmailPage: React.FC = () => {
                 <p className="verify-subtitle">
                   Il link potrebbe essere scaduto o non valido.
                 </p>
-                
+
                 <div className="countdown-progress">
-                  <div 
-                    className="countdown-progress-bar" 
+                  <div
+                    className="countdown-progress-bar"
                     style={{ width: `${(countdown / 5) * 100}%` }}
                   ></div>
                 </div>
                 <p className="redirect-message">
-                  Reindirizzamento alla home tra <strong>{countdown}</strong> secondi...
+                  Reindirizzamento alla home tra <strong>{countdown}</strong>{" "}
+                  secondi...
                 </p>
-                
+
                 <div className="button-group">
                   <button
                     className="btn btn-primary"
@@ -255,9 +264,12 @@ const VerifyEmailPage: React.FC = () => {
                 </button>
               </div>
             )}
-            
+
             <div className="verify-footer">
-              <p>Hai bisogno di aiuto? <a href="mailto:support@domy.it">Contattaci</a></p>
+              <p>
+                Hai bisogno di aiuto?{" "}
+                <a href="mailto:support@domy.it">Contattaci</a>
+              </p>
             </div>
           </>
         )}

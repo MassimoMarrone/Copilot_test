@@ -56,6 +56,16 @@ export const paymentService = {
             preferredTime: metadata.preferredTime || null,
             notes: metadata.notes || null,
             address: metadata.address || null,
+            // Smart booking fields
+            squareMetersRange: metadata.squareMetersRange || null,
+            windowsCount: metadata.windowsCount
+              ? parseInt(metadata.windowsCount, 10)
+              : null,
+            estimatedDuration: metadata.estimatedDuration
+              ? parseInt(metadata.estimatedDuration, 10)
+              : null,
+            startTime: metadata.startTime || null,
+            endTime: metadata.endTime || null,
           },
         });
 

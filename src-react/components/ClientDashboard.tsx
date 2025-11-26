@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import SearchBar from "./SearchBar";
 import ChatModal from "./ChatModal";
 import BecomeProviderModal from "./BecomeProviderModal";
-import ServiceMap from "./ServiceMap";
 import { authService } from "../services/authService";
-import { servicesService, Service } from "../services/servicesService";
 import { bookingService, Booking } from "../services/bookingService";
 import "../styles/ClientDashboard.css";
 
@@ -14,16 +11,7 @@ interface ClientDashboardProps {
 }
 
 const ClientDashboard: React.FC<ClientDashboardProps> = () => {
-  const [services, setServices] = useState<Service[]>([]);
-  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
-  const [bookingDate, setBookingDate] = useState("");
-  const [clientPhone, setClientPhone] = useState("");
-  const [preferredTime, setPreferredTime] = useState("");
-  const [bookingNotes, setBookingNotes] = useState("");
-  const [bookingAddress, setBookingAddress] = useState("");
-  const [showBookingModal, setShowBookingModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
   const [showBecomeProviderModal, setShowBecomeProviderModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -32,16 +20,10 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
     id: string;
     email: string;
   } | null>(null);
-  const [viewMode, setViewMode] = useState<"list" | "map">("list");
-  const [searchLocation, setSearchLocation] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    loadServices();
     loadBookings();
     checkAuth();
   }, []);
@@ -74,123 +56,12 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
     }
   };
 
-  const loadServices = async () => {
-    try {
-      const data = await servicesService.getAllServices();
-      setServices(data);
-      setFilteredServices(data);
-    } catch (error) {
-      console.error("Error loading services:", error);
-    }
-  };
-
   const loadBookings = async () => {
     try {
       const data = await bookingService.getMyBookings();
       setBookings(data);
     } catch (error) {
       console.error("Error loading bookings:", error);
-    }
-  };
-
-  const handleSearch = (
-    query: string,
-    location?: { lat: number; lng: number; address: string }
-  ) => {
-    let filtered = services;
-
-    // Filter by search query
-    if (query.trim()) {
-      filtered = filtered.filter(
-        (service) =>
-          service.title.toLowerCase().includes(query.toLowerCase()) ||
-          service.description.toLowerCase().includes(query.toLowerCase())
-      );
-    }
-
-    // Filter by location (if provided)
-    if (location && location.lat && location.lng) {
-      setSearchLocation({ lat: location.lat, lng: location.lng });
-      filtered = filtered.filter((service) => {
-        if (!service.latitude || !service.longitude) return false;
-
-        // Calculate distance using Haversine formula
-        const distance = calculateDistance(
-          location.lat,
-          location.lng,
-          service.latitude,
-          service.longitude
-        );
-
-        // Filter services within 50km
-        return distance <= 50;
-      });
-    } else {
-      setSearchLocation(null);
-    }
-
-    setFilteredServices(filtered);
-  };
-
-  // Haversine formula to calculate distance between two coordinates
-  const calculateDistance = (
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ): number => {
-    const R = 6371; // Radius of Earth in kilometers
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
-
-  const openBookingModal = (service: Service) => {
-    setSelectedService(service);
-    setShowBookingModal(true);
-    const today = new Date().toISOString().split("T")[0];
-    setBookingDate(today);
-    setClientPhone("");
-    setPreferredTime("");
-    setBookingNotes("");
-    setBookingAddress("");
-  };
-
-  const closeBookingModal = () => {
-    setShowBookingModal(false);
-    setSelectedService(null);
-    setBookingDate("");
-    setClientPhone("");
-    setPreferredTime("");
-    setBookingNotes("");
-    setBookingAddress("");
-  };
-
-  const handleBooking = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedService) return;
-
-    try {
-      const { url } = await bookingService.createBooking({
-        serviceId: selectedService.id,
-        date: bookingDate,
-        clientPhone: clientPhone,
-        preferredTime: preferredTime,
-        notes: bookingNotes,
-        address: bookingAddress,
-      });
-
-      // Redirect to Stripe checkout immediately
-      window.location.href = url;
-    } catch (error: any) {
-      alert(error.message || "Errore nella prenotazione");
     }
   };
 
@@ -218,15 +89,6 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await authService.logout();
-      navigate("/");
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-  };
-
   return (
     <div className="client-dashboard">
       <div className="dashboard-header">
@@ -249,71 +111,6 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
             </button>
           )}
         </div>
-      </div>
-
-      <div className="dashboard-section">
-        <h2>🔍 Ricerca Servizi</h2>
-        <SearchBar onSearch={handleSearch} />
-
-        <div className="view-mode-toggle">
-          <button
-            onClick={() => setViewMode("list")}
-            className={`btn view-mode-btn ${
-              viewMode === "list" ? "active" : ""
-            }`}
-          >
-            📋 Lista
-          </button>
-          <button
-            onClick={() => setViewMode("map")}
-            className={`btn view-mode-btn ${
-              viewMode === "map" ? "active" : ""
-            }`}
-          >
-            🗺️ Mappa
-          </button>
-        </div>
-
-        {viewMode === "list" ? (
-          <div className="services-grid">
-            {filteredServices.length === 0 ? (
-              <div className="empty-state">
-                <p>Nessun servizio disponibile.</p>
-              </div>
-            ) : (
-              filteredServices.map((service) => (
-                <div key={service.id} className="service-card">
-                  <h3>{service.title}</h3>
-                  <p className="service-description">{service.description}</p>
-                  {service.address && (
-                    <p className="service-location">📍 {service.address}</p>
-                  )}
-                  <p className="service-price">€{service.price.toFixed(2)}</p>
-                  <p className="service-provider">
-                    <small>Fornitore: {service.providerEmail}</small>
-                  </p>
-                  <button
-                    onClick={() => openBookingModal(service)}
-                    className="btn btn-book"
-                  >
-                    Prenota
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        ) : (
-          <div
-            className="map-container-wrapper"
-            style={{ height: "500px", marginTop: "20px" }}
-          >
-            <ServiceMap
-              services={filteredServices}
-              onBook={(service) => openBookingModal(service)}
-              center={searchLocation}
-            />
-          </div>
-        )}
       </div>
 
       <div className="dashboard-section">
@@ -408,98 +205,6 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
           )}
         </div>
       </div>
-
-      {/* Booking Modal */}
-      {showBookingModal && selectedService && (
-        <div className="modal-overlay" onClick={closeBookingModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={closeBookingModal}>
-              &times;
-            </button>
-            <h2>Prenota Servizio</h2>
-            <div className="service-summary">
-              <h3>{selectedService.title}</h3>
-              <p className="price">
-                Prezzo: €{selectedService.price.toFixed(2)}
-              </p>
-            </div>
-            <form onSubmit={handleBooking}>
-              <div className="form-group">
-                <label htmlFor="bookingDate">Data del Servizio: *</label>
-                <input
-                  type="date"
-                  id="bookingDate"
-                  value={bookingDate}
-                  min={new Date().toISOString().split("T")[0]}
-                  onChange={(e) => setBookingDate(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="clientPhone">Telefono di Contatto:</label>
-                <input
-                  type="tel"
-                  id="clientPhone"
-                  value={clientPhone}
-                  onChange={(e) => setClientPhone(e.target.value)}
-                  placeholder="+39 123 456 7890"
-                  maxLength={50}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="preferredTime">Orario Preferito:</label>
-                <input
-                  type="time"
-                  id="preferredTime"
-                  value={preferredTime}
-                  onChange={(e) => setPreferredTime(e.target.value)}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="bookingAddress">Indirizzo del Servizio:</label>
-                <input
-                  type="text"
-                  id="bookingAddress"
-                  value={bookingAddress}
-                  onChange={(e) => setBookingAddress(e.target.value)}
-                  placeholder="Via, Città, CAP"
-                  maxLength={500}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="bookingNotes">Note Aggiuntive:</label>
-                <textarea
-                  id="bookingNotes"
-                  value={bookingNotes}
-                  onChange={(e) => setBookingNotes(e.target.value)}
-                  placeholder="Aggiungi qualsiasi informazione utile per il fornitore..."
-                  rows={4}
-                  maxLength={1000}
-                />
-              </div>
-              <div className="info-box">
-                ℹ️ <strong>Pagamento Obbligatorio:</strong> Sarai reindirizzato
-                alla pagina di pagamento. La prenotazione sarà confermata solo
-                dopo il completamento del pagamento. Il pagamento sarà
-                trattenuto in modo sicuro in escrow fino al completamento del
-                servizio.
-              </div>
-              <div className="button-group">
-                <button type="submit" className="btn btn-primary">
-                  Procedi al Pagamento
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={closeBookingModal}
-                >
-                  Annulla
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Chat Modal */}
       {showChatModal && selectedBooking && currentUser && (

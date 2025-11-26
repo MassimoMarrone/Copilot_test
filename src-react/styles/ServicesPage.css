@@ -818,3 +818,18 @@
   border: 1px solid #c8e6c9;
 }
 
+/* Smart Booking Modal */
+.smart-booking-modal {
+  max-width: 600px;
+  width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.smart-booking-modal .modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 10;
+}
+

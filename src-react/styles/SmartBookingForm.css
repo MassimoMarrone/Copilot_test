@@ -1,0 +1,675 @@
+.smart-booking-form {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Progress Steps */
+.progress-steps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.progress-steps::before {
+  content: "";
+  position: absolute;
+  top: 20px;
+  left: 50px;
+  right: 50px;
+  height: 2px;
+  background: #e0e0e0;
+  z-index: 0;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+}
+
+.step.active .step-number {
+  background: #4a90d9;
+  color: white;
+}
+
+.step.completed .step-number {
+  background: #28a745;
+  color: white;
+}
+
+.step-label {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+}
+
+.step.active .step-label {
+  color: #4a90d9;
+  font-weight: 500;
+}
+
+/* Form Steps */
+.form-step {
+  background: #f8f9fa;
+  padding: 25px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.form-step h3 {
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.step-description {
+  color: #666;
+  margin-bottom: 25px;
+  font-size: 14px;
+}
+
+/* Form Groups */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.help-text {
+  color: #888;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* Square Meters Options */
+.square-meters-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.sqm-option {
+  display: block;
+  cursor: pointer;
+}
+
+.sqm-option input {
+  display: none;
+}
+
+.sqm-option .option-content {
+  padding: 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.sqm-option:hover .option-content {
+  border-color: #4a90d9;
+}
+
+.sqm-option.selected .option-content {
+  border-color: #4a90d9;
+  background: #e8f4fd;
+}
+
+.option-label {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.option-desc {
+  font-size: 12px;
+  color: #888;
+}
+
+/* Windows Counter */
+.windows-input {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.btn-counter {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #4a90d9;
+  background: white;
+  color: #4a90d9;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-counter:hover {
+  background: #4a90d9;
+  color: white;
+}
+
+.windows-count {
+  font-size: 24px;
+  font-weight: bold;
+  min-width: 40px;
+  text-align: center;
+}
+
+/* Windows Options (Box style) */
+.windows-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.windows-option {
+  display: block;
+  cursor: pointer;
+}
+
+.windows-option input {
+  display: none;
+}
+
+.windows-option .option-content {
+  padding: 12px 8px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  background: white;
+  text-align: center;
+}
+
+.windows-option:hover .option-content {
+  border-color: #4a90d9;
+}
+
+.windows-option.selected .option-content {
+  border-color: #4a90d9;
+  background: #e8f4fd;
+}
+
+.windows-option .option-label {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 2px;
+  font-size: 14px;
+}
+
+.windows-option .option-desc {
+  font-size: 11px;
+  color: #888;
+}
+
+/* Estimate Box */
+.estimate-box {
+  background: linear-gradient(135deg, #4a90d9 0%, #357abd 100%);
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 25px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.estimate-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: white;
+}
+
+.estimate-icon {
+  font-size: 28px;
+}
+
+.estimate-item strong {
+  display: block;
+  font-size: 12px;
+  opacity: 0.9;
+  color: white;
+}
+
+.estimate-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+}
+
+.estimate-value.price {
+  font-size: 22px;
+  color: white;
+}
+
+/* Custom DatePicker Styles */
+.react-datepicker {
+  font-family: inherit;
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  width: 100%;
+}
+
+.react-datepicker__month-container {
+  width: 100%;
+}
+
+.react-datepicker__header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: none;
+  padding: 20px 15px 15px;
+  border-radius: 0;
+}
+
+.react-datepicker__current-month {
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  text-transform: capitalize;
+}
+
+.react-datepicker__day-names {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 10px;
+}
+
+.react-datepicker__day-name {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+  font-size: 0.85rem;
+  width: 40px;
+  text-transform: uppercase;
+}
+
+.react-datepicker__navigation {
+  top: 20px;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: white;
+}
+
+.react-datepicker__navigation:hover *::before {
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.react-datepicker__month {
+  margin: 0;
+  padding: 15px;
+  background: white;
+}
+
+.react-datepicker__week {
+  display: flex;
+  justify-content: space-around;
+}
+
+.react-datepicker__day {
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  margin: 3px;
+  border-radius: 50%;
+  font-size: 0.95rem;
+  color: #333;
+  transition: all 0.2s ease;
+}
+
+.react-datepicker__day:hover {
+  background-color: #f0f4ff;
+  border-radius: 50%;
+}
+
+.react-datepicker__day--selected {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+}
+
+.react-datepicker__day--selected:hover {
+  background: linear-gradient(135deg, #5a72d9 0%, #6a4291 100%);
+}
+
+.react-datepicker__day--keyboard-selected {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.react-datepicker__day--today {
+  font-weight: 700;
+  color: #667eea;
+}
+
+.react-datepicker__day--today.react-datepicker__day--selected {
+  color: white;
+}
+
+.react-datepicker__day--disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.react-datepicker__day--disabled:hover {
+  background-color: transparent;
+}
+
+.react-datepicker__day--outside-month {
+  color: #ccc;
+}
+
+/* Date Input */
+.date-input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.2s;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: #4a90d9;
+}
+
+/* Time Slots Grid */
+.time-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 5px;
+}
+
+.time-slot {
+  padding: 12px 8px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.time-slot:hover:not(.unavailable) {
+  border-color: #4a90d9;
+  background: #f0f7ff;
+}
+
+.time-slot.selected {
+  border-color: #4a90d9;
+  background: #4a90d9;
+  color: white;
+}
+
+.time-slot.unavailable {
+  background: #f5f5f5;
+  color: #ccc;
+  cursor: not-allowed;
+  border-color: #eee;
+}
+
+.slot-time {
+  display: block;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.slot-status {
+  display: block;
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+/* Loading Slots */
+.loading-slots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px;
+  color: #666;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #4a90d9;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* No Slots */
+.no-slots {
+  text-align: center;
+  padding: 30px;
+  color: #666;
+}
+
+.no-slots p {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+/* Selected Summary */
+.selected-summary {
+  background: #e8f5e9;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+  border-left: 4px solid #28a745;
+}
+
+.selected-summary strong {
+  color: #28a745;
+}
+
+.selected-summary p {
+  margin: 8px 0 0 0;
+  color: #333;
+}
+
+/* Booking Summary */
+.booking-summary {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 25px;
+  border: 1px solid #e0e0e0;
+}
+
+.booking-summary h4 {
+  margin: 0 0 15px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e0e0e0;
+  color: #333;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+.summary-item .label {
+  color: #666;
+}
+
+.summary-item .value {
+  font-weight: 500;
+  color: #333;
+}
+
+.summary-item.highlight {
+  grid-column: span 2;
+  background: #f0f7ff;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.summary-item.highlight .value.price {
+  font-size: 22px;
+  color: #4a90d9;
+}
+
+/* Input Fields */
+.form-step input[type="tel"],
+.form-step input[type="text"],
+.form-step textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.form-step input:focus,
+.form-step textarea:focus {
+  outline: none;
+  border-color: #4a90d9;
+}
+
+.form-step textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Payment Info */
+.payment-info {
+  background: #fff3cd;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #ffc107;
+}
+
+.payment-info p {
+  margin: 0 0 5px 0;
+  color: #856404;
+}
+
+.payment-info small {
+  color: #856404;
+  font-size: 13px;
+}
+
+/* Navigation */
+.form-navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.form-navigation .btn {
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.form-navigation .btn-secondary {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.form-navigation .btn-secondary:hover {
+  background: #d0d0d0;
+}
+
+.form-navigation .btn-primary {
+  background: #4a90d9;
+  color: white;
+}
+
+.form-navigation .btn-primary:hover:not(:disabled) {
+  background: #357abd;
+}
+
+.form-navigation .btn-primary:disabled {
+  background: #b8d4f0;
+  cursor: not-allowed;
+}
+
+.form-navigation .btn-success {
+  background: #28a745;
+  color: white;
+}
+
+.form-navigation .btn-success:hover {
+  background: #218838;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .square-meters-options {
+    grid-template-columns: 1fr;
+  }
+
+  .windows-options {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .time-slots-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .estimate-box {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .progress-steps::before {
+    left: 30px;
+    right: 30px;
+  }
+}

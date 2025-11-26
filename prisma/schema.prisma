@@ -54,6 +54,7 @@ model Service {
   description   String
   category      String?
   price         Float
+  priceType     String    @default("fixed") // "fixed", "hourly", "per_sqm"
   productsUsed  String?   // JSON string
   address       String?
   latitude      Float?
@@ -63,6 +64,11 @@ model Service {
   averageRating Float     @default(0)
   reviewCount   Int       @default(0)
   availability  String?   // JSON string
+  
+  // Scheduling settings
+  workingHoursStart String  @default("08:00")  // Provider's work start time
+  workingHoursEnd   String  @default("18:00")  // Provider's work end time
+  slotDurationMinutes Int   @default(30)       // Minimum booking slot duration
 
   bookings      Booking[]
   reviews       Review[]
@@ -91,6 +97,13 @@ model Booking {
   preferredTime   String?
   notes           String?
   address         String?
+  
+  // Smart booking fields
+  squareMetersRange   String?   // "0-50", "50-80", "80-120", "120+"
+  windowsCount        Int?      // Number of windows
+  estimatedDuration   Int?      // Estimated duration in minutes
+  startTime           String?   // Booking start time "HH:MM"
+  endTime             String?   // Booking end time "HH:MM"
 
   messages        ChatMessage[]
   review          Review?

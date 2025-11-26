@@ -1,16 +1,26 @@
 .notification-center {
   position: relative;
   margin-right: 15px;
+  display: flex;
+  align-items: center;
 }
 
 .notification-bell {
   background: none;
   border: none;
-  font-size: 24px;
   cursor: pointer;
   position: relative;
-  padding: 5px;
+  padding: 8px;
   transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+}
+
+.notification-bell svg {
+  width: 24px;
+  height: 24px;
 }
 
 .notification-bell:hover {
@@ -19,8 +29,8 @@
 
 .notification-badge {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 2px;
+  right: 2px;
   background-color: #dc3545;
   color: white;
   border-radius: 50%;

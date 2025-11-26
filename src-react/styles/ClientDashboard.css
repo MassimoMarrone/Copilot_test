@@ -250,6 +250,10 @@
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
 }
 
+.modal-content.modal-large {
+  max-width: 700px;
+}
+
 .modal-close {
   position: absolute;
   top: 16px;
