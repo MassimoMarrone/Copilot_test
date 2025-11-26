@@ -62,19 +62,26 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const login = async (email: string, password: string) => {
-    const response = await axios.post<AuthResponse>(
+    // First, authenticate
+    await axios.post(
       `${API_URL}/api/login`,
       { identifier: email, password },
       { withCredentials: true }
     );
 
-    if (response.data.user.userType !== "admin") {
+    // Then fetch user data
+    const meResponse = await axios.get<{ user: AdminUser }>(
+      `${API_URL}/api/me`,
+      { withCredentials: true }
+    );
+
+    if (meResponse.data.user.userType !== "admin") {
       throw new Error(
         "Accesso non autorizzato. Solo gli amministratori possono accedere."
       );
     }
 
-    setUser(response.data.user);
+    setUser(meResponse.data.user);
   };
 
   const logout = async () => {
