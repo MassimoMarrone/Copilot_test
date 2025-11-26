@@ -547,7 +547,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                     </svg>
                     Chat
                   </button>
-                  {booking.status === "completed" && !booking.review && (
+                  {booking.status === "completed" && !booking.hasReview && (
                     <button
                       onClick={() => {
                         setSelectedBooking(booking);
@@ -568,7 +568,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                       Recensisci
                     </button>
                   )}
-                  {booking.review && (
+                  {booking.hasReview && (
                     <span className="badge-reviewed">
                       <svg
                         width="14"
