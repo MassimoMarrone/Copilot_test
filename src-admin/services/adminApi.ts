@@ -12,9 +12,12 @@ export interface AdminUser {
   email: string;
   firstName?: string;
   lastName?: string;
+  displayName?: string;
   userType: string;
   isClient: boolean;
   isProvider: boolean;
+  isAdmin: boolean;
+  adminLevel?: "super" | "standard" | null;
   isBlocked: boolean;
   createdAt: string;
   servicesCount?: number;
@@ -133,5 +136,20 @@ export const adminApi = {
 
   async refundBooking(bookingId: string): Promise<void> {
     await api.post(`/bookings/${bookingId}/refund`);
+  },
+
+  // ============ SUPER ADMIN ONLY ============
+
+  async getAdmins(): Promise<AdminUser[]> {
+    const response = await api.get<AdminUser[]>("/admins");
+    return response.data;
+  },
+
+  async promoteToAdmin(userId: string): Promise<void> {
+    await api.post(`/users/${userId}/promote`);
+  },
+
+  async demoteAdmin(userId: string): Promise<void> {
+    await api.post(`/users/${userId}/demote`);
   },
 };

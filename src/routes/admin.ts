@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate, requireAdmin } from "../middleware/auth";
+import { authenticate, requireAdmin, requireSuperAdmin } from "../middleware/auth";
 import { adminController } from "../controllers/adminController";
 
 const router = Router();
@@ -73,5 +73,26 @@ router.delete(
 
 // Get stats
 router.get("/stats", authenticate, requireAdmin, adminController.getStats);
+
+// ============ SUPER ADMIN ONLY ROUTES ============
+
+// Get all admins
+router.get("/admins", authenticate, requireSuperAdmin, adminController.getAllAdmins);
+
+// Promote user to admin
+router.post(
+  "/users/:id/promote",
+  authenticate,
+  requireSuperAdmin,
+  adminController.promoteToAdmin
+);
+
+// Demote admin to user
+router.post(
+  "/users/:id/demote",
+  authenticate,
+  requireSuperAdmin,
+  adminController.demoteAdmin
+);
 
 export default router;

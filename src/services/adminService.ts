@@ -147,11 +147,107 @@ export const adminService = {
       0
     );
 
+    // Additional stats for dashboard
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const newUsersToday = await prisma.user.count({
+      where: { createdAt: { gte: today } },
+    });
+
+    const pendingBookings = await prisma.booking.count({
+      where: { status: "pending" },
+    });
+
+    const activeProviders = await prisma.user.count({
+      where: { isProvider: true, isBlocked: false },
+    });
+
+    const completedBookingsCount = await prisma.booking.count({
+      where: { status: "completed" },
+    });
+
     return {
       totalUsers,
       totalServices,
       totalBookings,
       totalRevenue,
+      newUsersToday,
+      pendingBookings,
+      activeProviders,
+      completedBookings: completedBookingsCount,
     };
+  },
+
+  // ============ SUPER ADMIN ONLY ============
+
+  async getAllAdmins() {
+    const admins = await prisma.user.findMany({
+      where: { isAdmin: true },
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+        firstName: true,
+        lastName: true,
+        adminLevel: true,
+        createdAt: true,
+      },
+    });
+    return admins;
+  },
+
+  async promoteToAdmin(userId: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (user.isAdmin) {
+      throw new Error("User is already an admin");
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        isAdmin: true,
+        adminLevel: "standard",
+        userType: "admin",
+      },
+    });
+
+    return { success: true, message: "User promoted to admin" };
+  },
+
+  async demoteAdmin(userId: string, currentAdminId: string) {
+    if (userId === currentAdminId) {
+      throw new Error("Cannot demote yourself");
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (!user.isAdmin) {
+      throw new Error("User is not an admin");
+    }
+
+    if (user.adminLevel === "super") {
+      throw new Error("Cannot demote a super admin");
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        isAdmin: false,
+        adminLevel: null,
+        userType: user.isProvider ? "provider" : "client",
+      },
+    });
+
+    return { success: true, message: "Admin demoted to user" };
   },
 };

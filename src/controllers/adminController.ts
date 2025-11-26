@@ -135,4 +135,55 @@ export const adminController = {
       res.status(500).json({ error: "Failed to fetch stats" });
     }
   },
+
+  // ============ SUPER ADMIN ONLY ============
+
+  async getAllAdmins(_req: Request, res: Response): Promise<void> {
+    try {
+      const admins = await adminService.getAllAdmins();
+      res.json(admins);
+    } catch (error: any) {
+      console.error("Error fetching admins:", error);
+      res.status(500).json({ error: "Failed to fetch admins" });
+    }
+  },
+
+  async promoteToAdmin(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const result = await adminService.promoteToAdmin(id);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error promoting user:", error);
+      if (error.message === "User not found") {
+        res.status(404).json({ error: error.message });
+      } else if (error.message === "User is already an admin") {
+        res.status(400).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Failed to promote user" });
+      }
+    }
+  },
+
+  async demoteAdmin(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const currentAdminId = req.user!.id;
+      const result = await adminService.demoteAdmin(id, currentAdminId);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error demoting admin:", error);
+      if (error.message === "User not found") {
+        res.status(404).json({ error: error.message });
+      } else if (
+        error.message === "User is not an admin" ||
+        error.message === "Cannot demote a super admin" ||
+        error.message === "Cannot demote yourself"
+      ) {
+        res.status(400).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Failed to demote admin" });
+      }
+    }
+  },
 };

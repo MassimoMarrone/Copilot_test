@@ -26,6 +26,7 @@ export const authenticate = (
       email: payload.email,
       userType: payload.userType,
       isAdmin: payload.isAdmin,
+      adminLevel: payload.adminLevel,
     };
     next();
   } catch (err) {
@@ -40,6 +41,18 @@ export const requireAdmin = (
 ): void => {
   if (!req.user || !req.user.isAdmin) {
     res.status(403).json({ error: "Admin access required" });
+    return;
+  }
+  next();
+};
+
+export const requireSuperAdmin = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (!req.user || !req.user.isAdmin || req.user.adminLevel !== "super") {
+    res.status(403).json({ error: "Super admin access required" });
     return;
   }
   next();

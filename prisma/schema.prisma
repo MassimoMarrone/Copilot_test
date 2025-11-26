@@ -21,6 +21,7 @@ model User {
   isClient              Boolean   @default(true)
   isProvider            Boolean   @default(false)
   isAdmin               Boolean   @default(false)
+  adminLevel            String?   // "super" | "standard" - null if not admin
   isBlocked             Boolean   @default(false)
   isDeleted             Boolean   @default(false)
   deletedAt             DateTime?

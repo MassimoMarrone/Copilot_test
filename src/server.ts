@@ -252,11 +252,26 @@ const initAdmin = async (): Promise<void> => {
         isClient: false,
         isProvider: false,
         isAdmin: true,
+        adminLevel: "super", // First admin is always super admin
         acceptedTerms: true,
         createdAt: new Date(),
       },
     });
-    console.log(`Created default admin: ${adminEmail}`);
+    console.log(`Created default super admin: ${adminEmail}`);
+  } else {
+    // Ensure existing admins without adminLevel get upgraded to super if they're the first
+    const firstAdmin = await prisma.user.findFirst({
+      where: { isAdmin: true },
+      orderBy: { createdAt: "asc" },
+    });
+    
+    if (firstAdmin && !firstAdmin.adminLevel) {
+      await prisma.user.update({
+        where: { id: firstAdmin.id },
+        data: { adminLevel: "super" },
+      });
+      console.log(`Upgraded first admin to super: ${firstAdmin.email}`);
+    }
   }
 };
 

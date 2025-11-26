@@ -10,6 +10,7 @@ export interface User {
   isClient: boolean; // All users start as clients
   isProvider: boolean; // Can become provider by accepting provider terms
   isAdmin?: boolean; // Admin flag
+  adminLevel?: "super" | "standard" | null; // Admin hierarchy: super can manage other admins
   isBlocked?: boolean; // Blocked flag
   acceptedTerms: boolean; // Client terms
   acceptedProviderTerms?: boolean; // Provider terms (if isProvider is true)
@@ -143,6 +144,7 @@ export interface JWTPayload {
   email: string;
   userType: "client" | "provider" | "admin";
   isAdmin?: boolean;
+  adminLevel?: "super" | "standard" | null;
 }
 
 declare global {

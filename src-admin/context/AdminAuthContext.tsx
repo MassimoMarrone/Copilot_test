@@ -11,11 +11,13 @@ interface AdminUser {
   id: string;
   email: string;
   userType: string;
+  adminLevel?: "super" | "standard" | null;
 }
 
 interface AdminAuthContextType {
   user: AdminUser | null;
   isAuthenticated: boolean;
+  isSuperAdmin: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
@@ -89,6 +91,7 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({
       value={{
         user,
         isAuthenticated: !!user,
+        isSuperAdmin: user?.adminLevel === "super",
         loading,
         login,
         logout,

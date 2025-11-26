@@ -152,6 +152,8 @@ export class AuthController {
         userType: user.userType,
         isClient: user.isClient,
         isProvider: user.isProvider,
+        isAdmin: user.isAdmin,
+        adminLevel: user.adminLevel,
         createdAt: user.createdAt,
       });
     } catch (error: any) {

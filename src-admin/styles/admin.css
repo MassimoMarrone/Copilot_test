@@ -998,6 +998,163 @@ body {
 }
 
 /* ======================================
+   ADMIN MANAGEMENT (Super Admin)
+   ====================================== */
+
+.admin-management {
+  border: 2px solid #f39c12;
+  background: linear-gradient(135deg, #fff9e6 0%, #ffffff 100%);
+}
+
+.admin-management h2 {
+  color: #e67e22;
+}
+
+.section-description {
+  color: var(--admin-text-light);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.admin-list {
+  margin-bottom: 30px;
+}
+
+.admin-list h3 {
+  font-size: 16px;
+  margin-bottom: 12px;
+  color: var(--admin-text);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-table th {
+  background: var(--admin-bg);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--admin-text-light);
+}
+
+.admin-level {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.admin-level.super {
+  background: #fef3cd;
+  color: #856404;
+}
+
+.admin-level.standard {
+  background: #e8f4fd;
+  color: #0c5460;
+}
+
+.demote-btn {
+  padding: 6px 12px;
+  background: #fff;
+  border: 1px solid var(--admin-danger);
+  color: var(--admin-danger);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.demote-btn:hover:not(:disabled) {
+  background: var(--admin-danger);
+  color: white;
+}
+
+.demote-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.protected {
+  color: var(--admin-text-light);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.promote-section {
+  background: var(--admin-bg);
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.promote-section h3 {
+  font-size: 16px;
+  margin-bottom: 12px;
+  color: var(--admin-text);
+}
+
+.promote-form {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.promote-form input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 2px solid var(--admin-border);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.promote-form input:focus {
+  outline: none;
+  border-color: var(--admin-secondary);
+}
+
+.promote-btn {
+  padding: 10px 20px;
+  background: var(--admin-success);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.promote-btn:hover:not(:disabled) {
+  background: #219a52;
+}
+
+.promote-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.promote-section small {
+  color: var(--admin-text-light);
+  font-size: 12px;
+}
+
+/* ======================================
    RESPONSIVE
    ====================================== */
 
