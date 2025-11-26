@@ -64,7 +64,7 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({
   const login = async (email: string, password: string) => {
     const response = await axios.post<AuthResponse>(
       `${API_URL}/api/login`,
-      { email, password },
+      { identifier: email, password },
       { withCredentials: true }
     );
 

@@ -116,7 +116,9 @@ const SettingsPage: React.FC = () => {
                       <td>{admin.displayName || admin.firstName || "-"}</td>
                       <td>
                         <span
-                          className={`admin-level ${admin.adminLevel || "standard"}`}
+                          className={`admin-level ${
+                            admin.adminLevel || "standard"
+                          }`}
                         >
                           {admin.adminLevel === "super"
                             ? "👑 Super Admin"

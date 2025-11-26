@@ -264,7 +264,7 @@ const initAdmin = async (): Promise<void> => {
       where: { isAdmin: true },
       orderBy: { createdAt: "asc" },
     });
-    
+
     if (firstAdmin && !firstAdmin.adminLevel) {
       await prisma.user.update({
         where: { id: firstAdmin.id },

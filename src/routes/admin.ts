@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { authenticate, requireAdmin, requireSuperAdmin } from "../middleware/auth";
+import {
+  authenticate,
+  requireAdmin,
+  requireSuperAdmin,
+} from "../middleware/auth";
 import { adminController } from "../controllers/adminController";
 
 const router = Router();
@@ -77,7 +81,12 @@ router.get("/stats", authenticate, requireAdmin, adminController.getStats);
 // ============ SUPER ADMIN ONLY ROUTES ============
 
 // Get all admins
-router.get("/admins", authenticate, requireSuperAdmin, adminController.getAllAdmins);
+router.get(
+  "/admins",
+  authenticate,
+  requireSuperAdmin,
+  adminController.getAllAdmins
+);
 
 // Promote user to admin
 router.post(
