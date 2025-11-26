@@ -151,10 +151,60 @@ npm run dev:full
 - [ ] App mobile (React Native).
 - [ ] Dashboard analytics per fornitori.
 
+## 🎯 Prossimi Passi Prima del Lancio
+
+### Priorità Alta (1-2 settimane)
+
+| Task                    | Descrizione                                        | Impatto |
+| ----------------------- | -------------------------------------------------- | ------- |
+| 🧪 **Testing**          | Aggiungere test unitari per auth, booking, payment | Critico |
+| 🛡️ **Error Boundaries** | Implementare error boundaries in React             | Alto    |
+| 📝 **Logging**          | Integrare Winston/Pino per logging strutturato     | Alto    |
+| 🔔 **Monitoring**       | Setup Sentry per error tracking                    | Alto    |
+
+### Priorità Media (1 mese)
+
+| Task            | Descrizione                              | Impatto |
+| --------------- | ---------------------------------------- | ------- |
+| ⚡ **Caching**  | Implementare Redis per sessioni e cache  | Medio   |
+| 🖼️ **Immagini** | Ottimizzazione WebP + lazy loading       | Medio   |
+| 📱 **PWA**      | Support offline e push notifications     | Medio   |
+| 👨‍💼 **Admin**    | Completare dashboard admin con analytics | Medio   |
+
+### Priorità Bassa (2-3 mesi)
+
+| Task                | Descrizione                 | Impatto |
+| ------------------- | --------------------------- | ------- |
+| 📲 **Mobile App**   | Sviluppo React Native       | Basso   |
+| 🌍 **Multi-lingua** | Supporto EN/IT/ES           | Basso   |
+| 🎁 **Referral**     | Sistema invita un amico     | Basso   |
+| 📊 **Analytics**    | Dashboard metriche avanzate | Basso   |
+
+### 📈 Valutazione Attuale
+
+| Aspetto        | Voto              | Note                          |
+| -------------- | ----------------- | ----------------------------- |
+| Funzionalità   | ⭐⭐⭐⭐⭐⭐⭐⭐½ | Feature complete per MVP+     |
+| Codice         | ⭐⭐⭐⭐⭐⭐⭐½   | Buona struttura, migliorabile |
+| UI/UX          | ⭐⭐⭐⭐⭐⭐⭐⭐  | Professionale e consistente   |
+| Sicurezza      | ⭐⭐⭐⭐⭐⭐⭐½   | Buona base                    |
+| Testing        | ⭐⭐⭐⭐          | **Area critica**              |
+| Documentazione | ⭐⭐⭐⭐⭐⭐⭐⭐  | Completa con /docs            |
+
+**Voto Complessivo: 7/10** - Pronta per MVP, richiede testing prima del lancio pubblico.
+
 ## 📁 Struttura Progetto
 
 ```
 ├── prisma/                 # Schema e migrazioni database
+├── docs/                   # 📚 Documentazione tecnica dettagliata
+│   ├── auth/               # Flussi autenticazione
+│   ├── booking/            # Sistema prenotazioni
+│   ├── payments/           # Pagamenti e escrow
+│   ├── chat/               # Chat e notifiche
+│   ├── services/           # Gestione servizi
+│   ├── reviews/            # Sistema recensioni
+│   └── dashboard/          # Dashboard utenti
 ├── src/                    # Backend (Node.js/Express)
 │   ├── controllers/        # Controller API
 │   ├── services/           # Logica business
@@ -167,6 +217,8 @@ npm run dev:full
 │   └── styles/             # CSS per componenti
 └── public/                 # Asset statici
 ```
+
+> 📖 **Documentazione Completa**: Consulta la cartella [`/docs`](./docs/README.md) per la documentazione tecnica dettagliata di ogni funzionalità.
 
 ## 📄 Licenza
 

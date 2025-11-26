@@ -17,12 +17,18 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
   onSwitchToLogin,
 }) => {
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [step, setStep] = useState(1); // 1: Terms, 2: Account Info
   const navigate = useNavigate();
   const { checkAuth } = useAuth();
 
@@ -85,12 +91,45 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
       return;
     }
 
+    if (!firstName.trim() || !lastName.trim()) {
+      setErrorMessage("Nome e cognome sono obbligatori.");
+      return;
+    }
+
+    if (!username.trim()) {
+      setErrorMessage("Il nome utente è obbligatorio.");
+      return;
+    }
+
+    // Validate username format (alphanumeric and underscores only)
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    if (!usernameRegex.test(username)) {
+      setErrorMessage(
+        "Il nome utente deve contenere solo lettere, numeri e underscore (3-20 caratteri)."
+      );
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMessage("Le password non corrispondono.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setErrorMessage("La password deve essere di almeno 8 caratteri.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const data = await authService.register({
         email,
+        username,
         password,
+        firstName,
+        lastName,
+        phone,
         acceptedTerms,
       });
 
@@ -224,8 +263,64 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="modal-form">
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="register-firstName">Nome *</label>
+              <input
+                type="text"
+                id="register-firstName"
+                value={firstName}
+                onChange={(e) => {
+                  setFirstName(e.target.value);
+                  setErrorMessage("");
+                }}
+                required
+                disabled={isLoading}
+                placeholder="Mario"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="register-lastName">Cognome *</label>
+              <input
+                type="text"
+                id="register-lastName"
+                value={lastName}
+                onChange={(e) => {
+                  setLastName(e.target.value);
+                  setErrorMessage("");
+                }}
+                required
+                disabled={isLoading}
+                placeholder="Rossi"
+              />
+            </div>
+          </div>
+
           <div className="form-group">
-            <label htmlFor="register-email">Email:</label>
+            <label htmlFor="register-username">Nome Utente *</label>
+            <input
+              type="text"
+              id="register-username"
+              value={username}
+              onChange={(e) => {
+                setUsername(
+                  e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "")
+                );
+                setErrorMessage("");
+              }}
+              required
+              disabled={isLoading}
+              placeholder="mario_rossi"
+              minLength={3}
+              maxLength={20}
+            />
+            <span className="input-hint">
+              Puoi usare lettere, numeri e underscore (3-20 caratteri)
+            </span>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="register-email">Email *</label>
             <input
               type="email"
               id="register-email"
@@ -237,24 +332,61 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
               }}
               required
               disabled={isLoading}
+              placeholder="mario.rossi@email.com"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="register-password">Password:</label>
+            <label htmlFor="register-phone">Telefono (opzionale)</label>
             <input
-              type="password"
-              id="register-password"
-              value={password}
+              type="tel"
+              id="register-phone"
+              value={phone}
               onChange={(e) => {
-                setPassword(e.target.value);
-                setSuccessMessage("");
+                setPhone(e.target.value);
                 setErrorMessage("");
               }}
-              required
               disabled={isLoading}
-              minLength={8}
+              placeholder="+39 333 1234567"
             />
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="register-password">Password *</label>
+              <input
+                type="password"
+                id="register-password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setSuccessMessage("");
+                  setErrorMessage("");
+                }}
+                required
+                disabled={isLoading}
+                minLength={8}
+                placeholder="Minimo 8 caratteri"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="register-confirm-password">
+                Conferma Password *
+              </label>
+              <input
+                type="password"
+                id="register-confirm-password"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  setErrorMessage("");
+                }}
+                required
+                disabled={isLoading}
+                minLength={8}
+                placeholder="Ripeti la password"
+              />
+            </div>
           </div>
 
           {errorMessage && (

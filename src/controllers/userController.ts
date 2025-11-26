@@ -5,12 +5,27 @@ export class UserController {
   async updateProfile(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user!.id;
-      const { displayName, bio } = req.body;
+      const {
+        displayName,
+        bio,
+        firstName,
+        lastName,
+        phone,
+        city,
+        address,
+        postalCode,
+      } = req.body;
       const avatarUrl = req.file ? "/uploads/" + req.file.filename : undefined;
 
       const user = await userService.updateProfile(userId, {
         displayName,
         bio,
+        firstName,
+        lastName,
+        phone,
+        city,
+        address,
+        postalCode,
         avatarUrl,
       });
 

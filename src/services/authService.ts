@@ -12,25 +12,62 @@ const JWT_SECRET =
 
 export class AuthService {
   async register(data: any) {
-    const { email, password, acceptedTerms } = data;
+    const {
+      email,
+      username,
+      password,
+      acceptedTerms,
+      firstName,
+      lastName,
+      phone,
+      city,
+    } = data;
 
     if (acceptedTerms !== true && acceptedTerms !== "true") {
       throw new Error("You must accept the Terms & Conditions");
     }
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
-      throw new Error("User already exists");
+    // Validate username format
+    if (!username || !/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+      throw new Error(
+        "Username must be 3-20 characters, using only letters, numbers, and underscores"
+      );
+    }
+
+    // Check if email already exists
+    const existingEmail = await prisma.user.findUnique({ where: { email } });
+    if (existingEmail) {
+      throw new Error("Email already registered");
+    }
+
+    // Check if username already exists
+    const existingUsername = await prisma.user.findUnique({
+      where: { username },
+    });
+    if (existingUsername) {
+      throw new Error("Username already taken");
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
+    // Generate display name from firstName and lastName
+    const displayName =
+      firstName && lastName
+        ? `${firstName} ${lastName}`
+        : firstName || username;
+
     const user = await prisma.user.create({
       data: {
         email,
+        username: username.toLowerCase(),
         password: hashedPassword,
+        displayName,
+        firstName: firstName || null,
+        lastName: lastName || null,
+        phone: phone || null,
+        city: city || null,
         userType: "client",
         isClient: true,
         isProvider: false,
@@ -154,8 +191,14 @@ export class AuthService {
   }
 
   async login(data: any) {
-    const { email, password } = data;
-    const user = await prisma.user.findUnique({ where: { email } });
+    const { identifier, password } = data;
+
+    // Find user by email or username
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [{ email: identifier }, { username: identifier.toLowerCase() }],
+      },
+    });
 
     if (!user) {
       throw new Error("Invalid credentials");

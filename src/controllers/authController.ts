@@ -139,12 +139,20 @@ export class AuthController {
       res.json({
         id: user.id,
         email: user.email,
+        username: user.username,
         displayName: user.displayName,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone,
+        city: user.city,
+        address: user.address,
+        postalCode: user.postalCode,
         bio: user.bio,
         avatarUrl: user.avatarUrl,
         userType: user.userType,
         isClient: user.isClient,
         isProvider: user.isProvider,
+        createdAt: user.createdAt,
       });
     } catch (error: any) {
       console.error("Error in /api/me:", error);

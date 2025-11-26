@@ -16,7 +16,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
   onClose,
   onSwitchToRegister,
 }) => {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState(""); // Can be email or username
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -114,7 +114,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
     setIsLoading(true);
 
     try {
-      const data = await authService.login({ email, password });
+      const data = await authService.login({ identifier, password });
 
       if (data.success) {
         await checkAuth(); // Update auth state immediately
@@ -284,14 +284,15 @@ const LoginModal: React.FC<LoginModalProps> = ({
 
             <form onSubmit={handleSubmit} className="modal-form">
               <div className="form-group">
-                <label htmlFor="login-email">Email:</label>
+                <label htmlFor="login-identifier">Email o Nome Utente:</label>
                 <input
-                  type="email"
-                  id="login-email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  type="text"
+                  id="login-identifier"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   required
                   disabled={isLoading}
+                  placeholder="email@esempio.com o nome_utente"
                 />
               </div>
 

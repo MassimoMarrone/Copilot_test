@@ -10,17 +10,38 @@ import CompleteBookingModal from "./provider/CompleteBookingModal";
 import AvailabilityModal from "./provider/AvailabilityModal";
 import { Service, Booking, Review } from "../types/provider";
 import { ProviderAvailability } from "./AvailabilityManager";
-import { authService } from "../services/authService";
+import { authService, User } from "../services/authService";
 import { servicesService } from "../services/servicesService";
 import { bookingService } from "../services/bookingService";
 import { reviewService } from "../services/reviewService";
 import "../styles/ProviderDashboard.css";
 import "../styles/ToastNotification.css";
 
+interface ProviderStats {
+  totalServices: number;
+  totalBookings: number;
+  pendingBookings: number;
+  completedBookings: number;
+  totalEarnings: number;
+  averageRating: number;
+}
+
 const ProviderDashboard: React.FC = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [activeTab, setActiveTab] = useState<
+    "services" | "bookings" | "reviews"
+  >("bookings");
+  const [stats, setStats] = useState<ProviderStats>({
+    totalServices: 0,
+    totalBookings: 0,
+    pendingBookings: 0,
+    completedBookings: 0,
+    totalEarnings: 0,
+    averageRating: 0,
+  });
 
   // Modal States
   const [showServiceModal, setShowServiceModal] = useState(false);
@@ -50,6 +71,26 @@ const ProviderDashboard: React.FC = () => {
     loadBookings();
     loadReviews();
   }, []);
+
+  // Calculate stats when data changes
+  useEffect(() => {
+    const completed = bookings.filter((b) => b.status === "completed");
+    const pending = bookings.filter((b) => b.status === "pending");
+    const totalEarnings = completed.reduce((sum, b) => sum + b.amount, 0);
+    const avgRating =
+      reviews.length > 0
+        ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+        : 0;
+
+    setStats({
+      totalServices: services.length,
+      totalBookings: bookings.length,
+      pendingBookings: pending.length,
+      completedBookings: completed.length,
+      totalEarnings,
+      averageRating: avgRating,
+    });
+  }, [services, bookings, reviews]);
 
   // Socket.IO connection for real-time updates
   useEffect(() => {
@@ -90,6 +131,7 @@ const ProviderDashboard: React.FC = () => {
   const checkAuth = async () => {
     try {
       const user = await authService.getCurrentUser();
+      setCurrentUser(user);
       setUserEmail(user.email);
       setUserId(user.id);
       const isProviderUser = user.isProvider || user.userType === "provider";
@@ -229,61 +271,317 @@ const ProviderDashboard: React.FC = () => {
   return (
     <div className="provider-dashboard">
       <div className="dashboard-header">
-        <h1>🛠️ Dashboard Fornitore</h1>
+        <div className="header-info">
+          <h1>
+            Ciao,{" "}
+            {currentUser?.firstName || currentUser?.displayName || "Fornitore"}!
+            🛠️
+          </h1>
+          <p className="header-subtitle">
+            Gestisci i tuoi servizi e prenotazioni
+          </p>
+        </div>
         <div className="header-actions">
           <button
-            className="btn-secondary"
+            className="btn btn-secondary"
             onClick={() => navigate("/client-dashboard")}
-            style={{ marginRight: "10px" }}
           >
-            👤 Dashboard Cliente
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            Dashboard Cliente
           </button>
           <button
-            className="btn-add-service"
+            className="btn btn-primary"
             onClick={() => {
               setServiceModalMode("create");
               setEditingService(null);
               setShowServiceModal(true);
             }}
           >
-            + Nuovo Servizio
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Nuovo Servizio
           </button>
         </div>
       </div>
 
-      <div className="dashboard-section">
-        <h2>📦 I Miei Servizi</h2>
-        <ServiceList
-          services={services}
-          onEdit={(service) => {
-            setEditingService(service);
-            setServiceModalMode("edit");
-            setShowServiceModal(true);
-          }}
-          onCalendar={(service) => setAvailabilityService(service)}
-          onDelete={handleDeleteService}
-        />
+      {/* Stats Cards */}
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-icon stat-icon-blue">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+            </svg>
+          </div>
+          <div className="stat-content">
+            <span className="stat-value">{stats.totalServices}</span>
+            <span className="stat-label">Servizi Attivi</span>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon stat-icon-orange">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
+          <div className="stat-content">
+            <span className="stat-value">{stats.pendingBookings}</span>
+            <span className="stat-label">In Attesa</span>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon stat-icon-green">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+          </div>
+          <div className="stat-content">
+            <span className="stat-value">
+              €{stats.totalEarnings.toFixed(0)}
+            </span>
+            <span className="stat-label">Guadagni Totali</span>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon stat-icon-purple">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+          </div>
+          <div className="stat-content">
+            <span className="stat-value">{stats.averageRating.toFixed(1)}</span>
+            <span className="stat-label">Valutazione Media</span>
+          </div>
+        </div>
       </div>
 
-      <div className="dashboard-section">
-        <h2>📅 Prenotazioni Ricevute</h2>
-        <BookingList
-          bookings={bookings}
-          onComplete={(booking) => {
-            setSelectedBooking(booking);
-            setShowCompleteModal(true);
-          }}
-          onCancel={handleCancelBooking}
-          onChat={(booking) => {
-            navigate(`/messages?bookingId=${booking.id}`);
-          }}
-        />
+      {/* Tabs */}
+      <div className="dashboard-tabs">
+        <button
+          className={`tab-btn ${activeTab === "bookings" ? "active" : ""}`}
+          onClick={() => setActiveTab("bookings")}
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          Prenotazioni ({bookings.length})
+        </button>
+        <button
+          className={`tab-btn ${activeTab === "services" ? "active" : ""}`}
+          onClick={() => setActiveTab("services")}
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+          </svg>
+          I Miei Servizi ({services.length})
+        </button>
+        <button
+          className={`tab-btn ${activeTab === "reviews" ? "active" : ""}`}
+          onClick={() => setActiveTab("reviews")}
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+          Recensioni ({reviews.length})
+        </button>
       </div>
 
-      <div className="dashboard-section">
-        <h2>⭐ Le Mie Recensioni</h2>
-        <ReviewList reviews={reviews} />
-      </div>
+      {/* Content based on active tab */}
+      {activeTab === "bookings" && (
+        <div className="dashboard-section">
+          <div className="section-header">
+            <h2>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              Prenotazioni Ricevute
+            </h2>
+          </div>
+          <BookingList
+            bookings={bookings}
+            onComplete={(booking) => {
+              setSelectedBooking(booking);
+              setShowCompleteModal(true);
+            }}
+            onCancel={handleCancelBooking}
+            onChat={(booking) => {
+              navigate(`/messages?bookingId=${booking.id}`);
+            }}
+          />
+        </div>
+      )}
+
+      {activeTab === "services" && (
+        <div className="dashboard-section">
+          <div className="section-header">
+            <h2>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+              </svg>
+              I Miei Servizi
+            </h2>
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => {
+                setServiceModalMode("create");
+                setEditingService(null);
+                setShowServiceModal(true);
+              }}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Aggiungi
+            </button>
+          </div>
+          <ServiceList
+            services={services}
+            onEdit={(service) => {
+              setEditingService(service);
+              setServiceModalMode("edit");
+              setShowServiceModal(true);
+            }}
+            onCalendar={(service) => setAvailabilityService(service)}
+            onDelete={handleDeleteService}
+          />
+        </div>
+      )}
+
+      {activeTab === "reviews" && (
+        <div className="dashboard-section">
+          <div className="section-header">
+            <h2>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+              Le Mie Recensioni
+            </h2>
+            {stats.averageRating > 0 && (
+              <div className="average-rating-badge">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="#ffc107"
+                  stroke="#ffc107"
+                  strokeWidth="2"
+                >
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+                {stats.averageRating.toFixed(1)} media
+              </div>
+            )}
+          </div>
+          <ReviewList reviews={reviews} />
+        </div>
+      )}
 
       {/* Toast Notifications Container */}
       <div className="toast-container">

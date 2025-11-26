@@ -5,12 +5,29 @@ const prisma = new PrismaClient();
 export class UserService {
   async updateProfile(
     userId: string,
-    data: { displayName?: string; bio?: string; avatarUrl?: string }
+    data: {
+      displayName?: string;
+      bio?: string;
+      avatarUrl?: string;
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+      city?: string;
+      address?: string;
+      postalCode?: string;
+    }
   ) {
     const updateData: any = {};
-    if (data.displayName) updateData.displayName = data.displayName;
-    if (data.bio) updateData.bio = data.bio;
-    if (data.avatarUrl) updateData.avatarUrl = data.avatarUrl;
+    if (data.displayName !== undefined)
+      updateData.displayName = data.displayName;
+    if (data.bio !== undefined) updateData.bio = data.bio;
+    if (data.avatarUrl !== undefined) updateData.avatarUrl = data.avatarUrl;
+    if (data.firstName !== undefined) updateData.firstName = data.firstName;
+    if (data.lastName !== undefined) updateData.lastName = data.lastName;
+    if (data.phone !== undefined) updateData.phone = data.phone;
+    if (data.city !== undefined) updateData.city = data.city;
+    if (data.address !== undefined) updateData.address = data.address;
+    if (data.postalCode !== undefined) updateData.postalCode = data.postalCode;
 
     const user = await prisma.user.update({
       where: { id: userId },
@@ -21,9 +38,16 @@ export class UserService {
       id: user.id,
       email: user.email,
       displayName: user.displayName,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: user.phone,
+      city: user.city,
+      address: user.address,
+      postalCode: user.postalCode,
       bio: user.bio,
       avatarUrl: user.avatarUrl,
       isProvider: user.isProvider,
+      createdAt: user.createdAt,
     };
   }
 

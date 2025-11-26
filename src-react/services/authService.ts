@@ -3,7 +3,14 @@ import { get, post, del, upload } from "./api";
 export interface User {
   id: string;
   email: string;
+  username?: string;
   displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
   bio?: string;
   avatarUrl?: string;
   userType: "client" | "provider" | "admin";
