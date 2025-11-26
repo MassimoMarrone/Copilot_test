@@ -75,11 +75,19 @@ export class ServicesService {
       longitude,
       productsUsed,
       imageUrl,
+      workingHoursStart,
+      workingHoursEnd,
+      slotDurationMinutes,
     } = data;
 
     const defaultDaySchedule = {
       enabled: true,
-      slots: [{ start: "09:00", end: "17:00" }],
+      slots: [
+        {
+          start: workingHoursStart || "08:00",
+          end: workingHoursEnd || "18:00",
+        },
+      ],
     };
 
     const defaultWeeklySchedule = {
@@ -110,6 +118,11 @@ export class ServicesService {
         longitude: longitude ? parseFloat(longitude) : undefined,
         imageUrl,
         createdAt: new Date(),
+        workingHoursStart: workingHoursStart || "08:00",
+        workingHoursEnd: workingHoursEnd || "18:00",
+        slotDurationMinutes: slotDurationMinutes
+          ? parseInt(slotDurationMinutes)
+          : 60,
         availability: JSON.stringify({
           weekly: defaultWeeklySchedule,
           blockedDates: [],
