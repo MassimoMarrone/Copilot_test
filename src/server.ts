@@ -129,6 +129,10 @@ app.use(
   "/assets",
   express.static(path.join(__dirname, "..", "public", "react", "assets"))
 );
+app.use(
+  "/admin/assets",
+  express.static(path.join(__dirname, "..", "public", "admin", "assets"))
+);
 app.use(express.static("public"));
 
 // Rate Limiting
@@ -167,6 +171,21 @@ const serveSpa = (_req: Request, res: Response) => {
     res.status(404).send('Application not built. Run "npm run build" first.');
   }
 };
+
+// Admin SPA Fallback
+const serveAdminSpa = (_req: Request, res: Response) => {
+  const htmlPath = path.join(__dirname, "..", "public", "admin", "index.html");
+
+  if (fs.existsSync(htmlPath)) {
+    res.sendFile(htmlPath);
+  } else {
+    res.status(404).send('Admin not built. Run "npm run build:admin" first.');
+  }
+};
+
+// Admin routes (must be before main SPA routes)
+app.get("/admin", pageLimiter, serveAdminSpa);
+app.get("/admin/*splat", pageLimiter, serveAdminSpa);
 
 app.get(
   [
