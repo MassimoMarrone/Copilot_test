@@ -163,8 +163,8 @@ const ServicesPage: React.FC = () => {
     }
 
     if (location && location.lat && location.lng) {
-      filters.lat = location.lat;
-      filters.lng = location.lng;
+      filters.latitude = location.lat;
+      filters.longitude = location.lng;
     }
 
     if (priceRange) {
@@ -178,7 +178,7 @@ const ServicesPage: React.FC = () => {
 
     try {
       setLoading(true);
-      const result = await servicesService.searchServices(filters, 1, 100); // Load more results for search
+      const result = await servicesService.getAllServices(1, 100, filters); // Load more results for search
       setFilteredServices(result.services);
       setIsFiltered(true);
     } catch (error) {
