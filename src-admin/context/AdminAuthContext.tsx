@@ -39,10 +39,6 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({
     checkAuth();
   }, []);
 
-  interface AuthResponse {
-    user: AdminUser;
-  }
-
   const checkAuth = async () => {
     try {
       const response = await axios.get<AdminUser>(`${API_URL}/api/me`, {
@@ -70,18 +66,18 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({
     );
 
     // Then fetch user data
-    const meResponse = await axios.get<{ user: AdminUser }>(
+    const meResponse = await axios.get<AdminUser>(
       `${API_URL}/api/me`,
       { withCredentials: true }
     );
 
-    if (meResponse.data.user.userType !== "admin") {
+    if (meResponse.data.userType !== "admin") {
       throw new Error(
         "Accesso non autorizzato. Solo gli amministratori possono accedere."
       );
     }
 
-    setUser(meResponse.data.user);
+    setUser(meResponse.data);
   };
 
   const logout = async () => {
