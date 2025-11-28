@@ -5,7 +5,6 @@ import NotificationCenter from "./NotificationCenter";
 import logo from "../assets/logo.jpg";
 import "../styles/Navbar.css";
 
-
 interface NavbarProps {
   onLoginClick: () => void;
   onRegisterClick: () => void;
@@ -72,6 +71,7 @@ const Navbar: React.FC<NavbarProps> = ({
               <NotificationCenter userId={user.id} />
               <UserMenu
                 userEmail={user.email}
+                userName={user.displayName || user.username}
                 userType={user.userType}
                 isProvider={user.isProvider}
                 unreadMessagesCount={unreadMessagesCount}

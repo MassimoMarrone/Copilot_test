@@ -93,15 +93,15 @@ const ServicesPage: React.FC = () => {
         setLoading(true);
       }
       const result = await servicesService.getAllServices(pageNum, 12);
-      
+
       if (reset) {
         setServices(result.services);
         setFilteredServices(result.services);
       } else {
-        setServices(prev => [...prev, ...result.services]);
-        setFilteredServices(prev => [...prev, ...result.services]);
+        setServices((prev) => [...prev, ...result.services]);
+        setFilteredServices((prev) => [...prev, ...result.services]);
       }
-      
+
       setPage(pageNum);
       setHasMore(result.pagination.hasMore);
     } catch (error) {
@@ -211,12 +211,12 @@ const ServicesPage: React.FC = () => {
     // Check if any filter is active
     const hasActiveFilters = Boolean(
       query.trim() !== "" ||
-      (category && category !== "Tutte") ||
-      (products && products.length > 0) ||
-      (location && location.lat && location.lng) ||
-      (priceRange && (priceRange.min > 0 || priceRange.max < Infinity))
+        (category && category !== "Tutte") ||
+        (products && products.length > 0) ||
+        (location && location.lat && location.lng) ||
+        (priceRange && (priceRange.min > 0 || priceRange.max < Infinity))
     );
-    
+
     setIsFiltered(hasActiveFilters);
     setFilteredServices(filtered);
   };
@@ -351,103 +351,107 @@ const ServicesPage: React.FC = () => {
                       alt={service.title}
                       className="service-image"
                       style={{
-                      height: "200px",
-                      objectFit: "cover",
-                      width: "100%",
-                    }}
-                  />
-                ) : (
-                  <div className="service-image-placeholder">
-                    {/* Placeholder for service image */}
-                    <span>{service.title.charAt(0)}</span>
-                  </div>
-                )}
-                <div className="service-content">
-                  <h3>{service.title}</h3>
-                  <p className="service-price">€{service.price.toFixed(2)}</p>
-                  <div
-                    className="service-rating"
-                    onClick={() => openReviewsModal(service)}
-                    title="Clicca per vedere le recensioni"
-                  >
-                    <span className="rating-stars">
-                      {"⭐".repeat(Math.round(service.averageRating || 0))}
-                      {"☆".repeat(5 - Math.round(service.averageRating || 0))}
-                    </span>
-                    <span className="review-count">
-                      ({service.reviewCount || 0} recensioni)
-                    </span>
-                  </div>
-
-                  <div style={{ marginBottom: "10px" }}>
-                    <a
-                      href={`/provider/${service.providerId}`}
-                      className="provider-profile-link"
-                      style={{
-                        color: "#007bff",
-                        textDecoration: "none",
-                        fontSize: "0.9rem",
+                        height: "200px",
+                        objectFit: "cover",
+                        width: "100%",
                       }}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      👤 Vedi Profilo Fornitore
-                    </a>
-                  </div>
-
-                  <p className="service-description">{service.description}</p>
-
-                  {service.productsUsed && service.productsUsed.length > 0 && (
-                    <div className="service-products">
-                      {service.productsUsed.map((product) => (
-                        <span key={product} className="product-tag">
-                          {product}
-                        </span>
-                      ))}
+                    />
+                  ) : (
+                    <div className="service-image-placeholder">
+                      {/* Placeholder for service image */}
+                      <span>{service.title.charAt(0)}</span>
                     </div>
                   )}
+                  <div className="service-content">
+                    <h3>{service.title}</h3>
+                    <p className="service-price">€{service.price.toFixed(2)}</p>
+                    <div
+                      className="service-rating"
+                      onClick={() => openReviewsModal(service)}
+                      title="Clicca per vedere le recensioni"
+                    >
+                      <span className="rating-stars">
+                        {"⭐".repeat(Math.round(service.averageRating || 0))}
+                        {"☆".repeat(5 - Math.round(service.averageRating || 0))}
+                      </span>
+                      <span className="review-count">
+                        ({service.reviewCount || 0} recensioni)
+                      </span>
+                    </div>
 
-                  {service.address && (
-                    <p className="service-location">📍 {service.address}</p>
-                  )}
-                  <button
-                    className="btn-book"
-                    onClick={() => openBookingModal(service)}
-                  >
-                    Prenota Ora
-                  </button>
-                  <button
-                    className="btn-reviews"
-                    onClick={() => openReviewsModal(service)}
-                  >
-                    Leggi Recensioni
-                  </button>
+                    <div style={{ marginBottom: "10px" }}>
+                      <a
+                        href={`/provider/${service.providerId}`}
+                        className="provider-profile-link"
+                        style={{
+                          color: "#007bff",
+                          textDecoration: "none",
+                          fontSize: "0.9rem",
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        👤 Vedi Profilo Fornitore
+                      </a>
+                    </div>
+
+                    <p className="service-description">{service.description}</p>
+
+                    {service.productsUsed &&
+                      service.productsUsed.length > 0 && (
+                        <div className="service-products">
+                          {service.productsUsed.map((product) => (
+                            <span key={product} className="product-tag">
+                              {product}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                    {service.address && (
+                      <p className="service-location">📍 {service.address}</p>
+                    )}
+                    <button
+                      className="btn-book"
+                      onClick={() => openBookingModal(service)}
+                    >
+                      Prenota Ora
+                    </button>
+                    <button
+                      className="btn-reviews"
+                      onClick={() => openReviewsModal(service)}
+                    >
+                      Leggi Recensioni
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))
-          )}
-          
-          {/* Loading more skeletons */}
-          {loadingMore && (
-            <>
-              {[...Array(3)].map((_, i) => (
-                <ServiceCardSkeleton key={`loading-${i}`} />
-              ))}
-            </>
-          )}
-        </div>
+              ))
+            )}
 
-        {/* Infinite scroll trigger */}
-        {!isFiltered && hasMore && !loadingMore && (
-          <div ref={loadMoreRef} style={{ height: "20px", margin: "20px 0" }} />
-        )}
-
-        {/* End of results */}
-        {!hasMore && filteredServices.length > 0 && (
-          <div className="end-of-results">
-            ✨ Hai visto tutti i {filteredServices.length} servizi disponibili
+            {/* Loading more skeletons */}
+            {loadingMore && (
+              <>
+                {[...Array(3)].map((_, i) => (
+                  <ServiceCardSkeleton key={`loading-${i}`} />
+                ))}
+              </>
+            )}
           </div>
-        )}
-      </>
+
+          {/* Infinite scroll trigger */}
+          {!isFiltered && hasMore && !loadingMore && (
+            <div
+              ref={loadMoreRef}
+              style={{ height: "20px", margin: "20px 0" }}
+            />
+          )}
+
+          {/* End of results */}
+          {!hasMore && filteredServices.length > 0 && (
+            <div className="end-of-results">
+              ✨ Hai visto tutti i {filteredServices.length} servizi disponibili
+            </div>
+          )}
+        </>
       )}
 
       {/* Booking Modal with Smart Booking Form */}

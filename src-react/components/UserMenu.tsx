@@ -5,6 +5,7 @@ import { authService } from "../services/authService";
 
 interface UserMenuProps {
   userEmail?: string;
+  userName?: string;
   userType?: "client" | "provider" | "admin";
   isProvider?: boolean;
   unreadMessagesCount?: number;
@@ -14,6 +15,7 @@ interface UserMenuProps {
 
 const UserMenu: React.FC<UserMenuProps> = ({
   userEmail,
+  userName,
   userType,
   isProvider,
   unreadMessagesCount = 0,
@@ -99,7 +101,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
             <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </span>
-        <span className="user-email">{userEmail || "Utente"}</span>
+        <span className="user-email">{userName || userEmail || "Utente"}</span>
       </button>
 
       {isOpen && (
@@ -121,7 +123,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
               </svg>
             </div>
             <div className="user-info">
-              <div className="user-name">{userEmail}</div>
+              <div className="user-name">{userName || userEmail}</div>
               <div className="user-role">
                 {userType === "admin"
                   ? "Amministratore"

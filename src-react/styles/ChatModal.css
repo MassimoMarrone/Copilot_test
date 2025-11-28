@@ -296,3 +296,74 @@
     font-size: 0.75rem;
   }
 }
+
+@media (max-width: 480px) {
+  .chat-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .chat-modal-container {
+    width: 100%;
+    height: 95vh;
+    max-height: 95vh;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .chat-modal-header {
+    padding: 16px;
+  }
+
+  .chat-header-info h3 {
+    font-size: 1.1rem;
+  }
+
+  .chat-with {
+    font-size: 0.8rem;
+  }
+
+  .chat-close-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 1.75rem;
+  }
+
+  .chat-messages-container {
+    padding: 16px 12px;
+  }
+
+  .chat-messages {
+    gap: 10px;
+  }
+
+  .message-bubble {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 14px;
+  }
+
+  .message-text {
+    font-size: 0.9rem;
+  }
+
+  .message-time {
+    font-size: 0.65rem;
+  }
+
+  .chat-input-form {
+    padding: 12px 14px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .chat-input {
+    padding: 10px 14px;
+    font-size: 16px; /* Previene zoom su iOS */
+    border-radius: 20px;
+  }
+
+  .chat-send-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+}

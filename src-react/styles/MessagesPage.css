@@ -254,3 +254,86 @@
     display: block;
   }
 }
+
+@media (max-width: 480px) {
+  .messages-page {
+    height: calc(100vh - 56px); /* Altezza ridotta per navbar mobile */
+  }
+
+  .conversations-header {
+    padding: 16px;
+  }
+
+  .conversations-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .conversation-item {
+    padding: 12px 16px;
+  }
+
+  .conversation-title {
+    font-size: 0.95rem;
+    max-width: 60%;
+  }
+
+  .conversation-time {
+    font-size: 0.75rem;
+  }
+
+  .conversation-preview {
+    font-size: 0.85rem;
+  }
+
+  .chat-header {
+    padding: 12px 16px;
+  }
+
+  .chat-header-info h3 {
+    font-size: 1rem;
+  }
+
+  .chat-header-info p {
+    font-size: 0.8rem;
+  }
+
+  .messages-container {
+    padding: 16px 12px;
+    gap: 10px;
+  }
+
+  .message-bubble {
+    max-width: 85%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+  }
+
+  .message-time {
+    font-size: 0.65rem;
+  }
+
+  .message-input-area {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .message-input {
+    padding: 10px 14px;
+    font-size: 16px; /* Previene zoom su iOS */
+    border-radius: 18px;
+  }
+
+  .send-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .empty-chat-state {
+    padding: 16px;
+  }
+
+  .empty-chat-state h3 {
+    font-size: 1.1rem;
+  }
+}

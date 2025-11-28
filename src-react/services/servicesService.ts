@@ -31,7 +31,10 @@ export interface PaginatedServices {
 
 export const servicesService = {
   // Get all services with pagination (public)
-  getAllServices: async (page: number = 1, limit: number = 12): Promise<PaginatedServices> => {
+  getAllServices: async (
+    page: number = 1,
+    limit: number = 12
+  ): Promise<PaginatedServices> => {
     return get<PaginatedServices>(`/api/services?page=${page}&limit=${limit}`);
   },
 

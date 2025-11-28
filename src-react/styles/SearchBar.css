@@ -318,3 +318,66 @@
     padding: 12px 0;
   }
 }
+
+@media (max-width: 480px) {
+  .search-bar-container {
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
+  .search-form {
+    gap: 12px;
+  }
+
+  .search-input {
+    padding: 10px 12px;
+    font-size: 15px;
+    border-radius: 6px;
+  }
+
+  .location-input {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .location-input-wrapper {
+    border-radius: 6px;
+  }
+
+  .filter-toggle-btn {
+    padding: 10px 14px;
+    font-size: 13px;
+    border-radius: 6px;
+  }
+
+  .search-button {
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 6px;
+  }
+
+  .filters-dropdown {
+    padding: 16px;
+    border-radius: 10px;
+    gap: 16px;
+  }
+
+  .filter-label {
+    font-size: 13px;
+  }
+
+  .category-select {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .location-results-dropdown {
+    border-radius: 6px;
+  }
+
+  .location-result-item {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}

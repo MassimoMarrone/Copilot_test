@@ -137,7 +137,55 @@
 }
 
 @media (max-width: 768px) {
+  .navbar {
+    padding: 0 12px;
+    height: 60px;
+  }
+
+  .navbar-logo {
+    height: 32px;
+    max-width: 140px;
+  }
+
   .navbar-links {
-    display: none; /* Mobile menu to be implemented */
+    display: none;
+  }
+
+  .navbar-buttons {
+    gap: 8px;
+  }
+
+  .user-actions {
+    gap: 12px;
+  }
+
+  .btn-navbar {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .btn-login {
+    display: none; /* Mostra solo registrati su mobile */
+  }
+
+  .btn-register {
+    padding: 10px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0 10px;
+    height: 56px;
+  }
+
+  .navbar-logo {
+    height: 28px;
+    max-width: 120px;
+  }
+
+  .btn-register {
+    padding: 8px 12px;
+    font-size: 12px;
   }
 }

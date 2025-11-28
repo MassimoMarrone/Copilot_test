@@ -723,6 +723,70 @@
   }
 }
 
+@media (max-width: 480px) {
+  .services-page {
+    padding: 20px 12px;
+  }
+
+  .page-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .page-header p {
+    font-size: 0.95rem;
+  }
+
+  .services-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .service-card {
+    border-radius: 10px;
+  }
+
+  .service-image-placeholder {
+    height: 160px;
+    font-size: 2.5rem;
+  }
+
+  .service-content {
+    padding: 16px;
+  }
+
+  .service-content h3 {
+    font-size: 1.1rem;
+  }
+
+  .service-price {
+    font-size: 1.1rem;
+  }
+
+  .btn-book {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+
+  .modal-content {
+    padding: 20px;
+    border-radius: 16px 16px 0 0;
+    max-height: 90vh;
+  }
+
+  .calendar-day {
+    padding: 6px 2px;
+  }
+
+  .day-number {
+    font-size: 0.9rem;
+  }
+
+  .time-slot {
+    padding: 10px 6px;
+    font-size: 0.85rem;
+  }
+}
+
 /* Time Picker Styles */
 .time-picker-container {
   position: relative;

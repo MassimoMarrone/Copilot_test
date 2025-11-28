@@ -717,3 +717,130 @@
     width: 100%;
   }
 }
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 40px 16px;
+  }
+
+  .hero-content-centered {
+    padding: 20px 10px;
+  }
+
+  .hero-title {
+    font-size: 1.75rem;
+    letter-spacing: -1px;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+    margin-bottom: 30px;
+  }
+
+  .hero-cta {
+    padding: 14px 40px;
+    font-size: 1rem;
+    margin-top: 30px;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btn-hero-primary,
+  .btn-hero-secondary {
+    padding: 14px 30px;
+    font-size: 1rem;
+    width: 100%;
+  }
+
+  .features-section,
+  .how-it-works-section,
+  .cta-section {
+    padding: 40px 16px;
+  }
+
+  .section-title {
+    font-size: 1.6rem;
+    margin-bottom: 40px;
+  }
+
+  .section-title::after {
+    width: 60px;
+    margin: 15px auto 0;
+  }
+
+  .features-grid {
+    gap: 20px;
+  }
+
+  .feature-card {
+    padding: 30px 24px;
+    border-radius: 16px;
+  }
+
+  .feature-icon {
+    font-size: 2.5rem;
+  }
+
+  .feature-card h3 {
+    font-size: 1.25rem;
+  }
+
+  .step-card {
+    padding: 35px 25px;
+    border-radius: 16px;
+  }
+
+  .step-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 2.5rem;
+    border-radius: 12px;
+  }
+
+  .step-card h3 {
+    font-size: 1.2rem;
+  }
+
+  .cta-card {
+    padding: 30px 20px;
+    border-radius: 16px;
+  }
+
+  .cta-card h2 {
+    font-size: 1.5rem;
+  }
+
+  .cta-card p {
+    font-size: 0.95rem;
+  }
+
+  .services-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .service-card {
+    padding: 20px;
+  }
+
+  .login-prompt {
+    padding: 24px 16px;
+  }
+
+  .login-prompt p {
+    font-size: 1rem;
+  }
+
+  .login-prompt .btn {
+    display: block;
+    width: 100%;
+    margin: 8px 0;
+  }
+
+  .footer {
+    padding: 30px 16px;
+  }
+}

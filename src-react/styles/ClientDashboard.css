@@ -912,6 +912,193 @@
   }
 }
 
+@media (max-width: 480px) {
+  .client-dashboard {
+    padding: 12px;
+  }
+
+  .dashboard-header {
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 22px;
+  }
+
+  .welcome-text {
+    font-size: 13px;
+  }
+
+  .header-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .btn-provider,
+  .btn-logout {
+    width: 100%;
+    padding: 10px 16px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    padding: 16px 12px;
+    border-radius: 12px;
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+
+  .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+
+  .stat-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+  }
+
+  .stat-label {
+    font-size: 12px;
+  }
+
+  .dashboard-tabs {
+    padding: 6px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    gap: 6px;
+  }
+
+  .tab-btn {
+    padding: 10px 14px;
+    font-size: 12px;
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .tab-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .dashboard-section {
+    padding: 20px 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
+  .dashboard-section h2 {
+    font-size: 18px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
+
+  .bookings-list {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .booking-card {
+    border-radius: 12px;
+  }
+
+  .booking-card-header {
+    padding: 16px;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .booking-status-badges {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .status-badge,
+  .payment-badge {
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+
+  .booking-service-info h3 {
+    font-size: 16px;
+  }
+
+  .booking-card-body {
+    padding: 16px;
+  }
+
+  .booking-details-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .booking-detail {
+    font-size: 13px;
+  }
+
+  .booking-detail.booking-price {
+    grid-column: span 1;
+  }
+
+  .booking-detail .price {
+    font-size: 18px;
+  }
+
+  .booking-card-footer {
+    padding: 14px 16px;
+    gap: 8px;
+  }
+
+  .btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .empty-state {
+    padding: 40px 20px;
+    border-radius: 12px;
+  }
+
+  .empty-state h3 {
+    font-size: 16px;
+  }
+
+  .empty-state p {
+    font-size: 14px;
+  }
+
+  .modal-content {
+    padding: 20px;
+    border-radius: 16px 16px 0 0;
+    max-height: 85vh;
+  }
+
+  .modal-content h2 {
+    font-size: 20px;
+  }
+}
+
 /* Chat button styling */
 .btn-chat {
   background: #1a1a1a;

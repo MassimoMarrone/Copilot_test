@@ -158,3 +158,98 @@
     transform: translateY(0);
   }
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .notification-center {
+    margin-right: 8px;
+  }
+
+  .notification-bell {
+    padding: 6px;
+  }
+
+  .notification-bell svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .notification-badge {
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+  }
+
+  .notification-dropdown {
+    position: fixed;
+    top: 56px;
+    left: 8px;
+    right: 8px;
+    width: auto;
+    max-height: 70vh;
+    border-radius: 12px;
+  }
+
+  .notification-list {
+    max-height: 55vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .notification-center {
+    margin-right: 4px;
+  }
+
+  .notification-bell {
+    padding: 4px;
+  }
+
+  .notification-bell svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .notification-dropdown {
+    top: 52px;
+    left: 4px;
+    right: 4px;
+  }
+
+  .notification-header {
+    padding: 10px 14px;
+  }
+
+  .notification-header h3 {
+    font-size: 14px;
+  }
+
+  .mark-all-read {
+    font-size: 11px;
+  }
+
+  .notification-item {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  .notification-icon {
+    font-size: 16px;
+  }
+
+  .notification-title {
+    font-size: 13px;
+  }
+
+  .notification-message {
+    font-size: 12px;
+  }
+
+  .notification-time {
+    font-size: 10px;
+  }
+
+  .notification-empty {
+    padding: 24px;
+    font-size: 13px;
+  }
+}
