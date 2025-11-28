@@ -7,6 +7,8 @@ Applicazione web moderna per la prenotazione di servizi di pulizia professionale
 ### 🔐 Autenticazione & Sicurezza
 
 - **Registrazione & Login**: Accesso separato per Clienti e Fornitori con autenticazione JWT sicura.
+- **Google OAuth**: Login rapido con account Google.
+- **Username personalizzato**: Gli utenti possono scegliere un username univoco.
 - **Verifica Email**: Conferma email obbligatoria con possibilità di reinvio.
 - **Protezione Dati**: Password hashate con bcrypt, cookie HTTP-only, e protezione CSRF/XSS.
 - **Termini e Condizioni**: Accettazione obbligatoria durante la registrazione.
@@ -55,18 +57,36 @@ Applicazione web moderna per la prenotazione di servizi di pulizia professionale
 - **Landing Page Professionale**: Design con gradiente scuro e immagine hero.
 - **Icone SVG Minimal**: Stile coerente e professionale (Feather Icons style).
 - **Form Prenotazione 3 Step**: Wizard intuitivo per la prenotazione.
-- **Responsive Design**: Ottimizzato per desktop e mobile.
+- **Responsive Design**: Layout ottimizzato per desktop, tablet e mobile.
 - **Notifiche Toast**: Feedback visivo per le azioni utente.
+- **Skeleton Loading**: Placeholder animati durante il caricamento per UX fluida.
+
+### 🔍 Ricerca Avanzata
+
+- **Ricerca Server-Side**: Filtri applicati direttamente sul database per performance ottimali.
+- **Filtri Multipli**: Categoria, range prezzo, prodotti utilizzati.
+- **Geolocalizzazione**: Ricerca per posizione con formula Haversine (raggio 50km).
+- **Infinite Scroll**: Caricamento progressivo con paginazione server-side.
+- **Mappa Interattiva**: Visualizzazione servizi su mappa Leaflet.
+
+### ⭐ Sistema Recensioni
+
+- **Rating Dettagliato**: Valutazione su più criteri (puntualità, qualità, comunicazione).
+- **Commenti e Risposte**: I provider possono rispondere alle recensioni.
+- **Media Voti**: Calcolo automatico rating medio per servizio.
+- **Voti Utili**: Gli utenti possono votare le recensioni più utili.
 
 ## 🛠️ Stack Tecnologico
 
-- **Frontend**: React 19, Vite, TypeScript, React DatePicker, CSS Modules.
-- **Backend**: Node.js, Express, TypeScript.
+- **Frontend**: React 19, Vite 7, TypeScript, React Router 7, React DatePicker, Leaflet Maps.
+- **Backend**: Node.js, Express 5, TypeScript.
 - **Database**: PostgreSQL (Neon) con Prisma ORM.
-- **Real-time**: Socket.IO.
-- **Pagamenti**: Stripe API.
-- **Email**: Resend API.
+- **Real-time**: Socket.IO per chat e notifiche.
+- **Pagamenti**: Stripe API con sistema escrow.
+- **Email**: Nodemailer con supporto SMTP.
+- **Auth**: JWT + Google OAuth.
 - **Sicurezza**: Helmet, Rate Limiting, Express Validator, BCrypt.
+- **Deploy**: Render.com con build automatizzati.
 
 ## 🚀 Installazione e Avvio
 
@@ -129,27 +149,37 @@ npm run dev:full
 
 ## 📊 Stato del Progetto
 
-**Versione Attuale**: v1.1.0
+**Versione Attuale**: v1.2.0
 
 ### ✅ Funzionalità Completate
 
 - [x] Autenticazione completa (JWT, Cookie, Verifica Email).
+- [x] **Google OAuth** per login rapido.
+- [x] **Username personalizzato** per ogni utente.
 - [x] CRUD Servizi e Prenotazioni.
 - [x] **Sistema di prenotazione intelligente** (stima durata, prezzo dinamico).
 - [x] **Gestione slot orari** con prevenzione sovrapposizioni.
 - [x] Chat in tempo reale (Socket.IO) con notifiche.
-- [x] Dashboard Admin completa.
+- [x] Dashboard Admin completa con gestione utenti/servizi/prenotazioni.
 - [x] Upload immagini (Multer).
 - [x] Pagamenti Stripe con escrow e rimborsi automatici.
 - [x] UI/UX Moderna con icone SVG professionali.
 - [x] Calendario React DatePicker in italiano.
+- [x] **Sistema recensioni completo** con rating dettagliato e risposte provider.
+- [x] **Ricerca server-side** con filtri (categoria, prezzo, prodotti, posizione).
+- [x] **Geolocalizzazione** con formula Haversine per ricerca per distanza.
+- [x] **Infinite scroll** con paginazione server-side.
+- [x] **Skeleton loading** per UX migliorata.
+- [x] **Design responsive** ottimizzato per mobile.
+- [x] **Mappa interattiva** con Leaflet per visualizzazione servizi.
 
 ### 🚧 Roadmap Futura
 
-- [ ] Sistema di recensioni e rating avanzato.
-- [ ] Notifiche push.
+- [ ] Code splitting e lazy loading componenti.
+- [ ] PWA con supporto offline e notifiche push.
 - [ ] App mobile (React Native).
 - [ ] Dashboard analytics per fornitori.
+- [ ] Sistema referral "invita un amico".
 
 ## 🎯 Prossimi Passi Prima del Lancio
 
@@ -182,16 +212,120 @@ npm run dev:full
 
 ### 📈 Valutazione Attuale
 
-| Aspetto        | Voto              | Note                          |
-| -------------- | ----------------- | ----------------------------- |
-| Funzionalità   | ⭐⭐⭐⭐⭐⭐⭐⭐½ | Feature complete per MVP+     |
-| Codice         | ⭐⭐⭐⭐⭐⭐⭐½   | Buona struttura, migliorabile |
-| UI/UX          | ⭐⭐⭐⭐⭐⭐⭐⭐  | Professionale e consistente   |
-| Sicurezza      | ⭐⭐⭐⭐⭐⭐⭐½   | Buona base                    |
-| Testing        | ⭐⭐⭐⭐          | **Area critica**              |
-| Documentazione | ⭐⭐⭐⭐⭐⭐⭐⭐  | Completa con /docs            |
+| Aspetto        | Voto               | Note                                      |
+| -------------- | ------------------ | ----------------------------------------- |
+| Funzionalità   | ⭐⭐⭐⭐⭐⭐⭐⭐⭐ | Feature complete per lancio               |
+| Codice         | ⭐⭐⭐⭐⭐⭐⭐⭐   | Struttura solida, ben organizzato         |
+| UI/UX          | ⭐⭐⭐⭐⭐⭐⭐⭐   | Professionale, responsive, consistente    |
+| Sicurezza      | ⭐⭐⭐⭐⭐⭐⭐⭐   | JWT, bcrypt, helmet, rate limiting        |
+| Performance    | ⭐⭐⭐⭐⭐⭐⭐½    | Pagination, skeleton, ricerca server-side |
+| Testing        | ⭐⭐⭐⭐           | **Area da migliorare**                    |
+| Documentazione | ⭐⭐⭐⭐⭐⭐⭐⭐   | README completo + /docs                   |
 
-**Voto Complessivo: 7/10** - Pronta per MVP, richiede testing prima del lancio pubblico.
+**Voto Complessivo: 8/10** - Pronta per MVP e beta testing pubblico.
+
+---
+
+## ⚙️ Tecniche e Pattern Implementati
+
+### 🚀 Performance & Ottimizzazione
+
+| Tecnica                    | Descrizione                                                                                           | Beneficio                                                              |
+| -------------------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| **Server-Side Filtering**  | I filtri di ricerca vengono applicati direttamente nelle query Prisma sul database, non in JavaScript | Riduce il carico sul client, permette di cercare su migliaia di record |
+| **Pagination Server-Side** | I risultati vengono paginati dal database con `skip` e `take`                                         | Carica solo 12 servizi per volta invece di tutti                       |
+| **Infinite Scroll**        | `IntersectionObserver` rileva quando l'utente raggiunge il fondo pagina                               | UX fluida senza pulsanti "carica altro"                                |
+| **Skeleton Loading**       | Placeholder animati con CSS durante il caricamento                                                    | Percezione di velocità, evita layout shift                             |
+| **Haversine Formula**      | Calcolo distanza geodetica tra coordinate GPS                                                         | Ricerca servizi nel raggio di 50km dalla posizione utente              |
+| **Debounce su Input**      | Ritardo prima di eseguire ricerche                                                                    | Riduce chiamate API durante la digitazione                             |
+
+### 🔒 Sicurezza Implementata
+
+| Tecnica                    | Implementazione                     | Protezione                                  |
+| -------------------------- | ----------------------------------- | ------------------------------------------- |
+| **JWT in HttpOnly Cookie** | Token non accessibile da JavaScript | Protezione XSS                              |
+| **BCrypt Hashing**         | Salt rounds = 12 per password       | Password sicure anche se DB compromesso     |
+| **Helmet.js**              | Headers di sicurezza automatici     | CSP, X-Frame-Options, HSTS                  |
+| **Rate Limiting**          | Max 100 richieste/15min per IP      | Protezione brute force e DDoS               |
+| **Express Validator**      | Validazione input server-side       | Protezione injection e dati malformati      |
+| **CORS Configurato**       | Whitelist domini autorizzati        | Blocca richieste da origini non autorizzate |
+| **Email Normalization**    | `.toLowerCase().trim()` su email    | Previene duplicati e bypass                 |
+
+### 🏗️ Architettura & Pattern
+
+| Pattern                   | Dove                                      | Beneficio                               |
+| ------------------------- | ----------------------------------------- | --------------------------------------- |
+| **MVC**                   | Backend (Controllers → Services → Prisma) | Separazione responsabilità, testabilità |
+| **Context API**           | React AuthContext, AdminAuthContext       | State globale senza prop drilling       |
+| **Service Layer**         | `src/services/`, `src-react/services/`    | Logica business centralizzata           |
+| **Repository Pattern**    | Prisma come ORM                           | Astrazione database, query type-safe    |
+| **Middleware Chain**      | Express (auth → validate → controller)    | Pipeline di elaborazione richieste      |
+| **Component Composition** | React componenti modulari                 | Riutilizzo e manutenibilità             |
+
+### 📡 Real-Time & Comunicazione
+
+| Tecnica               | Uso                      | Beneficio                         |
+| --------------------- | ------------------------ | --------------------------------- |
+| **Socket.IO**         | Chat cliente-fornitore   | Messaggi istantanei senza polling |
+| **Room-based Events** | Stanze per ogni booking  | Isolamento conversazioni          |
+| **Unread Counter**    | Badge messaggi non letti | Notifica visiva real-time         |
+
+---
+
+## 🔮 Roadmap Tecnica - Ottimizzazioni Future
+
+### 🎯 Performance (Impatto Utente Diretto)
+
+| Tecnica                   | Descrizione                                                   | Impatto Stimato                          | Complessità |
+| ------------------------- | ------------------------------------------------------------- | ---------------------------------------- | ----------- |
+| **Code Splitting**        | `React.lazy()` + `Suspense` per caricare componenti on-demand | -60% bundle iniziale                     | ⭐⭐ Media  |
+| **Lazy Loading Immagini** | `loading="lazy"` + Intersection Observer per immagini         | -40% tempo caricamento                   | ⭐ Bassa    |
+| **WebP/AVIF Images**      | Conversione automatica immagini in formati moderni            | -50% peso immagini                       | ⭐⭐ Media  |
+| **Service Worker (PWA)**  | Cache assets statici + offline support                        | Caricamento istantaneo dopo prima visita | ⭐⭐⭐ Alta |
+| **Redis Caching**         | Cache query frequenti (lista servizi, categorie)              | -80% latenza API ripetute                | ⭐⭐ Media  |
+| **CDN per Assets**        | Cloudflare/CloudFront per file statici                        | -50% latency globale                     | ⭐ Bassa    |
+| **Database Indexing**     | Indici su colonne filtrate (category, price, location)        | -70% tempo query                         | ⭐ Bassa    |
+| **Connection Pooling**    | PgBouncer per gestione connessioni DB                         | Supporto più utenti concorrenti          | ⭐⭐ Media  |
+
+### 🛡️ Sicurezza Avanzata
+
+| Tecnica                     | Descrizione                                    | Priorità |
+| --------------------------- | ---------------------------------------------- | -------- |
+| **CSRF Tokens**             | Token per protezione form submissions          | Alta     |
+| **Content Security Policy** | Whitelist risorse esterne                      | Media    |
+| **Audit Logging**           | Log azioni sensibili (login, pagamenti, admin) | Alta     |
+| **2FA/MFA**                 | Autenticazione a due fattori                   | Media    |
+| **Encryption at Rest**      | Crittografia dati sensibili nel DB             | Bassa    |
+
+### 📊 Monitoring & Observability
+
+| Tool                     | Scopo                                 | Priorità |
+| ------------------------ | ------------------------------------- | -------- |
+| **Sentry**               | Error tracking e crash reporting      | Alta     |
+| **Winston/Pino**         | Logging strutturato JSON              | Alta     |
+| **Prometheus + Grafana** | Metriche applicazione e dashboard     | Media    |
+| **Uptime Monitoring**    | Alert downtime (UptimeRobot, Pingdom) | Alta     |
+
+### 🧪 Testing & Quality
+
+| Tipo                  | Tool                   | Coverage Target                            |
+| --------------------- | ---------------------- | ------------------------------------------ |
+| **Unit Tests**        | Jest + Testing Library | 70% business logic                         |
+| **Integration Tests** | Supertest per API      | 80% endpoints critici                      |
+| **E2E Tests**         | Playwright/Cypress     | Flussi principali (auth, booking, payment) |
+| **Load Testing**      | k6 o Artillery         | 1000 utenti concorrenti                    |
+
+### 🌍 Scalabilità Futura
+
+| Tecnica                | Quando Implementare               | Beneficio                                            |
+| ---------------------- | --------------------------------- | ---------------------------------------------------- |
+| **Horizontal Scaling** | > 10k utenti/giorno               | Più istanze server                                   |
+| **Message Queue**      | > 1000 email/ora                  | Bull/RabbitMQ per job async                          |
+| **Microservizi**       | Team > 5 sviluppatori             | Servizi indipendenti (auth, payments, notifications) |
+| **GraphQL**            | API complesse con molte relazioni | Query flessibili, meno over-fetching                 |
+| **Kubernetes**         | Enterprise scale                  | Orchestrazione container automatica                  |
+
+---
 
 ## 📁 Struttura Progetto
 
@@ -210,12 +344,18 @@ npm run dev:full
 │   ├── services/           # Logica business
 │   ├── routes/             # Route API
 │   └── middleware/         # Auth, validation, rate limiting
-├── src-react/              # Frontend (React/Vite)
-│   ├── components/         # Componenti React
+├── src-react/              # Frontend principale (React/Vite)
+│   ├── components/         # Componenti React (25+)
 │   ├── pages/              # Pagine principali
 │   ├── services/           # API client services
+│   ├── context/            # Auth context, state globale
 │   └── styles/             # CSS per componenti
-└── public/                 # Asset statici
+├── src-admin/              # Pannello Admin (React/Vite)
+│   ├── components/         # Layout e componenti admin
+│   ├── pages/              # Dashboard, Users, Services, Bookings
+│   ├── context/            # Admin auth context
+│   └── styles/             # CSS admin
+└── public/                 # Asset statici e uploads
 ```
 
 > 📖 **Documentazione Completa**: Consulta la cartella [`/docs`](./docs/README.md) per la documentazione tecnica dettagliata di ogni funzionalità.

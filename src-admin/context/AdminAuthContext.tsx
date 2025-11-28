@@ -66,10 +66,9 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({
     );
 
     // Then fetch user data
-    const meResponse = await axios.get<AdminUser>(
-      `${API_URL}/api/me`,
-      { withCredentials: true }
-    );
+    const meResponse = await axios.get<AdminUser>(`${API_URL}/api/me`, {
+      withCredentials: true,
+    });
 
     if (meResponse.data.userType !== "admin") {
       throw new Error(
