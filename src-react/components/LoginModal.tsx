@@ -24,6 +24,9 @@ const LoginModal: React.FC<LoginModalProps> = ({
   const [pendingToken, setPendingToken] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
+  const [showVerificationNeeded, setShowVerificationNeeded] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [resendSuccess, setResendSuccess] = useState(false);
   const navigate = useNavigate();
   const { checkAuth } = useAuth();
 
@@ -111,6 +114,8 @@ const LoginModal: React.FC<LoginModalProps> = ({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
+    setShowVerificationNeeded(false);
+    setResendSuccess(false);
     setIsLoading(true);
 
     try {
@@ -133,7 +138,30 @@ const LoginModal: React.FC<LoginModalProps> = ({
         setErrorMessage(data.error || "Login fallito");
       }
     } catch (error: any) {
-      setErrorMessage(error.message || "Errore di connessione");
+      const errorMsg = error.message || "Errore di connessione";
+      // Check if it's an email verification error
+      if (
+        errorMsg.includes("verify your email") ||
+        errorMsg.includes("verifica")
+      ) {
+        setShowVerificationNeeded(true);
+        setVerificationEmail(identifier);
+      } else {
+        setErrorMessage(errorMsg);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setIsLoading(true);
+    setErrorMessage("");
+    try {
+      await authService.resendVerification(verificationEmail);
+      setResendSuccess(true);
+    } catch (error: any) {
+      setErrorMessage(error.message || "Errore nell'invio dell'email");
     } finally {
       setIsLoading(false);
     }
@@ -310,6 +338,29 @@ const LoginModal: React.FC<LoginModalProps> = ({
 
               {errorMessage && (
                 <div className="error-message show">{errorMessage}</div>
+              )}
+
+              {showVerificationNeeded && (
+                <div className="verification-needed-box">
+                  <p>
+                    📧 <strong>Email non verificata</strong>
+                  </p>
+                  <p>Devi verificare la tua email prima di accedere.</p>
+                  {resendSuccess ? (
+                    <p className="success-text">
+                      ✅ Email inviata! Controlla la tua casella di posta.
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={handleResendVerification}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Invio..." : "Reinvia email di verifica"}
+                    </button>
+                  )}
+                </div>
               )}
 
               <div className="button-group">

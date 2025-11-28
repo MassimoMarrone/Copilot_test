@@ -73,4 +73,11 @@ export const authService = {
   ): Promise<{ success: boolean; isProvider: boolean }> => {
     return post("/api/become-provider", { acceptedProviderTerms });
   },
+
+  // Resend verification email
+  resendVerification: async (
+    email: string
+  ): Promise<{ success: boolean; message: string }> => {
+    return post("/api/resend-verification", { email });
+  },
 };
