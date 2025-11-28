@@ -11,8 +11,18 @@ const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
 export class AuthService {
+  // Helper function to normalize email (especially for Gmail)
+  private normalizeEmail(email: string): string {
+    let normalized = email.toLowerCase().trim();
+    if (normalized.endsWith("@gmail.com")) {
+      const [localPart, domain] = normalized.split("@");
+      normalized = localPart.replace(/\./g, "") + "@" + domain;
+    }
+    return normalized;
+  }
+
   async register(data: any) {
-    const {
+    let {
       email,
       username,
       password,
@@ -22,6 +32,9 @@ export class AuthService {
       phone,
       city,
     } = data;
+
+    // Normalize email
+    email = this.normalizeEmail(email);
 
     if (acceptedTerms !== true && acceptedTerms !== "true") {
       throw new Error("You must accept the Terms & Conditions");
@@ -140,7 +153,8 @@ export class AuthService {
     return { user: updatedUser, token: authToken };
   }
 
-  async resendVerificationEmail(email: string) {
+  async resendVerificationEmail(emailInput: string) {
+    const email = this.normalizeEmail(emailInput);
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
@@ -193,10 +207,18 @@ export class AuthService {
   async login(data: any) {
     const { identifier, password } = data;
 
+    // Normalize identifier if it's an email
+    const normalizedIdentifier = identifier.includes("@")
+      ? this.normalizeEmail(identifier)
+      : identifier.toLowerCase();
+
     // Find user by email or username
     const user = await prisma.user.findFirst({
       where: {
-        OR: [{ email: identifier }, { username: identifier.toLowerCase() }],
+        OR: [
+          { email: normalizedIdentifier },
+          { username: normalizedIdentifier },
+        ],
       },
     });
 
@@ -239,7 +261,10 @@ export class AuthService {
       throw new Error("Invalid Google token");
     }
 
-    const { email, sub: googleId } = payload;
+    const { sub: googleId } = payload;
+
+    // Normalize email using the helper function
+    const email = this.normalizeEmail(payload.email);
 
     let user = await prisma.user.findUnique({ where: { email } });
 
