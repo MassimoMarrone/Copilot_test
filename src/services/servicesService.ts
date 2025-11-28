@@ -14,7 +14,11 @@ interface SearchFilters {
 }
 
 export class ServicesService {
-  async getAllServices(page: number = 1, limit: number = 12, filters?: SearchFilters) {
+  async getAllServices(
+    page: number = 1,
+    limit: number = 12,
+    filters?: SearchFilters
+  ) {
     const skip = (page - 1) * limit;
 
     // Build where clause
@@ -40,8 +44,8 @@ export class ServicesService {
     // Text search filter
     if (filters?.query && filters.query.trim()) {
       where.OR = [
-        { title: { contains: filters.query, mode: 'insensitive' } },
-        { description: { contains: filters.query, mode: 'insensitive' } },
+        { title: { contains: filters.query, mode: "insensitive" } },
+        { description: { contains: filters.query, mode: "insensitive" } },
       ];
     }
 
@@ -66,13 +70,14 @@ export class ServicesService {
         if (!service.productsUsed) return false;
         let products: string[] = [];
         try {
-          products = typeof service.productsUsed === 'string' 
-            ? JSON.parse(service.productsUsed) 
-            : service.productsUsed;
+          products =
+            typeof service.productsUsed === "string"
+              ? JSON.parse(service.productsUsed)
+              : service.productsUsed;
         } catch (e) {
           return false;
         }
-        return filters.products!.every(p => products.includes(p));
+        return filters.products!.every((p) => products.includes(p));
       });
     }
 
@@ -146,7 +151,12 @@ export class ServicesService {
   }
 
   // Haversine formula to calculate distance between two coordinates
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  private calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number {
     const R = 6371; // Radius of Earth in kilometers
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
     const dLon = ((lon2 - lon1) * Math.PI) / 180;

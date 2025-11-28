@@ -48,7 +48,7 @@ export const servicesService = {
     filters?: SearchFilters
   ): Promise<PaginatedServices> => {
     let url = `/api/services?page=${page}&limit=${limit}`;
-    
+
     if (filters) {
       if (filters.query) {
         url += `&query=${encodeURIComponent(filters.query)}`;
@@ -63,7 +63,7 @@ export const servicesService = {
         url += `&maxPrice=${filters.maxPrice}`;
       }
       if (filters.products && filters.products.length > 0) {
-        url += `&products=${encodeURIComponent(filters.products.join(','))}`;
+        url += `&products=${encodeURIComponent(filters.products.join(","))}`;
       }
       if (filters.latitude && filters.longitude) {
         url += `&latitude=${filters.latitude}&longitude=${filters.longitude}`;
@@ -72,7 +72,7 @@ export const servicesService = {
         }
       }
     }
-    
+
     return get<PaginatedServices>(url);
   },
 

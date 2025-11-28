@@ -7,7 +7,11 @@ import ServiceCardSkeleton from "../components/ServiceCardSkeleton";
 import SmartBookingForm, {
   SmartBookingData,
 } from "../components/SmartBookingForm";
-import { servicesService, Service, SearchFilters } from "../services/servicesService";
+import {
+  servicesService,
+  Service,
+  SearchFilters,
+} from "../services/servicesService";
 import { bookingService } from "../services/bookingService";
 import "../styles/ServicesPage.css";
 import "../styles/Skeleton.css";
@@ -145,24 +149,24 @@ const ServicesPage: React.FC = () => {
 
     // Build filters object for server-side search
     const filters: SearchFilters = {};
-    
+
     if (query.trim()) {
       filters.query = query.trim();
     }
-    
+
     if (category && category !== "Tutte") {
       filters.category = category;
     }
-    
+
     if (products && products.length > 0) {
       filters.products = products;
     }
-    
+
     if (location && location.lat && location.lng) {
       filters.lat = location.lat;
       filters.lng = location.lng;
     }
-    
+
     if (priceRange) {
       if (priceRange.min > 0) {
         filters.minPrice = priceRange.min;

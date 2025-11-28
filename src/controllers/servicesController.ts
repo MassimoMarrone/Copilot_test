@@ -6,10 +6,10 @@ export class ServicesController {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 12;
-      
+
       // Parse filters from query params
       const filters: any = {};
-      
+
       if (req.query.query) {
         filters.query = req.query.query as string;
       }
@@ -21,19 +21,22 @@ export class ServicesController {
       }
       if (req.query.maxPrice) {
         const maxPrice = parseFloat(req.query.maxPrice as string);
-        if (maxPrice < 10000) { // Only apply if not "infinity"
+        if (maxPrice < 10000) {
+          // Only apply if not "infinity"
           filters.maxPrice = maxPrice;
         }
       }
       if (req.query.products) {
-        filters.products = (req.query.products as string).split(',');
+        filters.products = (req.query.products as string).split(",");
       }
       if (req.query.latitude && req.query.longitude) {
         filters.latitude = parseFloat(req.query.latitude as string);
         filters.longitude = parseFloat(req.query.longitude as string);
-        filters.radiusKm = req.query.radiusKm ? parseFloat(req.query.radiusKm as string) : 50;
+        filters.radiusKm = req.query.radiusKm
+          ? parseFloat(req.query.radiusKm as string)
+          : 50;
       }
-      
+
       const result = await servicesService.getAllServices(page, limit, filters);
       res.json(result);
     } catch (error: any) {
