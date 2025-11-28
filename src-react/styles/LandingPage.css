@@ -282,6 +282,7 @@
 .how-it-works-section {
   padding: 100px 20px;
   background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  overflow-x: hidden;
 }
 
 .steps-grid {
@@ -290,6 +291,8 @@
   gap: 40px;
   max-width: 1000px;
   margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
 }
 
 .steps-container {
@@ -299,6 +302,8 @@
   align-items: center;
   max-width: 1200px;
   margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
 }
 
 .step-card {
@@ -656,6 +661,11 @@
 
   .steps-container {
     grid-template-columns: 1fr;
+  }
+
+  .steps-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
   }
 
   .step-arrow {

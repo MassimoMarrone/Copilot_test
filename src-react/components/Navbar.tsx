@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import UserMenu from "./UserMenu";
 import NotificationCenter from "./NotificationCenter";
@@ -23,12 +23,21 @@ const Navbar: React.FC<NavbarProps> = ({
   unreadMessagesCount = 0,
 }) => {
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+  };
 
   return (
     <nav className="navbar">
       <div className="navbar-container">
         <div className="navbar-brand">
-          <Link to="/" className="brand-link">
+          <Link to="/" className="brand-link" onClick={closeMobileMenu}>
             <img src={logo} alt="domy" className="navbar-logo" />
           </Link>
         </div>
@@ -78,6 +87,12 @@ const Navbar: React.FC<NavbarProps> = ({
                 onLogout={onLogout}
                 onBecomeProvider={onBecomeProvider}
               />
+              {/* Hamburger menu per mobile */}
+              <button className="hamburger-btn" onClick={toggleMobileMenu} aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+              </button>
             </div>
           ) : (
             <>
@@ -94,6 +109,33 @@ const Navbar: React.FC<NavbarProps> = ({
           )}
         </div>
       </div>
+
+      {/* Menu mobile */}
+      {user && mobileMenuOpen && (
+        <div className="mobile-menu">
+          <Link
+            to="/services"
+            className={`nav-link ${location.pathname === "/services" ? "active" : ""}`}
+            onClick={closeMobileMenu}
+          >
+            🔍 Esplora
+          </Link>
+          <Link
+            to="/bookings"
+            className={`nav-link ${location.pathname === "/bookings" ? "active" : ""}`}
+            onClick={closeMobileMenu}
+          >
+            📅 Prenotazioni
+          </Link>
+          <Link
+            to="/messages"
+            className={`nav-link ${location.pathname === "/messages" ? "active" : ""}`}
+            onClick={closeMobileMenu}
+          >
+            💬 Messaggi {unreadMessagesCount > 0 && `(${unreadMessagesCount})`}
+          </Link>
+        </div>
+      )}
     </nav>
   );
 };
