@@ -2,25 +2,54 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+interface SearchFilters {
+  query?: string;
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  products?: string[];
+  latitude?: number;
+  longitude?: number;
+  radiusKm?: number;
+}
+
 export class ServicesService {
-  async getAllServices(page: number = 1, limit: number = 12) {
+  async getAllServices(page: number = 1, limit: number = 12, filters?: SearchFilters) {
     const skip = (page - 1) * limit;
 
-    // Get total count for pagination info
-    const totalCount = await prisma.service.count({
-      where: {
-        provider: {
-          isBlocked: false,
-        },
+    // Build where clause
+    const where: any = {
+      provider: {
+        isBlocked: false,
       },
-    });
+    };
 
-    const services = await prisma.service.findMany({
-      where: {
-        provider: {
-          isBlocked: false,
-        },
-      },
+    // Category filter
+    if (filters?.category && filters.category !== "Tutte") {
+      where.category = filters.category;
+    }
+
+    // Price filters
+    if (filters?.minPrice !== undefined && filters.minPrice > 0) {
+      where.price = { ...where.price, gte: filters.minPrice };
+    }
+    if (filters?.maxPrice !== undefined && filters.maxPrice < Infinity) {
+      where.price = { ...where.price, lte: filters.maxPrice };
+    }
+
+    // Text search filter
+    if (filters?.query && filters.query.trim()) {
+      where.OR = [
+        { title: { contains: filters.query, mode: 'insensitive' } },
+        { description: { contains: filters.query, mode: 'insensitive' } },
+      ];
+    }
+
+    // Get total count for pagination info
+    const totalCount = await prisma.service.count({ where });
+
+    let services = await prisma.service.findMany({
+      where,
       include: {
         reviews: true,
       },
@@ -30,6 +59,37 @@ export class ServicesService {
         createdAt: "desc",
       },
     });
+
+    // Post-filter by products (JSON field)
+    if (filters?.products && filters.products.length > 0) {
+      services = services.filter((service: any) => {
+        if (!service.productsUsed) return false;
+        let products: string[] = [];
+        try {
+          products = typeof service.productsUsed === 'string' 
+            ? JSON.parse(service.productsUsed) 
+            : service.productsUsed;
+        } catch (e) {
+          return false;
+        }
+        return filters.products!.every(p => products.includes(p));
+      });
+    }
+
+    // Post-filter by location (Haversine formula)
+    if (filters?.latitude && filters?.longitude) {
+      const radiusKm = filters.radiusKm || 50;
+      services = services.filter((service: any) => {
+        if (!service.latitude || !service.longitude) return false;
+        const distance = this.calculateDistance(
+          filters.latitude!,
+          filters.longitude!,
+          service.latitude,
+          service.longitude
+        );
+        return distance <= radiusKm;
+      });
+    }
 
     const mappedServices = services.map((service: any) => {
       const reviewCount = service.reviews.length;
@@ -78,11 +138,26 @@ export class ServicesService {
       pagination: {
         page,
         limit,
-        totalCount,
+        totalCount: mappedServices.length, // Adjusted after post-filtering
         totalPages: Math.ceil(totalCount / limit),
         hasMore: page * limit < totalCount,
       },
     };
+  }
+
+  // Haversine formula to calculate distance between two coordinates
+  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371; // Radius of Earth in kilometers
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
   }
 
   async createService(userId: string, data: any) {

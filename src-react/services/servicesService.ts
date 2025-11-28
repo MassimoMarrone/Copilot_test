@@ -29,13 +29,51 @@ export interface PaginatedServices {
   };
 }
 
+export interface SearchFilters {
+  query?: string;
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  products?: string[];
+  latitude?: number;
+  longitude?: number;
+  radiusKm?: number;
+}
+
 export const servicesService = {
-  // Get all services with pagination (public)
+  // Get all services with pagination and filters (public)
   getAllServices: async (
     page: number = 1,
-    limit: number = 12
+    limit: number = 12,
+    filters?: SearchFilters
   ): Promise<PaginatedServices> => {
-    return get<PaginatedServices>(`/api/services?page=${page}&limit=${limit}`);
+    let url = `/api/services?page=${page}&limit=${limit}`;
+    
+    if (filters) {
+      if (filters.query) {
+        url += `&query=${encodeURIComponent(filters.query)}`;
+      }
+      if (filters.category && filters.category !== "Tutte") {
+        url += `&category=${encodeURIComponent(filters.category)}`;
+      }
+      if (filters.minPrice !== undefined && filters.minPrice > 0) {
+        url += `&minPrice=${filters.minPrice}`;
+      }
+      if (filters.maxPrice !== undefined && filters.maxPrice < Infinity) {
+        url += `&maxPrice=${filters.maxPrice}`;
+      }
+      if (filters.products && filters.products.length > 0) {
+        url += `&products=${encodeURIComponent(filters.products.join(','))}`;
+      }
+      if (filters.latitude && filters.longitude) {
+        url += `&latitude=${filters.latitude}&longitude=${filters.longitude}`;
+        if (filters.radiusKm) {
+          url += `&radiusKm=${filters.radiusKm}`;
+        }
+      }
+    }
+    
+    return get<PaginatedServices>(url);
   },
 
   // Get provider's own services

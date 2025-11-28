@@ -7,7 +7,7 @@ import ServiceCardSkeleton from "../components/ServiceCardSkeleton";
 import SmartBookingForm, {
   SmartBookingData,
 } from "../components/SmartBookingForm";
-import { servicesService, Service } from "../services/servicesService";
+import { servicesService, Service, SearchFilters } from "../services/servicesService";
 import { bookingService } from "../services/bookingService";
 import "../styles/ServicesPage.css";
 import "../styles/Skeleton.css";
@@ -119,95 +119,14 @@ const ServicesPage: React.FC = () => {
     }
   }, [page, loadingMore, hasMore]);
 
-  // Haversine formula to calculate distance between two coordinates
-  const calculateDistance = (
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ): number => {
-    const R = 6371; // Radius of Earth in kilometers
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
-
-  const handleSearch = (
+  // Server-side search with filters
+  const handleSearch = async (
     query: string,
     location?: { lat: number; lng: number; address: string },
     priceRange?: { min: number; max: number },
     category?: string,
     products?: string[]
   ) => {
-    let filtered = services;
-
-    // Filter by category
-    if (category && category !== "Tutte") {
-      filtered = filtered.filter((service) => service.category === category);
-    }
-
-    // Filter by products
-    if (products && products.length > 0) {
-      filtered = filtered.filter((service) => {
-        if (!service.productsUsed || service.productsUsed.length === 0)
-          return false;
-        // Check if service has ALL selected products (AND logic)
-        // Or ANY selected product (OR logic) - usually OR is better for discovery, but AND is more precise.
-        // Let's go with OR logic for now (if service has at least one of the selected products)
-        // Actually, if I select "Eco-friendly" and "Pet-friendly", I probably want services that are BOTH.
-        // Let's stick to AND logic for now as it's a filter.
-        return products.every((p) => service.productsUsed!.includes(p));
-      });
-    }
-
-    // Filter by search query
-    if (query.trim()) {
-      filtered = filtered.filter(
-        (service) =>
-          service.title.toLowerCase().includes(query.toLowerCase()) ||
-          service.description.toLowerCase().includes(query.toLowerCase())
-      );
-    }
-
-    // Filter by location (if provided)
-    if (location && location.lat && location.lng) {
-      filtered = filtered.filter((service) => {
-        if (!service.latitude || !service.longitude) return false;
-
-        // Calculate distance using Haversine formula
-        const distance = calculateDistance(
-          location.lat,
-          location.lng,
-          service.latitude,
-          service.longitude
-        );
-
-        // Filter services within 50km
-        return distance <= 50;
-      });
-    }
-
-    // Filter by price range
-    if (priceRange) {
-      if (priceRange.min > 0) {
-        filtered = filtered.filter(
-          (service) => service.price >= priceRange.min
-        );
-      }
-      if (priceRange.max < Infinity) {
-        filtered = filtered.filter(
-          (service) => service.price <= priceRange.max
-        );
-      }
-    }
-
     // Check if any filter is active
     const hasActiveFilters = Boolean(
       query.trim() !== "" ||
@@ -217,8 +136,52 @@ const ServicesPage: React.FC = () => {
         (priceRange && (priceRange.min > 0 || priceRange.max < Infinity))
     );
 
-    setIsFiltered(hasActiveFilters);
-    setFilteredServices(filtered);
+    if (!hasActiveFilters) {
+      // No filters - reset to normal paginated view
+      setIsFiltered(false);
+      setFilteredServices(services);
+      return;
+    }
+
+    // Build filters object for server-side search
+    const filters: SearchFilters = {};
+    
+    if (query.trim()) {
+      filters.query = query.trim();
+    }
+    
+    if (category && category !== "Tutte") {
+      filters.category = category;
+    }
+    
+    if (products && products.length > 0) {
+      filters.products = products;
+    }
+    
+    if (location && location.lat && location.lng) {
+      filters.lat = location.lat;
+      filters.lng = location.lng;
+    }
+    
+    if (priceRange) {
+      if (priceRange.min > 0) {
+        filters.minPrice = priceRange.min;
+      }
+      if (priceRange.max < Infinity) {
+        filters.maxPrice = priceRange.max;
+      }
+    }
+
+    try {
+      setLoading(true);
+      const result = await servicesService.searchServices(filters, 1, 100); // Load more results for search
+      setFilteredServices(result.services);
+      setIsFiltered(true);
+    } catch (error) {
+      console.error("Error searching services:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const clearFilters = () => {
