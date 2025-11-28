@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import ServiceReviewsModal from "../components/ServiceReviewsModal";
 import SearchBar from "../components/SearchBar";
 import ServiceMap from "../components/ServiceMap";
+import ServiceCardSkeleton from "../components/ServiceCardSkeleton";
 import SmartBookingForm, {
   SmartBookingData,
 } from "../components/SmartBookingForm";
 import { servicesService, Service } from "../services/servicesService";
 import { bookingService } from "../services/bookingService";
 import "../styles/ServicesPage.css";
+import "../styles/Skeleton.css";
 
 interface TimeSlot {
   start: string;
@@ -42,29 +44,80 @@ const ServicesPage: React.FC = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [filteredServices, setFilteredServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [isFiltered, setIsFiltered] = useState(false);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   // Reviews modal state
   const [showReviewsModal, setShowReviewsModal] = useState(false);
   const [reviewsService, setReviewsService] = useState<Service | null>(null);
 
+  // Initial load
   useEffect(() => {
-    loadServices();
+    loadServices(1, true);
   }, []);
 
-  const loadServices = async () => {
+  // Infinite scroll observer
+  useEffect(() => {
+    if (isFiltered || viewMode === "map") return; // Disable infinite scroll when filtered or in map mode
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
+          loadMoreServices();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMore, loadingMore, loading, isFiltered, viewMode]);
+
+  const loadServices = async (pageNum: number, reset: boolean = false) => {
     try {
-      const data = await servicesService.getAllServices();
-      setServices(data);
-      setFilteredServices(data);
+      if (reset) {
+        setLoading(true);
+      }
+      const result = await servicesService.getAllServices(pageNum, 12);
+      
+      if (reset) {
+        setServices(result.services);
+        setFilteredServices(result.services);
+      } else {
+        setServices(prev => [...prev, ...result.services]);
+        setFilteredServices(prev => [...prev, ...result.services]);
+      }
+      
+      setPage(pageNum);
+      setHasMore(result.pagination.hasMore);
     } catch (error) {
       console.error("Error loading services:", error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
+
+  const loadMoreServices = useCallback(() => {
+    if (!loadingMore && hasMore) {
+      setLoadingMore(true);
+      loadServices(page + 1, false);
+    }
+  }, [page, loadingMore, hasMore]);
 
   // Haversine formula to calculate distance between two coordinates
   const calculateDistance = (
@@ -155,7 +208,22 @@ const ServicesPage: React.FC = () => {
       }
     }
 
+    // Check if any filter is active
+    const hasActiveFilters = Boolean(
+      query.trim() !== "" ||
+      (category && category !== "Tutte") ||
+      (products && products.length > 0) ||
+      (location && location.lat && location.lng) ||
+      (priceRange && (priceRange.min > 0 || priceRange.max < Infinity))
+    );
+    
+    setIsFiltered(hasActiveFilters);
     setFilteredServices(filtered);
+  };
+
+  const clearFilters = () => {
+    setIsFiltered(false);
+    setFilteredServices(services);
   };
 
   const openBookingModal = (service: Service) => {
@@ -260,27 +328,29 @@ const ServicesPage: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <span className="loading-text">Caricamento...</span>
+        <div className="services-grid">
+          {[...Array(6)].map((_, i) => (
+            <ServiceCardSkeleton key={i} />
+          ))}
         </div>
       ) : viewMode === "map" ? (
         <ServiceMap services={filteredServices} onBook={openBookingModal} />
       ) : (
-        <div className="services-grid">
-          {filteredServices.length === 0 ? (
-            <div className="empty-state">
-              Nessun servizio disponibile al momento.
-            </div>
-          ) : (
-            filteredServices.map((service) => (
-              <div key={service.id} className="service-card">
-                {service.imageUrl ? (
-                  <img
-                    src={service.imageUrl}
-                    alt={service.title}
-                    className="service-image"
-                    style={{
+        <>
+          <div className="services-grid">
+            {filteredServices.length === 0 ? (
+              <div className="empty-state">
+                Nessun servizio disponibile al momento.
+              </div>
+            ) : (
+              filteredServices.map((service) => (
+                <div key={service.id} className="service-card">
+                  {service.imageUrl ? (
+                    <img
+                      src={service.imageUrl}
+                      alt={service.title}
+                      className="service-image"
+                      style={{
                       height: "200px",
                       objectFit: "cover",
                       width: "100%",
@@ -355,7 +425,29 @@ const ServicesPage: React.FC = () => {
               </div>
             ))
           )}
+          
+          {/* Loading more skeletons */}
+          {loadingMore && (
+            <>
+              {[...Array(3)].map((_, i) => (
+                <ServiceCardSkeleton key={`loading-${i}`} />
+              ))}
+            </>
+          )}
         </div>
+
+        {/* Infinite scroll trigger */}
+        {!isFiltered && hasMore && !loadingMore && (
+          <div ref={loadMoreRef} style={{ height: "20px", margin: "20px 0" }} />
+        )}
+
+        {/* End of results */}
+        {!hasMore && filteredServices.length > 0 && (
+          <div className="end-of-results">
+            ✨ Hai visto tutti i {filteredServices.length} servizi disponibili
+          </div>
+        )}
+      </>
       )}
 
       {/* Booking Modal with Smart Booking Form */}

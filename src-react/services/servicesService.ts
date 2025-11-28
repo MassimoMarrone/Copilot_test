@@ -18,10 +18,21 @@ export interface Service {
   availability?: any;
 }
 
+export interface PaginatedServices {
+  services: Service[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+    hasMore: boolean;
+  };
+}
+
 export const servicesService = {
-  // Get all services (public)
-  getAllServices: async (): Promise<Service[]> => {
-    return get<Service[]>("/api/services");
+  // Get all services with pagination (public)
+  getAllServices: async (page: number = 1, limit: number = 12): Promise<PaginatedServices> => {
+    return get<PaginatedServices>(`/api/services?page=${page}&limit=${limit}`);
   },
 
   // Get provider's own services

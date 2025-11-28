@@ -3,7 +3,18 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export class ServicesService {
-  async getAllServices() {
+  async getAllServices(page: number = 1, limit: number = 12) {
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination info
+    const totalCount = await prisma.service.count({
+      where: {
+        provider: {
+          isBlocked: false,
+        },
+      },
+    });
+
     const services = await prisma.service.findMany({
       where: {
         provider: {
@@ -13,9 +24,14 @@ export class ServicesService {
       include: {
         reviews: true,
       },
+      skip,
+      take: limit,
+      orderBy: {
+        createdAt: "desc",
+      },
     });
 
-    return services.map((service: any) => {
+    const mappedServices = services.map((service: any) => {
       const reviewCount = service.reviews.length;
       const averageRating =
         reviewCount > 0
@@ -56,6 +72,17 @@ export class ServicesService {
         averageRating: parseFloat(averageRating.toFixed(1)),
       };
     });
+
+    return {
+      services: mappedServices,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        hasMore: page * limit < totalCount,
+      },
+    };
   }
 
   async createService(userId: string, data: any) {

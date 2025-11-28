@@ -2,10 +2,12 @@ import { Request, Response } from "express";
 import { servicesService } from "../services/servicesService";
 
 export class ServicesController {
-  async getAllServices(_req: Request, res: Response): Promise<void> {
+  async getAllServices(req: Request, res: Response): Promise<void> {
     try {
-      const services = await servicesService.getAllServices();
-      res.json(services);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 12;
+      const result = await servicesService.getAllServices(page, limit);
+      res.json(result);
     } catch (error: any) {
       console.error("Error fetching services:", error);
       res.status(500).json({ error: "Failed to fetch services" });
