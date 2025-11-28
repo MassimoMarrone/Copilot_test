@@ -61,7 +61,7 @@ export class AuthService {
       throw new Error("Username already taken");
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, 10); // 10 rounds: good security/speed balance
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
@@ -99,20 +99,14 @@ export class AuthService {
     ).replace(/\/$/, ""); // Remove trailing slash if present
     const verificationLink = `${baseUrl}/verify-email?token=${verificationToken}`;
 
-    // Await email sending to ensure it works before returning success
-    // or at least catch errors to log them properly
-    try {
-      await sendEmail(
-        user.email,
-        "Verifica la tua email - Domy",
-        emailTemplates.verification(user.email.split("@")[0], verificationLink)
-      );
-    } catch (emailError) {
+    // Send verification email asynchronously (don't block response)
+    sendEmail(
+      user.email,
+      "Verifica la tua email - Domy",
+      emailTemplates.verification(user.email.split("@")[0], verificationLink)
+    ).catch((emailError) => {
       console.error("Failed to send verification email:", emailError);
-      // Optionally, we could delete the user if email fails, but for now let's just log it
-      // await prisma.user.delete({ where: { id: user.id } });
-      // throw new Error("Failed to send verification email. Please try again.");
-    }
+    });
 
     return {
       message:
@@ -193,10 +187,13 @@ export class AuthService {
     ).replace(/\/$/, "");
     const verificationLink = `${baseUrl}/verify-email?token=${verificationToken}`;
 
-    await sendEmail(
+    // Send email asynchronously
+    sendEmail(
       user.email,
       "Verifica la tua email - Domy",
       emailTemplates.verification(user.email.split("@")[0], verificationLink)
+    ).catch((err) =>
+      console.error("Failed to resend verification email:", err)
     );
 
     return {
