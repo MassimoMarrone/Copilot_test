@@ -136,15 +136,6 @@
   border-color: #333;
 }
 
-/* Hamburger nascosto su desktop */
-.hamburger-btn {
-  display: none;
-}
-
-.mobile-menu {
-  display: none;
-}
-
 @media (max-width: 768px) {
   .navbar {
     padding: 0 12px;
@@ -179,55 +170,6 @@
 
   .btn-register {
     padding: 8px 14px;
-  }
-
-  /* Menu hamburger */
-  .hamburger-btn {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 4px;
-    background: none;
-    border: none;
-    padding: 8px;
-    cursor: pointer;
-    margin-left: 8px;
-  }
-
-  .hamburger-btn span {
-    display: block;
-    width: 20px;
-    height: 2px;
-    background-color: #333;
-    transition: all 0.3s ease;
-  }
-
-  .mobile-menu {
-    position: fixed;
-    top: 60px;
-    left: 0;
-    right: 0;
-    background: white;
-    padding: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    z-index: 999;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .mobile-menu .nav-link {
-    padding: 12px 16px;
-    font-size: 16px;
-    border-radius: 8px;
-    background: #f8f9fa;
-  }
-
-  .mobile-menu .nav-link:hover,
-  .mobile-menu .nav-link.active {
-    background: #1a1a1a;
-    color: white;
   }
 }
 
