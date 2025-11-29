@@ -8,6 +8,7 @@ import {
   WINDOWS_COUNT_OPTIONS,
   TimeSlot,
 } from "../services/schedulingService";
+import AddressAutocomplete from "./AddressAutocomplete";
 import "../styles/SmartBookingForm.css";
 
 // Registra la locale italiana
@@ -133,6 +134,10 @@ const SmartBookingForm: React.FC<SmartBookingFormProps> = ({
 
   const handleSubmit = () => {
     if (!selectedSlot) return;
+    if (!address.trim()) {
+      alert("Per favore inserisci l'indirizzo dove effettuare il servizio");
+      return;
+    }
 
     onSubmit({
       date: selectedDate,
@@ -418,14 +423,14 @@ const SmartBookingForm: React.FC<SmartBookingFormProps> = ({
           </div>
 
           <div className="form-group">
-            <label>Indirizzo del servizio</label>
-            <input
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Via Roma 1, Milano"
-              maxLength={200}
+            <label>Indirizzo del servizio *</label>
+            <AddressAutocomplete
+              initialValue={address}
+              onSelect={(location) => setAddress(location.address)}
             />
+            <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
+              Inizia a digitare e seleziona l'indirizzo corretto dai suggerimenti
+            </small>
           </div>
 
           <div className="form-group">

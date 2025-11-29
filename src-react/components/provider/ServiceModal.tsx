@@ -125,6 +125,10 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
         "L'orario di fine deve essere dopo l'orario di inizio";
     }
 
+    if (!formData.address || formData.address.trim().length < 5) {
+      newErrors.address = "L'indirizzo è obbligatorio";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -418,7 +422,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
             />
           </div>
           <div className="form-group">
-            <label>Indirizzo (Opzionale)</label>
+            <label>Indirizzo *</label>
             <AddressAutocomplete
               onSelect={(loc) => {
                 setFormData({
@@ -427,9 +431,13 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
                   latitude: loc.lat,
                   longitude: loc.lng,
                 });
+                if (errors.address) setErrors({ ...errors, address: "" });
               }}
               initialValue={formData.address}
             />
+            {errors.address && (
+              <span className="error-message">{errors.address}</span>
+            )}
           </div>
 
           {mode === "edit" && (

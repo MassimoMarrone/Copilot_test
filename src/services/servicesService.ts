@@ -192,6 +192,11 @@ export class ServicesService {
       slotDurationMinutes,
     } = data;
 
+    // Validazione indirizzo obbligatorio
+    if (!address || address.trim().length < 5) {
+      throw new Error("L'indirizzo è obbligatorio");
+    }
+
     const defaultDaySchedule = {
       enabled: true,
       slots: [
@@ -225,7 +230,7 @@ export class ServicesService {
             ? productsUsed
             : JSON.stringify(productsUsed)
           : JSON.stringify([]),
-        address: address || undefined,
+        address: address.trim(),
         latitude: latitude ? parseFloat(latitude) : undefined,
         longitude: longitude ? parseFloat(longitude) : undefined,
         imageUrl,
