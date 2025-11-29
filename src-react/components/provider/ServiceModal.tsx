@@ -41,6 +41,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
     workingHoursStart: "08:00",
     workingHoursEnd: "18:00",
     slotDurationMinutes: 60,
+    coverageRadiusKm: 20,
     availability: {
       weekly: defaultWeeklySchedule,
       blockedDates: [],
@@ -97,6 +98,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
         workingHoursStart: (initialData as any).workingHoursStart || "08:00",
         workingHoursEnd: (initialData as any).workingHoursEnd || "18:00",
         slotDurationMinutes: (initialData as any).slotDurationMinutes || 60,
+        coverageRadiusKm: (initialData as any).coverageRadiusKm || 20,
         availability: availability,
         extraServices: extraServices,
       });
@@ -114,6 +116,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
         workingHoursStart: "08:00",
         workingHoursEnd: "18:00",
         slotDurationMinutes: 60,
+        coverageRadiusKm: 20,
         availability: {
           weekly: defaultWeeklySchedule,
           blockedDates: [],
@@ -182,6 +185,10 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
       data.append(
         "slotDurationMinutes",
         formData.slotDurationMinutes.toString()
+      );
+      data.append(
+        "coverageRadiusKm",
+        formData.coverageRadiusKm.toString()
       );
 
       if (mode === "edit") {
@@ -623,6 +630,45 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
             {errors.address && (
               <span className="error-message">{errors.address}</span>
             )}
+          </div>
+
+          {/* Raggio di Copertura */}
+          <div className="form-group">
+            <label>Raggio di Copertura (km) *</label>
+            <p style={{ fontSize: "0.85em", color: "#666", marginBottom: "12px" }}>
+              Indica la distanza massima che sei disposto a percorrere per raggiungere i clienti
+            </p>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              {[5, 10, 15, 20, 30, 50].map((radius) => (
+                <label
+                  key={radius}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "10px 16px",
+                    backgroundColor: formData.coverageRadiusKm === radius ? "#1a1a1a" : "#f8f9fa",
+                    color: formData.coverageRadiusKm === radius ? "white" : "#333",
+                    borderRadius: "8px",
+                    border: formData.coverageRadiusKm === radius ? "2px solid #1a1a1a" : "1px solid #ddd",
+                    cursor: "pointer",
+                    fontWeight: formData.coverageRadiusKm === radius ? "600" : "400",
+                    transition: "all 0.2s ease",
+                    minWidth: "70px",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="coverageRadius"
+                    value={radius}
+                    checked={formData.coverageRadiusKm === radius}
+                    onChange={() => setFormData({ ...formData, coverageRadiusKm: radius })}
+                    style={{ display: "none" }}
+                  />
+                  {radius} km
+                </label>
+              ))}
+            </div>
           </div>
 
           {mode === "edit" && (

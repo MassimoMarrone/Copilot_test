@@ -82,8 +82,8 @@ export class ServicesService {
     }
 
     // Post-filter by location (Haversine formula)
+    // Check if client's location is within the provider's coverage radius
     if (filters?.latitude && filters?.longitude) {
-      const radiusKm = filters.radiusKm || 50;
       services = services.filter((service: any) => {
         if (!service.latitude || !service.longitude) return false;
         const distance = this.calculateDistance(
@@ -92,7 +92,9 @@ export class ServicesService {
           service.latitude,
           service.longitude
         );
-        return distance <= radiusKm;
+        // Use the provider's coverage radius (default 20km if not set)
+        const providerCoverageKm = service.coverageRadiusKm || 20;
+        return distance <= providerCoverageKm;
       });
     }
 
@@ -204,6 +206,7 @@ export class ServicesService {
       workingHoursEnd,
       slotDurationMinutes,
       extraServices,
+      coverageRadiusKm,
     } = data;
 
     // Validazione indirizzo obbligatorio
@@ -259,6 +262,9 @@ export class ServicesService {
         slotDurationMinutes: slotDurationMinutes
           ? parseInt(slotDurationMinutes)
           : 60,
+        coverageRadiusKm: coverageRadiusKm
+          ? parseInt(coverageRadiusKm)
+          : 20,
         availability: JSON.stringify({
           weekly: defaultWeeklySchedule,
           blockedDates: [],
@@ -294,6 +300,7 @@ export class ServicesService {
       productsUsed,
       imageUrl,
       extraServices,
+      coverageRadiusKm,
     } = data;
 
     const updateData: any = {};
@@ -317,6 +324,9 @@ export class ServicesService {
           ? extraServices
           : JSON.stringify(extraServices)
         : null;
+    }
+    if (coverageRadiusKm !== undefined) {
+      updateData.coverageRadiusKm = parseInt(coverageRadiusKm);
     }
     if (imageUrl) {
       updateData.imageUrl = imageUrl;

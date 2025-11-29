@@ -17,6 +17,7 @@ export interface Service {
   productsUsed?: string[];
   availability?: any;
   extraServices?: { name: string; price: number }[];
+  coverageRadiusKm?: number;
 }
 
 export interface PaginatedServices {

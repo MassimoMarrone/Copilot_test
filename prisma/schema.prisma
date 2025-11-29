@@ -80,6 +80,7 @@ model Service {
   workingHoursEnd   String  @default("18:00")  // Provider's work end time
   slotDurationMinutes Int   @default(30)       // Minimum booking slot duration
   extraServices     String?   // JSON string [{name: string, price: number}]
+  coverageRadiusKm  Int     @default(20)       // Maximum distance provider will travel (km)
 
   bookings      Booking[]
   reviews       Review[]
