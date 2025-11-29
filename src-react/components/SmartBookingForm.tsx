@@ -428,8 +428,11 @@ const SmartBookingForm: React.FC<SmartBookingFormProps> = ({
               initialValue={address}
               onSelect={(location) => setAddress(location.address)}
             />
-            <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
-              Inizia a digitare e seleziona l'indirizzo corretto dai suggerimenti
+            <small
+              style={{ color: "#666", marginTop: "4px", display: "block" }}
+            >
+              Inizia a digitare e seleziona l'indirizzo corretto dai
+              suggerimenti
             </small>
           </div>
 

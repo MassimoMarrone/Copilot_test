@@ -25,7 +25,10 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   // Chiudi dropdown quando si clicca fuori
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
         setShowResults(false);
       }
     };
@@ -74,7 +77,11 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   };
 
   return (
-    <div className="address-autocomplete" style={{ position: "relative" }} ref={wrapperRef}>
+    <div
+      className="address-autocomplete"
+      style={{ position: "relative" }}
+      ref={wrapperRef}
+    >
       <input
         type="text"
         className="form-control"

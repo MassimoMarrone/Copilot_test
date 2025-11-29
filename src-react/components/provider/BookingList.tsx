@@ -45,36 +45,46 @@ const BookingList: React.FC<BookingListProps> = ({
             </p>
           )}
           {booking.address && (
-            <p>
-              <strong>Indirizzo:</strong>{" "}
+            <div style={{ marginBottom: "12px" }}>
+              <p style={{ marginBottom: "8px" }}>
+                <strong>Indirizzo:</strong> 📍 {booking.address}
+              </p>
               <a
-                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(booking.address)}`}
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                  booking.address
+                )}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  color: "#1a73e8",
-                  textDecoration: "none",
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "4px",
+                  gap: "8px",
+                  padding: "10px 16px",
+                  backgroundColor: "#1a73e8",
+                  color: "white",
+                  borderRadius: "8px",
+                  textDecoration: "none",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                  transition: "background-color 0.2s",
                 }}
+                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#1557b0")}
+                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#1a73e8")}
               >
-                📍 {booking.address}
                 <svg
-                  width="14"
-                  height="14"
+                  width="18"
+                  height="18"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
-                  style={{ marginLeft: "4px" }}
                 >
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                  <polyline points="15 3 21 3 21 9" />
-                  <line x1="10" y1="14" x2="21" y2="3" />
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
                 </svg>
+                Portami al Servizio
               </a>
-            </p>
+            </div>
           )}
           {booking.notes && (
             <p>
