@@ -14,11 +14,17 @@ import "../styles/SmartBookingForm.css";
 // Registra la locale italiana
 registerLocale("it", it);
 
+interface ExtraService {
+  name: string;
+  price: number;
+}
+
 interface SmartBookingFormProps {
   service: {
     id: string;
     title: string;
     price: number;
+    extraServices?: ExtraService[];
   };
   onSubmit: (bookingData: SmartBookingData) => void;
   onCancel: () => void;
@@ -35,6 +41,7 @@ export interface SmartBookingData {
   address?: string;
   calculatedPrice: number;
   estimatedDuration: number;
+  selectedExtras?: ExtraService[];
 }
 
 const SmartBookingForm: React.FC<SmartBookingFormProps> = ({
@@ -55,6 +62,7 @@ const SmartBookingForm: React.FC<SmartBookingFormProps> = ({
   const [clientPhone, setClientPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [address, setAddress] = useState("");
+  const [selectedExtras, setSelectedExtras] = useState<ExtraService[]>([]);
 
   // Calculated values
   const [estimatedDuration, setEstimatedDuration] = useState<string>("");
@@ -120,6 +128,25 @@ const SmartBookingForm: React.FC<SmartBookingFormProps> = ({
   const canProceedToStep2 = squareMetersRange !== "";
   const canProceedToStep3 = selectedDate !== "" && selectedSlot !== null;
 
+  // Calculate extras total
+  const extrasTotal = selectedExtras.reduce(
+    (sum, extra) => sum + extra.price,
+    0
+  );
+  const totalWithExtras = calculatedPrice + extrasTotal;
+
+  // Toggle extra service selection
+  const toggleExtraService = (extra: ExtraService) => {
+    setSelectedExtras((prev) => {
+      const isSelected = prev.some((e) => e.name === extra.name);
+      if (isSelected) {
+        return prev.filter((e) => e.name !== extra.name);
+      } else {
+        return [...prev, extra];
+      }
+    });
+  };
+
   const handleNext = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
@@ -148,8 +175,9 @@ const SmartBookingForm: React.FC<SmartBookingFormProps> = ({
       clientPhone,
       notes,
       address,
-      calculatedPrice,
+      calculatedPrice: totalWithExtras,
       estimatedDuration: estimatedMinutes,
+      selectedExtras: selectedExtras.length > 0 ? selectedExtras : undefined,
     });
   };
 
@@ -402,14 +430,95 @@ const SmartBookingForm: React.FC<SmartBookingFormProps> = ({
                 <span className="label">⏱️ Durata:</span>
                 <span className="value">{estimatedDuration}</span>
               </div>
+              <div className="summary-item">
+                <span className="label">💰 Prezzo base:</span>
+                <span className="value">€{calculatedPrice.toFixed(2)}</span>
+              </div>
+              {extrasTotal > 0 && (
+                <div className="summary-item">
+                  <span className="label">➕ Extra:</span>
+                  <span className="value">€{extrasTotal.toFixed(2)}</span>
+                </div>
+              )}
               <div className="summary-item highlight">
                 <span className="label">💰 Totale:</span>
                 <span className="value price">
-                  €{calculatedPrice.toFixed(2)}
+                  €{totalWithExtras.toFixed(2)}
                 </span>
               </div>
             </div>
           </div>
+
+          {/* Servizi Extra Opzionali */}
+          {service.extraServices && service.extraServices.length > 0 && (
+            <div className="form-group">
+              <label>✨ Servizi Extra Opzionali</label>
+              <p
+                style={{
+                  fontSize: "0.85em",
+                  color: "#666",
+                  marginBottom: "12px",
+                }}
+              >
+                Seleziona i servizi aggiuntivi che desideri
+              </p>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+              >
+                {service.extraServices.map((extra, index) => {
+                  const isSelected = selectedExtras.some(
+                    (e) => e.name === extra.name
+                  );
+                  return (
+                    <label
+                      key={index}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "12px 16px",
+                        backgroundColor: isSelected ? "#e8f5e9" : "#f8f9fa",
+                        borderRadius: "8px",
+                        border: isSelected
+                          ? "2px solid #28a745"
+                          : "1px solid #e0e0e0",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleExtraService(extra)}
+                          style={{
+                            width: "18px",
+                            height: "18px",
+                            accentColor: "#28a745",
+                          }}
+                        />
+                        <span style={{ fontWeight: "500" }}>{extra.name}</span>
+                      </div>
+                      <span
+                        style={{
+                          fontWeight: "600",
+                          color: isSelected ? "#28a745" : "#1a1a1a",
+                        }}
+                      >
+                        +€{extra.price.toFixed(2)}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="form-group">
             <label>Telefono di contatto</label>

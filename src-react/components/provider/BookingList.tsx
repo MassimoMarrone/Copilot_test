@@ -68,8 +68,12 @@ const BookingList: React.FC<BookingListProps> = ({
                   fontSize: "14px",
                   transition: "background-color 0.2s",
                 }}
-                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#1557b0")}
-                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#1a73e8")}
+                onMouseOver={(e) =>
+                  (e.currentTarget.style.backgroundColor = "#1557b0")
+                }
+                onMouseOut={(e) =>
+                  (e.currentTarget.style.backgroundColor = "#1a73e8")
+                }
               >
                 <svg
                   width="18"

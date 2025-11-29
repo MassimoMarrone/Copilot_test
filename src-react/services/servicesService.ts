@@ -16,6 +16,7 @@ export interface Service {
   imageUrl?: string;
   productsUsed?: string[];
   availability?: any;
+  extraServices?: { name: string; price: number }[];
 }
 
 export interface PaginatedServices {

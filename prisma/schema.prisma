@@ -79,6 +79,7 @@ model Service {
   workingHoursStart String  @default("08:00")  // Provider's work start time
   workingHoursEnd   String  @default("18:00")  // Provider's work end time
   slotDurationMinutes Int   @default(30)       // Minimum booking slot duration
+  extraServices     String?   // JSON string [{name: string, price: number}]
 
   bookings      Booking[]
   reviews       Review[]
@@ -114,6 +115,7 @@ model Booking {
   estimatedDuration   Int?      // Estimated duration in minutes
   startTime           String?   // Booking start time "HH:MM"
   endTime             String?   // Booking end time "HH:MM"
+  selectedExtras      String?   // JSON string [{name: string, price: number}]
 
   messages        ChatMessage[]
   review          Review?

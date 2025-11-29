@@ -24,6 +24,7 @@ export const bookingService = {
       windowsCount?: number;
       startTime?: string;
       endTime?: string;
+      selectedExtras?: { name: string; price: number }[];
     }
   ) {
     const {
@@ -39,6 +40,7 @@ export const bookingService = {
       windowsCount,
       startTime,
       endTime,
+      selectedExtras,
     } = data;
 
     const service = await prisma.service.findUnique({
@@ -156,6 +158,13 @@ export const bookingService = {
       );
     }
 
+    // Add selected extras to the price
+    let extrasTotal = 0;
+    if (selectedExtras && selectedExtras.length > 0) {
+      extrasTotal = selectedExtras.reduce((sum, extra) => sum + extra.price, 0);
+      finalPrice += extrasTotal;
+    }
+
     if (finalPrice < 0.5) {
       throw new Error(
         "Il prezzo del servizio è inferiore al minimo consentito per i pagamenti online (€0.50)."
@@ -192,6 +201,10 @@ export const bookingService = {
       estimatedDuration: (estimatedDuration || 0).toString(),
       startTime: (startTime || "").substring(0, 10),
       endTime: (endTime || "").substring(0, 10),
+      // Selected extras (JSON stringified, max 500 chars for Stripe)
+      selectedExtras: selectedExtras
+        ? JSON.stringify(selectedExtras).substring(0, 500)
+        : "",
     };
 
     let session;

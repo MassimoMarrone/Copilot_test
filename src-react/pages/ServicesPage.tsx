@@ -230,6 +230,7 @@ const ServicesPage: React.FC = () => {
         estimatedDuration: bookingData.estimatedDuration,
         startTime: bookingData.startTime,
         endTime: bookingData.endTime,
+        selectedExtras: bookingData.selectedExtras,
       });
 
       window.location.href = url;

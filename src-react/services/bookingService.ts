@@ -44,6 +44,8 @@ export interface CreateBookingData {
   estimatedDuration?: number;
   startTime?: string;
   endTime?: string;
+  // Selected extras
+  selectedExtras?: { name: string; price: number }[];
 }
 
 export const bookingService = {

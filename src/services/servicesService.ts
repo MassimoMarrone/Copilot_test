@@ -129,10 +129,23 @@ export class ServicesService {
         }
       }
 
+      let parsedExtraServices = [];
+      if (service.extraServices) {
+        try {
+          parsedExtraServices =
+            typeof service.extraServices === "string"
+              ? JSON.parse(service.extraServices)
+              : service.extraServices;
+        } catch (e) {
+          console.error("Error parsing extraServices:", e);
+        }
+      }
+
       return {
         ...service,
         productsUsed: parsedProducts,
         availability: parsedAvailability,
+        extraServices: parsedExtraServices,
         reviewCount,
         averageRating: parseFloat(averageRating.toFixed(1)),
       };
@@ -190,6 +203,7 @@ export class ServicesService {
       workingHoursStart,
       workingHoursEnd,
       slotDurationMinutes,
+      extraServices,
     } = data;
 
     // Validazione indirizzo obbligatorio
@@ -230,6 +244,11 @@ export class ServicesService {
             ? productsUsed
             : JSON.stringify(productsUsed)
           : JSON.stringify([]),
+        extraServices: extraServices
+          ? typeof extraServices === "string"
+            ? extraServices
+            : JSON.stringify(extraServices)
+          : null,
         address: address.trim(),
         latitude: latitude ? parseFloat(latitude) : undefined,
         longitude: longitude ? parseFloat(longitude) : undefined,
@@ -274,6 +293,7 @@ export class ServicesService {
       availability,
       productsUsed,
       imageUrl,
+      extraServices,
     } = data;
 
     const updateData: any = {};
@@ -290,6 +310,13 @@ export class ServicesService {
         typeof productsUsed === "string"
           ? productsUsed
           : JSON.stringify(productsUsed);
+    }
+    if (extraServices !== undefined) {
+      updateData.extraServices = extraServices
+        ? typeof extraServices === "string"
+          ? extraServices
+          : JSON.stringify(extraServices)
+        : null;
     }
     if (imageUrl) {
       updateData.imageUrl = imageUrl;
@@ -343,10 +370,23 @@ export class ServicesService {
         }
       }
 
+      let parsedExtraServices = [];
+      if (service.extraServices) {
+        try {
+          parsedExtraServices =
+            typeof service.extraServices === "string"
+              ? JSON.parse(service.extraServices)
+              : service.extraServices;
+        } catch (e) {
+          console.error("Error parsing extraServices", e);
+        }
+      }
+
       return {
         ...service,
         productsUsed: parsedProducts,
         availability: parsedAvailability,
+        extraServices: parsedExtraServices,
       };
     });
   }

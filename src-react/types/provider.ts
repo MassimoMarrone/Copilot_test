@@ -14,6 +14,7 @@ export interface Service {
   createdAt: string;
   imageUrl?: string;
   availability?: ProviderAvailability;
+  extraServices?: { name: string; price: number }[];
 }
 
 export interface Booking {

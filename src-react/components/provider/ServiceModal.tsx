@@ -7,6 +7,11 @@ import AvailabilityManager, {
 import { CATEGORIES, AVAILABLE_PRODUCTS } from "../../constants/provider";
 import { Service } from "../../types/provider";
 
+interface ExtraService {
+  name: string;
+  price: number;
+}
+
 interface ServiceModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -40,10 +45,15 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
       weekly: defaultWeeklySchedule,
       blockedDates: [],
     } as ProviderAvailability,
+    extraServices: [] as ExtraService[],
   });
   const [image, setImage] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Stato per nuovo servizio extra
+  const [newExtraName, setNewExtraName] = useState("");
+  const [newExtraPrice, setNewExtraPrice] = useState("");
 
   useEffect(() => {
     if (initialData && mode === "edit") {
@@ -62,6 +72,19 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
         availability.blockedDates = [];
       }
 
+      // Parse extra services
+      let extraServices: ExtraService[] = [];
+      if ((initialData as any).extraServices) {
+        try {
+          extraServices =
+            typeof (initialData as any).extraServices === "string"
+              ? JSON.parse((initialData as any).extraServices)
+              : (initialData as any).extraServices;
+        } catch (e) {
+          extraServices = [];
+        }
+      }
+
       setFormData({
         title: initialData.title,
         description: initialData.description,
@@ -75,6 +98,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
         workingHoursEnd: (initialData as any).workingHoursEnd || "18:00",
         slotDurationMinutes: (initialData as any).slotDurationMinutes || 60,
         availability: availability,
+        extraServices: extraServices,
       });
     } else {
       // Reset for create mode
@@ -94,9 +118,12 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
           weekly: defaultWeeklySchedule,
           blockedDates: [],
         },
+        extraServices: [],
       });
       setImage(null);
       setErrors({});
+      setNewExtraName("");
+      setNewExtraPrice("");
     }
   }, [initialData, mode, isOpen]);
 
@@ -149,6 +176,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
       data.append("category", formData.category);
       data.append("price", formData.price);
       data.append("productsUsed", JSON.stringify(formData.productsUsed));
+      data.append("extraServices", JSON.stringify(formData.extraServices));
       data.append("workingHoursStart", formData.workingHoursStart);
       data.append("workingHoursEnd", formData.workingHoursEnd);
       data.append(
@@ -176,6 +204,31 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Funzioni per gestire i servizi extra
+  const addExtraService = () => {
+    if (newExtraName.trim() && newExtraPrice) {
+      const price = parseFloat(newExtraPrice);
+      if (price > 0) {
+        setFormData({
+          ...formData,
+          extraServices: [
+            ...formData.extraServices,
+            { name: newExtraName.trim(), price },
+          ],
+        });
+        setNewExtraName("");
+        setNewExtraPrice("");
+      }
+    }
+  };
+
+  const removeExtraService = (index: number) => {
+    setFormData({
+      ...formData,
+      extraServices: formData.extraServices.filter((_, i) => i !== index),
+    });
   };
 
   if (!isOpen) return null;
@@ -405,6 +458,138 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
               ))}
             </div>
           </div>
+
+          {/* Servizi Extra */}
+          <div className="form-group">
+            <label>Servizi Extra (Opzionale)</label>
+            <p
+              style={{
+                fontSize: "0.85em",
+                color: "#666",
+                marginBottom: "12px",
+              }}
+            >
+              Aggiungi servizi aggiuntivi che i clienti possono scegliere
+              durante la prenotazione
+            </p>
+
+            {/* Lista servizi extra esistenti */}
+            {formData.extraServices.length > 0 && (
+              <div style={{ marginBottom: "16px" }}>
+                {formData.extraServices.map((extra, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "10px 14px",
+                      backgroundColor: "#f8f9fa",
+                      borderRadius: "8px",
+                      marginBottom: "8px",
+                      border: "1px solid #e0e0e0",
+                    }}
+                  >
+                    <span style={{ fontWeight: "500" }}>{extra.name}</span>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                      }}
+                    >
+                      <span style={{ color: "#1a1a1a", fontWeight: "600" }}>
+                        +€{extra.price.toFixed(2)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeExtraService(index)}
+                        style={{
+                          background: "#dc3545",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "50%",
+                          width: "24px",
+                          height: "24px",
+                          cursor: "pointer",
+                          fontSize: "14px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Form per aggiungere nuovo servizio extra */}
+            <div
+              style={{ display: "flex", gap: "10px", alignItems: "flex-end" }}
+            >
+              <div style={{ flex: 2 }}>
+                <label style={{ fontSize: "0.85em", color: "#666" }}>
+                  Nome servizio
+                </label>
+                <input
+                  type="text"
+                  value={newExtraName}
+                  onChange={(e) => setNewExtraName(e.target.value)}
+                  placeholder="Es: Pulizia finestre, Stiratura..."
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "6px",
+                    border: "1px solid #ccc",
+                  }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: "0.85em", color: "#666" }}>
+                  Prezzo (€)
+                </label>
+                <input
+                  type="number"
+                  step="0.50"
+                  min="0"
+                  value={newExtraPrice}
+                  onChange={(e) => setNewExtraPrice(e.target.value)}
+                  placeholder="10.00"
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "6px",
+                    border: "1px solid #ccc",
+                  }}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={addExtraService}
+                disabled={!newExtraName.trim() || !newExtraPrice}
+                style={{
+                  padding: "10px 16px",
+                  backgroundColor:
+                    newExtraName.trim() && newExtraPrice ? "#28a745" : "#ccc",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor:
+                    newExtraName.trim() && newExtraPrice
+                      ? "pointer"
+                      : "not-allowed",
+                  fontWeight: "600",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                + Aggiungi
+              </button>
+            </div>
+          </div>
+
           <div className="form-group">
             <label>
               {mode === "create"
