@@ -4,6 +4,7 @@ import ServiceReviewsModal from "../components/ServiceReviewsModal";
 import SearchBar from "../components/SearchBar";
 import ServiceMap from "../components/ServiceMap";
 import ServiceCardSkeleton from "../components/ServiceCardSkeleton";
+import ServiceCard from "../components/ServiceCard";
 import SmartBookingForm, {
   SmartBookingData,
 } from "../components/SmartBookingForm";
@@ -280,76 +281,12 @@ const ServicesPage: React.FC = () => {
               </div>
             ) : (
               filteredServices.map((service) => (
-                  <div key={service.id} className="service-card">
-                    {service.imageUrl ? (
-                      <img
-                        src={service.imageUrl}
-                        alt={service.title}
-                        className="service-image"
-                      />
-                    ) : (
-                      <div className="service-image-placeholder">
-                        {/* Placeholder for service image */}
-                        <span>{service.title.charAt(0)}</span>
-                      </div>
-                    )}
-                    <div className="service-content">
-                      <h3>{service.title}</h3>
-                      <p className="service-price">€{service.price.toFixed(2)}</p>
-                      <div
-                        className="service-rating"
-                        onClick={() => openReviewsModal(service)}
-                        title="Clicca per vedere le recensioni"
-                      >
-                        <span className="rating-stars">
-                          {"⭐".repeat(Math.round(service.averageRating || 0))}
-                          {"☆".repeat(5 - Math.round(service.averageRating || 0))}
-                        </span>
-                        <span className="review-count">
-                          ({service.reviewCount || 0} recensioni)
-                        </span>
-                      </div>
-
-                      <div className="provider-info">
-                        <a
-                          href={`/provider/${service.providerId}`}
-                          className="provider-profile-link"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          👤 Vedi Profilo Fornitore
-                        </a>
-                      </div>
-
-                    <p className="service-description">{service.description}</p>
-
-                    {service.productsUsed &&
-                      service.productsUsed.length > 0 && (
-                        <div className="service-products">
-                          {service.productsUsed.map((product) => (
-                            <span key={product} className="product-tag">
-                              {product}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                    {service.address && (
-                      <p className="service-location">📍 {service.address}</p>
-                    )}
-                    <button
-                      className="btn-book"
-                      onClick={() => openBookingModal(service)}
-                    >
-                      Prenota Ora
-                    </button>
-                    <button
-                      className="btn-reviews"
-                      onClick={() => openReviewsModal(service)}
-                    >
-                      Leggi Recensioni
-                    </button>
-                  </div>
-                </div>
+                <ServiceCard
+                  key={service.id}
+                  service={service}
+                  onBook={openBookingModal}
+                  onReview={openReviewsModal}
+                />
               ))
             )}
 

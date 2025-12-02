@@ -7,6 +7,8 @@ export interface Service {
   description: string;
   price: number;
   providerEmail: string;
+  providerName?: string;
+  providerAvatar?: string;
   address?: string;
   latitude?: number;
   longitude?: number;

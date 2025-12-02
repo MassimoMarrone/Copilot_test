@@ -1,0 +1,295 @@
+/* Service Card - Premium Modern Theme (Royal Blue Edition) */
+.service-card {
+  background: var(--surface-dark, #ffffff);
+  border-radius: var(--radius-lg, 24px); /* More rounded */
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  height: 100%;
+  position: relative;
+}
+
+.service-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(37, 99, 235, 0.12); /* Blue tinted shadow */
+  border-color: rgba(37, 99, 235, 0.1);
+}
+
+/* Image Container */
+.service-card-image-container {
+  position: relative;
+  height: 240px; /* Slightly taller */
+  width: 100%;
+  overflow: hidden;
+}
+
+.service-image {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.service-card:hover .service-image {
+  transform: scale(1.08);
+}
+
+.service-image-placeholder {
+  height: 100%;
+  width: 100%;
+  background-color: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+/* Price Badge */
+.service-price-badge {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(8px);
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #1e3a8a; /* Dark Blue */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 2;
+  border: 1px solid rgba(37, 99, 235, 0.1);
+}
+
+/* Content */
+.service-content {
+  padding: 12px 24px 24px; /* Significantly reduced top padding */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.service-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  gap: 8px;
+}
+
+.service-title {
+  margin: 0;
+  font-family: "Outfit", sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+/* Rating */
+.service-rating {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+  padding: 0;
+}
+
+.service-rating:hover {
+  opacity: 0.8;
+}
+
+.rating-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+}
+
+.star-icon {
+  color: #fbbf24; /* Amber */
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.rating-value {
+  font-weight: 700;
+  color: #1e293b; /* Slate 800 */
+}
+
+.rating-separator {
+  color: #cbd5e1; /* Slate 300 */
+  font-size: 0.8rem;
+}
+
+.review-label {
+  color: #64748b; /* Slate 500 */
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: rgba(100, 116, 139, 0.3);
+  font-size: 0.9rem;
+}
+
+/* Provider Info */
+.provider-info {
+  margin-bottom: 20px;
+}
+
+.provider-profile-link {
+  color: #64748b;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.2s;
+}
+
+/* Provider Info */
+.provider-info {
+  margin-bottom: 16px;
+}
+
+.provider-profile-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.provider-profile-link:hover {
+  opacity: 0.8;
+}
+
+.provider-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #f1f5f9;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.provider-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.provider-avatar span {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.provider-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155; /* Slate 700 */
+}
+
+/* Products */
+.service-products {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.product-tag {
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  background: #eff6ff; /* Light Blue */
+  border-radius: 9999px;
+  color: #1d4ed8; /* Dark Blue Text */
+  font-weight: 600;
+  border: 1px solid #dbeafe;
+  transition: all 0.2s;
+}
+
+.product-tag:hover {
+  background: #dbeafe;
+}
+
+.product-tag-more {
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* Location */
+.service-location {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.location-icon {
+  color: #2563eb;
+  opacity: 0.8;
+}
+
+/* Actions */
+.service-actions {
+  display: flex;
+  margin-top: auto;
+}
+
+.btn-book {
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-book:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+}
+
+.btn-reviews {
+  padding: 14px 20px;
+  background-color: white;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-reviews:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}

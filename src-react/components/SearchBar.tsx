@@ -223,38 +223,57 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   return (
     <div className="search-bar-container">
       <form onSubmit={handleSearch} className="search-form">
-        <div className="search-main-row">
-          <div className="search-input-group">
+        <div className="search-bar-wrapper">
+          <div className="search-input-section">
+            <div className="search-icon-label">
+              <span className="icon">🔍</span>
+              <label>Cosa cerchi?</label>
+            </div>
             <input
               type="text"
-              className="search-input"
-              placeholder="Cerca servizi..."
+              className="search-input-premium"
+              placeholder="Pulizia, Idraulico..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
-          <div className="location-group">
-            <div className="location-input-wrapper" ref={locationWrapperRef}>
+          <div className="search-divider"></div>
+
+          <div className="location-input-section">
+            <div className="search-icon-label">
+              <span className="icon">📍</span>
+              <label>Dove?</label>
+            </div>
+            <div className="location-input-container" ref={locationWrapperRef}>
               <input
                 type="text"
-                className="location-input"
-                placeholder="Dove?"
+                className="location-input-premium"
+                placeholder="Indirizzo o città"
                 value={locationQuery}
                 onChange={handleLocationChange}
                 onFocus={() => setShowResults(true)}
               />
+              {locationEnabled && currentLocation && (
+                <button
+                  type="button"
+                  className="clear-location-btn-premium"
+                  onClick={handleClearLocation}
+                >
+                  ✕
+                </button>
+              )}
+              
               {showResults && (
-                <ul className="location-results-dropdown">
+                <ul className="location-results-dropdown premium-dropdown">
                   <li
                     className="location-result-item current-location-item"
                     onClick={() => {
                       handleGetCurrentLocation();
                       setShowResults(false);
                     }}
-                    style={{ fontWeight: "bold", color: "#28a745" }}
                   >
-                    📍 Usa la mia posizione attuale
+                    <span className="icon">📍</span> Usa la mia posizione attuale
                   </li>
                   {locationResults.map((result) => (
                     <li
@@ -262,43 +281,28 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
                       onClick={() => selectLocation(result)}
                       className="location-result-item"
                     >
-                      📍 {result.display_name}
+                      <span className="icon">🏙️</span> {result.display_name}
                     </li>
                   ))}
                 </ul>
               )}
-              <button
-                type="button"
-                className="location-icon-btn"
-                onClick={handleGetCurrentLocation}
-                title="Usa la mia posizione"
-              >
-                📍
-              </button>
             </div>
-            {locationEnabled && currentLocation && (
-              <button
-                type="button"
-                className="clear-location-btn"
-                onClick={handleClearLocation}
-              >
-                ✕
-              </button>
-            )}
           </div>
 
-          <button
-            type="button"
-            className={`filter-toggle-btn ${showFilters ? "active" : ""}`}
-            onClick={() => setShowFilters(!showFilters)}
-            title="Filtri avanzati"
-          >
-            ⚙️ Filtri
-          </button>
-
-          <button type="submit" className="search-button">
-            🔍
-          </button>
+          <div className="search-actions-section">
+            <button
+              type="button"
+              className={`filter-btn-premium ${showFilters ? "active" : ""}`}
+              onClick={() => setShowFilters(!showFilters)}
+              title="Filtri"
+            >
+              <span className="icon">⚙️</span>
+            </button>
+            <button type="submit" className="search-btn-premium">
+              <span className="icon">🔍</span>
+              <span className="text">Cerca</span>
+            </button>
+          </div>
         </div>
 
         {showFilters && (

@@ -9,8 +9,10 @@
 
 /* Page Header */
 .page-header {
-  margin-bottom: 60px;
+  margin-bottom: 40px;
   text-align: center;
+  padding-bottom: 40px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .page-header h1 {
@@ -58,10 +60,10 @@
 }
 
 .view-toggle-btn.active {
-  background: #000;
+  background: #2563eb;
   color: white;
-  border-color: #000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 /* Services Grid */
@@ -71,189 +73,7 @@
   gap: 40px;
 }
 
-/* Service Card - Premium */
-.service-card {
-  background: white;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid rgba(0, 0, 0, 0.03);
-}
 
-.service-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-}
-
-.service-image {
-  height: 240px;
-  width: 100%;
-  object-fit: cover;
-  transition: transform 0.5s ease;
-}
-
-.service-card:hover .service-image {
-  transform: scale(1.05);
-}
-
-.service-image-placeholder {
-  height: 240px;
-  background-color: #f5f5f5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 3rem;
-  color: #e0e0e0;
-  font-weight: 600;
-}
-
-.service-content {
-  padding: 32px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.service-content h3 {
-  margin: 0 0 12px 0;
-  font-family: "Outfit", sans-serif;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #1a1a1a;
-}
-
-.service-price {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #000;
-  margin-bottom: 16px;
-  letter-spacing: -0.02em;
-}
-
-.service-rating {
-  display: inline-flex;
-  align-items: center;
-  margin-bottom: 16px;
-  padding: 6px 0;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.service-rating:hover {
-  opacity: 0.7;
-}
-
-.rating-stars {
-  color: #000; /* Black stars for minimalism */
-  font-size: 1rem;
-  letter-spacing: 2px;
-}
-
-.review-count {
-  margin-left: 8px;
-  font-size: 0.9rem;
-  color: #888;
-  font-weight: 500;
-}
-
-.provider-info {
-  margin-bottom: 20px;
-}
-
-.provider-profile-link {
-  color: #2563eb; /* Royal Blue accent */
-  text-decoration: none;
-  font-size: 0.9rem;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: color 0.2s;
-}
-
-.provider-profile-link:hover {
-  color: #000;
-  text-decoration: underline;
-}
-
-.service-description {
-  color: #666;
-  font-size: 1rem;
-  line-height: 1.6;
-  margin-bottom: 24px;
-  flex: 1;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.service-location {
-  font-size: 0.9rem;
-  color: #888;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.service-products {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 24px;
-}
-
-.product-tag {
-  font-size: 0.75rem;
-  padding: 4px 10px;
-  background: #f5f5f5;
-  border-radius: 20px;
-  color: #666;
-  font-weight: 500;
-}
-
-/* Buttons */
-.btn-book {
-  width: 100%;
-  padding: 16px;
-  background-color: #000;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.btn-book:hover {
-  background-color: #333;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-}
-
-.btn-reviews {
-  width: 100%;
-  padding: 14px;
-  margin-top: 12px;
-  background-color: white;
-  color: #000;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-reviews:hover {
-  background-color: #f9f9f9;
-  border-color: #000;
-}
 
 /* Empty State */
 .empty-state {
@@ -280,7 +100,10 @@
     grid-template-columns: 1fr;
     gap: 24px;
   }
-}  width: 100%;
+}
+
+.time-input {
+  width: 100%;
   padding: 12px 15px;
   padding-right: 40px;
   border: 2px solid #e0e0e0;
@@ -373,22 +196,7 @@
   background: #999;
 }
 
-.service-products {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 15px;
-}
 
-.product-tag {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  padding: 4px 10px;
-  border-radius: 16px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  border: 1px solid #c8e6c9;
-}
 
 /* Smart Booking Modal */
 .smart-booking-modal {
