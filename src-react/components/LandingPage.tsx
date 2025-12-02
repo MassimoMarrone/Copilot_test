@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import heroImage from "../assets/hero.jpg";
+import heroImage from "../assets/hero-modern.jpg";
 import "../styles/LandingPage.css";
 
 interface LandingPageProps {
@@ -18,22 +18,14 @@ const LandingPage: React.FC<LandingPageProps> = ({
 
   return (
     <>
-      {/* Hero Section */}
-      <div
-        className="hero-section"
-        style={{
-          backgroundImage: `linear-gradient(rgba(26, 26, 46, 0.4), rgba(22, 33, 62, 0.5)), url(${heroImage})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center 40%",
-          backgroundRepeat: "no-repeat",
-        }}
-      >
+      {/* Hero Section - Premium Full Width */}
+      <div className="hero-section full-width-hero" style={{ backgroundImage: `url(${heroImage})` }}>
+        <div className="hero-overlay"></div>
         <div className="container">
           <div className="hero-content-centered">
             <h1 className="hero-title">domy</h1>
             <p className="hero-subtitle">
-              Il modo più semplice per prenotare servizi di pulizia
-              professionali
+              IL TUO SPAZIO, PERFETTO
             </p>
             <button
               className="btn btn-primary btn-large hero-cta"
@@ -140,7 +132,35 @@ const LandingPage: React.FC<LandingPageProps> = ({
       {/* Footer */}
       <footer className="footer">
         <div className="container">
-          <p>&copy; 2024 domy. Tutti i diritti riservati.</p>
+          <div className="footer-content">
+            <div className="footer-brand">
+              <h3>domy</h3>
+              <p>Il tuo spazio, perfetto.</p>
+            </div>
+            <div className="footer-links">
+              <div className="footer-column">
+                <h4>Servizi</h4>
+                <a href="#">Pulizia Casa</a>
+                <a href="#">Uffici</a>
+                <a href="#">Post-Ristrutturazione</a>
+              </div>
+              <div className="footer-column">
+                <h4>Azienda</h4>
+                <a href="#">Chi Siamo</a>
+                <a href="#">Come Funziona</a>
+                <a href="#">Lavora con Noi</a>
+              </div>
+              <div className="footer-column">
+                <h4>Supporto</h4>
+                <a href="#">Contatti</a>
+                <a href="#">FAQ</a>
+                <a href="#">Privacy Policy</a>
+              </div>
+            </div>
+          </div>
+          <div className="footer-bottom">
+            <p>&copy; 2024 domy. Tutti i diritti riservati.</p>
+          </div>
         </div>
       </footer>
     </>

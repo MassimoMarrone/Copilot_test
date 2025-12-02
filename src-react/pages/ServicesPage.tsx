@@ -248,48 +248,16 @@ const ServicesPage: React.FC = () => {
 
       <SearchBar onSearch={handleSearch} />
 
-      <div
-        className="view-toggle-container"
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          marginBottom: "20px",
-          gap: "10px",
-        }}
-      >
+      <div className="view-toggle-container">
         <button
           className={`view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
           onClick={() => setViewMode("list")}
-          style={{
-            padding: "8px 16px",
-            borderRadius: "20px",
-            border: "1px solid #ddd",
-            background: viewMode === "list" ? "#000" : "white",
-            color: viewMode === "list" ? "white" : "#333",
-            cursor: "pointer",
-            fontWeight: "600",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-          }}
         >
           📋 Lista
         </button>
         <button
           className={`view-toggle-btn ${viewMode === "map" ? "active" : ""}`}
           onClick={() => setViewMode("map")}
-          style={{
-            padding: "8px 16px",
-            borderRadius: "20px",
-            border: "1px solid #ddd",
-            background: viewMode === "map" ? "#000" : "white",
-            color: viewMode === "map" ? "white" : "#333",
-            cursor: "pointer",
-            fontWeight: "600",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-          }}
         >
           🗺️ Mappa
         </button>
@@ -312,55 +280,45 @@ const ServicesPage: React.FC = () => {
               </div>
             ) : (
               filteredServices.map((service) => (
-                <div key={service.id} className="service-card">
-                  {service.imageUrl ? (
-                    <img
-                      src={service.imageUrl}
-                      alt={service.title}
-                      className="service-image"
-                      style={{
-                        height: "200px",
-                        objectFit: "cover",
-                        width: "100%",
-                      }}
-                    />
-                  ) : (
-                    <div className="service-image-placeholder">
-                      {/* Placeholder for service image */}
-                      <span>{service.title.charAt(0)}</span>
-                    </div>
-                  )}
-                  <div className="service-content">
-                    <h3>{service.title}</h3>
-                    <p className="service-price">€{service.price.toFixed(2)}</p>
-                    <div
-                      className="service-rating"
-                      onClick={() => openReviewsModal(service)}
-                      title="Clicca per vedere le recensioni"
-                    >
-                      <span className="rating-stars">
-                        {"⭐".repeat(Math.round(service.averageRating || 0))}
-                        {"☆".repeat(5 - Math.round(service.averageRating || 0))}
-                      </span>
-                      <span className="review-count">
-                        ({service.reviewCount || 0} recensioni)
-                      </span>
-                    </div>
-
-                    <div style={{ marginBottom: "10px" }}>
-                      <a
-                        href={`/provider/${service.providerId}`}
-                        className="provider-profile-link"
-                        style={{
-                          color: "#007bff",
-                          textDecoration: "none",
-                          fontSize: "0.9rem",
-                        }}
-                        onClick={(e) => e.stopPropagation()}
+                  <div key={service.id} className="service-card">
+                    {service.imageUrl ? (
+                      <img
+                        src={service.imageUrl}
+                        alt={service.title}
+                        className="service-image"
+                      />
+                    ) : (
+                      <div className="service-image-placeholder">
+                        {/* Placeholder for service image */}
+                        <span>{service.title.charAt(0)}</span>
+                      </div>
+                    )}
+                    <div className="service-content">
+                      <h3>{service.title}</h3>
+                      <p className="service-price">€{service.price.toFixed(2)}</p>
+                      <div
+                        className="service-rating"
+                        onClick={() => openReviewsModal(service)}
+                        title="Clicca per vedere le recensioni"
                       >
-                        👤 Vedi Profilo Fornitore
-                      </a>
-                    </div>
+                        <span className="rating-stars">
+                          {"⭐".repeat(Math.round(service.averageRating || 0))}
+                          {"☆".repeat(5 - Math.round(service.averageRating || 0))}
+                        </span>
+                        <span className="review-count">
+                          ({service.reviewCount || 0} recensioni)
+                        </span>
+                      </div>
+
+                      <div className="provider-info">
+                        <a
+                          href={`/provider/${service.providerId}`}
+                          className="provider-profile-link"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          👤 Vedi Profilo Fornitore
+                        </a>
+                      </div>
 
                     <p className="service-description">{service.description}</p>
 
