@@ -47,20 +47,20 @@
   .calendar-main {
     flex-direction: column;
   }
-  
+
   .calendar-stats {
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
   }
-  
+
   .calendar-stat {
     padding: 10px 4px;
   }
-  
+
   .calendar-stat .stat-value {
     font-size: 1.25rem;
   }
-  
+
   .calendar-stat .stat-label {
     font-size: 0.65rem;
   }
@@ -442,44 +442,44 @@
     padding: 12px;
     border-radius: 12px;
   }
-  
+
   .calendar-grid {
     padding: 10px;
   }
-  
+
   .calendar-header {
     margin-bottom: 12px;
   }
-  
+
   .calendar-nav-btn {
     width: 32px;
     height: 32px;
     font-size: 1rem;
   }
-  
+
   .calendar-month-title {
     font-size: 0.95rem;
   }
-  
+
   .calendar-day-name {
     font-size: 0.6rem;
     padding: 4px 1px;
   }
-  
+
   .calendar-cell {
     min-height: 36px;
     border-radius: 6px;
   }
-  
+
   .calendar-day-number {
     font-size: 0.75rem;
   }
-  
+
   .event-dot {
     width: 4px;
     height: 4px;
   }
-  
+
   .calendar-event-count {
     width: 14px;
     height: 14px;
@@ -487,22 +487,22 @@
     top: 1px;
     right: 1px;
   }
-  
+
   .calendar-sidebar {
     padding: 12px;
     max-height: 250px;
   }
-  
+
   .event-title {
     font-size: 0.85rem;
   }
-  
+
   .calendar-legend {
     gap: 12px;
     margin-top: 12px;
     padding-top: 10px;
   }
-  
+
   .legend-item {
     font-size: 0.7rem;
   }

@@ -197,6 +197,7 @@ export class ServicesService {
       description,
       category,
       price,
+      priceType,
       address,
       latitude,
       longitude,
@@ -242,6 +243,7 @@ export class ServicesService {
         description,
         category: category || "Altro",
         price: parseFloat(price),
+        priceType: priceType || "hourly",
         productsUsed: productsUsed
           ? typeof productsUsed === "string"
             ? productsUsed
@@ -293,6 +295,7 @@ export class ServicesService {
       description,
       category,
       price,
+      priceType,
       address,
       latitude,
       longitude,
@@ -309,6 +312,7 @@ export class ServicesService {
     if (description) updateData.description = description;
     if (category) updateData.category = category;
     if (price) updateData.price = parseFloat(price);
+    if (priceType) updateData.priceType = priceType;
     if (address !== undefined) updateData.address = address;
     if (latitude) updateData.latitude = parseFloat(latitude);
     if (longitude) updateData.longitude = parseFloat(longitude);

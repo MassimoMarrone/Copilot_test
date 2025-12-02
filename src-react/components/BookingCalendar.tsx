@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback, memo } from "react";
 import {
   format,
   startOfMonth,
@@ -11,6 +11,7 @@ import {
   isSameMonth,
   isSameDay,
   parseISO,
+  isValid,
 } from "date-fns";
 import { it } from "date-fns/locale";
 import "../styles/BookingCalendar.css";
@@ -33,23 +34,37 @@ interface BookingCalendarProps {
   userType: "provider" | "client";
 }
 
+// Helper function to safely parse dates
+const safeParseISO = (dateString: string): Date | null => {
+  try {
+    const parsed = parseISO(dateString);
+    return isValid(parsed) ? parsed : null;
+  } catch {
+    console.warn(`Invalid date string: ${dateString}`);
+    return null;
+  }
+};
+
 const BookingCalendar: React.FC<BookingCalendarProps> = ({
   events,
   onEventClick,
   userType,
 }) => {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-  // Group events by date
+  // Group events by date - with safe parsing
   const eventsByDate = useMemo(() => {
     const grouped: { [key: string]: CalendarEvent[] } = {};
     events.forEach((event) => {
-      const dateKey = format(parseISO(event.date), "yyyy-MM-dd");
-      if (!grouped[dateKey]) {
-        grouped[dateKey] = [];
+      const parsedDate = safeParseISO(event.date);
+      if (parsedDate) {
+        const dateKey = format(parsedDate, "yyyy-MM-dd");
+        if (!grouped[dateKey]) {
+          grouped[dateKey] = [];
+        }
+        grouped[dateKey].push(event);
       }
-      grouped[dateKey].push(event);
     });
     return grouped;
   }, [events]);
@@ -61,12 +76,30 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
     return eventsByDate[dateKey] || [];
   }, [selectedDate, eventsByDate]);
 
+  // Navigation handlers with useCallback to prevent unnecessary re-renders
+  const handlePrevMonth = useCallback(() => {
+    setCurrentMonth(prev => subMonths(prev, 1));
+  }, []);
+
+  const handleNextMonth = useCallback(() => {
+    setCurrentMonth(prev => addMonths(prev, 1));
+  }, []);
+
+  const handleDateSelect = useCallback((date: Date) => {
+    setSelectedDate(date);
+  }, []);
+
+  const handleEventClick = useCallback((event: CalendarEvent) => {
+    onEventClick?.(event);
+  }, [onEventClick]);
+
   const renderHeader = () => {
     return (
       <div className="calendar-header">
         <button
           className="calendar-nav-btn"
-          onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+          onClick={handlePrevMonth}
+          aria-label="Mese precedente"
         >
           ‹
         </button>
@@ -75,7 +108,8 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
         </h2>
         <button
           className="calendar-nav-btn"
-          onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+          onClick={handleNextMonth}
+          aria-label="Mese successivo"
         >
           ›
         </button>
@@ -126,11 +160,20 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
         const currentDay = day;
         days.push(
           <div
-            key={day.toString()}
+            key={dateKey}
             className={`calendar-cell ${!isCurrentMonth ? "disabled" : ""} ${
               isSelected ? "selected" : ""
             } ${isToday ? "today" : ""} ${hasEvents ? "has-events" : ""}`}
-            onClick={() => isCurrentMonth && setSelectedDate(currentDay)}
+            onClick={() => isCurrentMonth && handleDateSelect(currentDay)}
+            role="button"
+            tabIndex={isCurrentMonth ? 0 : -1}
+            aria-label={`${format(day, "d MMMM yyyy", { locale: it })}${hasEvents ? `, ${dayEvents.length} appuntamenti` : ""}`}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                isCurrentMonth && handleDateSelect(currentDay);
+              }
+            }}
           >
             <span className="calendar-day-number">{format(day, "d")}</span>
             {hasEvents && (
@@ -159,7 +202,7 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
         day = addDays(day, 1);
       }
       rows.push(
-        <div key={day.toString()} className="calendar-row">
+        <div key={`row-${rows.length}`} className="calendar-row">
           {days}
         </div>
       );
@@ -227,7 +270,15 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
           <div
             key={event.id}
             className={`calendar-event-card ${getStatusClass(event.status)}`}
-            onClick={() => onEventClick?.(event)}
+            onClick={() => handleEventClick(event)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleEventClick(event);
+              }
+            }}
           >
             <div className="event-card-header">
               <span className="event-time">{event.time || "Orario TBD"}</span>
@@ -254,17 +305,22 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
     );
   };
 
-  // Stats summary
+  // Stats summary - with safe date parsing
   const stats = useMemo(() => {
-    const upcoming = events.filter(
-      (e) =>
+    const now = new Date();
+    const upcoming = events.filter((e) => {
+      const parsedDate = safeParseISO(e.date);
+      return (
         (e.status === "pending" || e.status === "confirmed") &&
-        new Date(e.date) >= new Date()
-    ).length;
+        parsedDate &&
+        parsedDate >= now
+      );
+    }).length;
     const completed = events.filter((e) => e.status === "completed").length;
-    const thisMonth = events.filter((e) =>
-      isSameMonth(parseISO(e.date), currentMonth)
-    ).length;
+    const thisMonth = events.filter((e) => {
+      const parsedDate = safeParseISO(e.date);
+      return parsedDate && isSameMonth(parsedDate, currentMonth);
+    }).length;
     return { upcoming, completed, thisMonth };
   }, [events, currentMonth]);
 
@@ -308,4 +364,5 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
   );
 };
 
-export default BookingCalendar;
+// Memoize the component to prevent unnecessary re-renders
+export default memo(BookingCalendar);

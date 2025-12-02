@@ -34,6 +34,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
     description: "",
     category: "Altro",
     price: "",
+    priceType: "hourly", // Sempre orario
     productsUsed: [] as string[],
     address: "",
     latitude: 0,
@@ -91,6 +92,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
         description: initialData.description,
         category: initialData.category || "Altro",
         price: initialData.price.toString(),
+        priceType: "hourly", // Sempre orario
         productsUsed: initialData.productsUsed || [],
         address: initialData.address || "",
         latitude: initialData.latitude || 0,
@@ -109,6 +111,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
         description: "",
         category: "Altro",
         price: "",
+        priceType: "hourly",
         productsUsed: [],
         address: "",
         latitude: 0,
@@ -178,6 +181,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
       data.append("description", formData.description.trim());
       data.append("category", formData.category);
       data.append("price", formData.price);
+      data.append("priceType", formData.priceType);
       data.append("productsUsed", JSON.stringify(formData.productsUsed));
       data.append("extraServices", JSON.stringify(formData.extraServices));
       data.append("workingHoursStart", formData.workingHoursStart);
@@ -324,8 +328,9 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
               <span className="error-message">{errors.description}</span>
             )}
           </div>
+
           <div className="form-group">
-            <label>Prezzo orario (€) *</label>
+            <label>Prezzo orario (€/ora) *</label>
             <input
               type="number"
               step="0.01"
