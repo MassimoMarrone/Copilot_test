@@ -51,7 +51,10 @@ export const bookingController = {
         return;
       }
 
-      const bookings = await bookingService.getMyBookings(req.user!.id);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      const bookings = await bookingService.getMyBookings(req.user!.id, page, limit);
       res.json(bookings);
     } catch (error: any) {
       console.error("Error fetching bookings:", error);

@@ -71,7 +71,11 @@ const Layout: React.FC = () => {
         unreadMessagesCount={unreadMessagesCount}
         onBecomeProvider={() => setShowBecomeProviderModal(true)}
       />
-      <main className="app-content">
+      <main
+        className={`app-content ${
+          location.pathname === "/" ? "landing-content" : ""
+        }`}
+      >
         <Outlet
           context={{
             openLogin: () => setShowLoginModal(true),

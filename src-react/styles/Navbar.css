@@ -152,27 +152,36 @@
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
 }
 
+.nav-icon {
+  display: none;
+  font-size: 1.2rem;
+  margin-right: 6px;
+}
+
 @media (max-width: 768px) {
   .navbar {
     padding: 0 12px;
     height: 60px;
+    top: 20px; /* Standard mobile top spacing */
+    bottom: auto;
+    width: 95%;
+    border-radius: 24px;
+    justify-content: space-between;
+    background-color: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   }
 
-  .navbar-logo {
-    height: 32px;
-    max-width: 140px;
+  .navbar-container {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .navbar-brand, .navbar-buttons {
+    display: flex; /* Restore logo and buttons */
   }
 
   .navbar-links {
-    display: none;
-  }
-
-  .navbar-buttons {
-    gap: 8px;
-  }
-
-  .user-actions {
-    gap: 12px;
+    display: none; /* Hide links on mobile as before */
   }
 
   .btn-navbar {
@@ -186,22 +195,5 @@
 
   .btn-register {
     padding: 8px 14px;
-  }
-}
-
-@media (max-width: 480px) {
-  .navbar {
-    padding: 0 10px;
-    height: 56px;
-  }
-
-  .navbar-logo {
-    height: 28px;
-    max-width: 120px;
-  }
-
-  .btn-register {
-    padding: 8px 12px;
-    font-size: 12px;
   }
 }

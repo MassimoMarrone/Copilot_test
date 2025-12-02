@@ -36,6 +36,22 @@ body {
   min-height: 100vh;
 }
 
+/* Global Layout Fix for Fixed Navbar */
+.app-content {
+  padding-top: 100px; /* Desktop: 32px top + 55px height + spacing */
+  min-height: 100vh;
+}
+
+.app-content.landing-content {
+  padding-top: 0;
+}
+
+@media (max-width: 768px) {
+  .app-content {
+    padding-top: 120px; /* Mobile: 32px top + 60px height + spacing */
+  }
+}
+
 .container {
   max-width: 1200px;
   margin: 0 auto;

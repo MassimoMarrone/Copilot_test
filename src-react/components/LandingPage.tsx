@@ -106,28 +106,41 @@ const LandingPage: React.FC<LandingPageProps> = ({
       </div>
 
       {/* CTA Section */}
-      {!user && (
-        <div className="cta-section">
-          <div className="container">
-            <h2>Pronto a iniziare?</h2>
-            <p>Unisciti a migliaia di clienti soddisfatti</p>
-            <div className="cta-buttons">
+      <div className="cta-section">
+        <div className="container">
+          <h2>{user ? "Pronto a prenotare?" : "Pronto a iniziare?"}</h2>
+          <p>
+            {user
+              ? "Trova il professionista perfetto per le tue esigenze"
+              : "Unisciti a migliaia di clienti soddisfatti"}
+          </p>
+          <div className="cta-buttons">
+            {user ? (
               <button
-                onClick={onRegisterClick}
+                onClick={() => navigate("/services")}
                 className="btn btn-primary btn-large"
               >
-                Registrati Gratis
+                Esplora Servizi
               </button>
-              <button
-                onClick={onLoginClick}
-                className="btn btn-secondary btn-large"
-              >
-                Accedi
-              </button>
-            </div>
+            ) : (
+              <>
+                <button
+                  onClick={onRegisterClick}
+                  className="btn btn-primary btn-large"
+                >
+                  Registrati Gratis
+                </button>
+                <button
+                  onClick={onLoginClick}
+                  className="btn btn-secondary btn-large"
+                >
+                  Accedi
+                </button>
+              </>
+            )}
           </div>
         </div>
-      )}
+      </div>
 
       {/* Footer */}
       <footer className="footer">
