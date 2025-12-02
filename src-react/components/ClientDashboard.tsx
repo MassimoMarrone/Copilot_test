@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import ChatModal from "./ChatModal";
 import BecomeProviderModal from "./BecomeProviderModal";
 import ReviewModal from "./ReviewModal";
+import BookingCalendar from "./BookingCalendar";
 import { authService, User } from "../services/authService";
 import { bookingService, Booking } from "../services/bookingService";
 import "../styles/ClientDashboard.css";
@@ -26,7 +27,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isProvider, setIsProvider] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<"upcoming" | "completed" | "all">(
+  const [activeTab, setActiveTab] = useState<"upcoming" | "completed" | "all" | "calendar">(
     "upcoming"
   );
   const [stats, setStats] = useState<DashboardStats>({
@@ -346,10 +347,55 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
           </svg>
           Tutte ({bookings.length})
         </button>
+        <button
+          className={`tab-btn ${activeTab === "calendar" ? "active" : ""}`}
+          onClick={() => setActiveTab("calendar")}
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+            <line x1="9" y1="16" x2="9.01" y2="16" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+            <line x1="15" y1="16" x2="15.01" y2="16" />
+          </svg>
+          Calendario
+        </button>
       </div>
 
-      <div className="dashboard-section">
-        <div className="bookings-list">
+      {activeTab === "calendar" ? (
+        <div className="dashboard-section">
+          <BookingCalendar
+            events={bookings.map((booking) => ({
+              id: booking.id,
+              title: booking.serviceTitle,
+              date: booking.date,
+              time: booking.preferredTime,
+              status: booking.status,
+              amount: booking.amount,
+              providerName: booking.providerEmail?.split("@")[0],
+              address: booking.address,
+            }))}
+            onEventClick={(event) => {
+              const booking = bookings.find((b) => b.id === event.id);
+              if (booking) {
+                setSelectedBooking(booking);
+              }
+            }}
+            userType="client"
+          />
+        </div>
+      ) : (
+        <div className="dashboard-section">
+          <div className="bookings-list">
           {getFilteredBookings().length === 0 ? (
             <div className="empty-state">
               <svg
@@ -602,6 +648,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
           )}
         </div>
       </div>
+      )}
 
       {/* Chat Modal */}
       {showChatModal && selectedBooking && currentUser && (
