@@ -57,8 +57,8 @@ export const bookingService = {
   },
 
   // Get client's bookings
-  getMyBookings: async (): Promise<Booking[]> => {
-    return get<Booking[]>("/api/my-bookings");
+  getMyBookings: async (page: number = 1): Promise<Booking[]> => {
+    return get<Booking[]>(`/api/my-bookings?page=${page}&limit=10`);
   },
 
   // Get provider's bookings

@@ -41,6 +41,27 @@ const MessagesPage: React.FC = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Handle browser back button
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (selectedConversation && isMobileView) {
+        // If we are in a chat on mobile, close it
+        setShowSidebar(true);
+        setSelectedConversation(null);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [selectedConversation, isMobileView]);
+
+  // Push state when opening chat on mobile
+  useEffect(() => {
+    if (selectedConversation && isMobileView) {
+      window.history.pushState({ chatOpen: true }, "");
+    }
+  }, [selectedConversation?.bookingId, isMobileView]);
+
   useEffect(() => {
     let newSocket: Socket | null = null;
     if (user) {
@@ -296,125 +317,131 @@ const MessagesPage: React.FC = () => {
   };
 
   return (
-    <div className="messages-page">
-      {/* Sidebar */}
-      <div
-        className={`conversations-sidebar ${
-          !showSidebar && isMobileView ? "hidden" : ""
-        }`}
-      >
-        <div className="conversations-header">
-          <h2>Messaggi</h2>
-        </div>
-        <div className="conversations-list">
-          {conversations.length === 0 ? (
-            <div className="empty-state">
-              <p>Nessuna conversazione attiva</p>
-            </div>
-          ) : (
-            conversations.map((conv) => (
-              <div
-                key={conv.bookingId}
-                className={`conversation-item ${
-                  selectedConversation?.bookingId === conv.bookingId
-                    ? "active"
-                    : ""
-                } ${conv.unreadCount > 0 ? "unread" : ""}`}
-                onClick={() => setSelectedConversation(conv)}
-              >
-                <div className="conversation-header">
-                  <span className="conversation-title">
-                    {conv.serviceTitle}
-                  </span>
-                  <span className="conversation-time">
-                    {conv.lastMessage
-                      ? formatDate(conv.lastMessage.createdAt)
-                      : ""}
-                  </span>
-                </div>
-                <div className="conversation-preview">
-                  {conv.lastMessage ? (
-                    <>
-                      {conv.lastMessage.senderId === user?.id ? "Tu: " : ""}
-                      {conv.lastMessage.message}
-                    </>
-                  ) : (
-                    <em>Nessun messaggio</em>
-                  )}
-                </div>
-                {conv.unreadCount > 0 && (
-                  <span className="unread-badge">{conv.unreadCount}</span>
-                )}
+    <div className={`messages-page ${isMobileView ? "is-mobile" : ""}`}>
+      <div className="messages-card">
+        {/* Sidebar */}
+        <div
+          className={`conversations-sidebar ${
+            !showSidebar && isMobileView ? "hidden" : ""
+          }`}
+        >
+          <div className="conversations-header">
+            <h2>Messaggi</h2>
+          </div>
+          <div className="conversations-list">
+            {conversations.length === 0 ? (
+              <div className="empty-state">
+                <p>Nessuna conversazione attiva</p>
               </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Chat Area */}
-      <div className="chat-area">
-        {selectedConversation ? (
-          <>
-            <div className="chat-header">
-              <button
-                className="back-button"
-                onClick={() => {
-                  setShowSidebar(true);
-                  setSelectedConversation(null);
-                }}
-              >
-                ←
-              </button>
-              <div className="chat-header-info">
-                <h3>{selectedConversation.serviceTitle}</h3>
-                <p>{selectedConversation.otherPartyEmail}</p>
-              </div>
-            </div>
-
-            <div className="messages-container">
-              {messages.map((msg) => (
+            ) : (
+              conversations.map((conv) => (
                 <div
-                  key={msg.id}
-                  className={`message-bubble ${
-                    msg.senderId === user?.id ? "sent" : "received"
-                  }`}
-                  title={`Inviato da: ${msg.senderEmail} (${msg.senderType})`}
+                  key={conv.bookingId}
+                  className={`conversation-item ${
+                    selectedConversation?.bookingId === conv.bookingId
+                      ? "active"
+                      : ""
+                  } ${conv.unreadCount > 0 ? "unread" : ""}`}
+                  onClick={() => setSelectedConversation(conv)}
                 >
-                  <div className="message-text">{msg.message}</div>
-                  <div className="message-time">
-                    {formatTime(msg.createdAt)}
-                    {msg.read && msg.senderId === user?.id && (
-                      <span className="read-receipt"> ✓✓</span>
+                  <div className="conversation-header">
+                    <span className="conversation-title">
+                      {conv.serviceTitle}
+                    </span>
+                    <span className="conversation-time">
+                      {conv.lastMessage
+                        ? formatDate(conv.lastMessage.createdAt)
+                        : ""}
+                    </span>
+                  </div>
+                  <div className="conversation-preview">
+                    {conv.lastMessage ? (
+                      <>
+                        {conv.lastMessage.senderId === user?.id ? "Tu: " : ""}
+                        {conv.lastMessage.message}
+                      </>
+                    ) : (
+                      <em>Nessun messaggio</em>
                     )}
                   </div>
+                  {conv.unreadCount > 0 && (
+                    <span className="unread-badge">{conv.unreadCount}</span>
+                  )}
                 </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-
-            <form className="message-input-area" onSubmit={handleSendMessage}>
-              <input
-                type="text"
-                className="message-input"
-                placeholder="Scrivi un messaggio..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-              />
-              <button
-                type="submit"
-                className="send-button"
-                disabled={!newMessage.trim()}
-              >
-                ➤
-              </button>
-            </form>
-          </>
-        ) : (
-          <div className="empty-chat-state">
-            <h3>Seleziona una conversazione</h3>
-            <p>Scegli una chat dalla lista per iniziare a messaggiare</p>
+              ))
+            )}
           </div>
-        )}
+        </div>
+
+        {/* Chat Area */}
+        <div className="chat-area">
+          {selectedConversation ? (
+            <>
+              <div className="chat-header">
+                <button
+                  className="back-button"
+                  onClick={() => {
+                    if (isMobileView) {
+                      window.history.back(); // This will trigger popstate
+                    } else {
+                      setShowSidebar(true);
+                      setSelectedConversation(null);
+                    }
+                  }}
+                >
+                  ←
+                </button>
+                <div className="chat-header-info">
+                  <h3>{selectedConversation.serviceTitle}</h3>
+                  <p>{selectedConversation.otherPartyEmail}</p>
+                </div>
+              </div>
+
+              <div className="messages-container">
+                {messages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`message-bubble ${
+                      msg.senderId === user?.id ? "sent" : "received"
+                    }`}
+                    title={`Inviato da: ${msg.senderEmail} (${msg.senderType})`}
+                  >
+                    <div className="message-text">{msg.message}</div>
+                    <div className="message-time">
+                      {formatTime(msg.createdAt)}
+                      {msg.read && msg.senderId === user?.id && (
+                        <span className="read-receipt"> ✓✓</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+
+              <form className="message-input-area" onSubmit={handleSendMessage}>
+                <input
+                  type="text"
+                  className="message-input"
+                  placeholder="Scrivi un messaggio..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  className="send-button"
+                  disabled={!newMessage.trim()}
+                >
+                  ➤
+                </button>
+              </form>
+            </>
+          ) : (
+            <div className="empty-chat-state">
+              <h3>Seleziona una conversazione</h3>
+              <p>Scegli una chat dalla lista per iniziare a messaggiare</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

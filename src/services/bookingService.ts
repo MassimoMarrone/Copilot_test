@@ -261,12 +261,16 @@ export const bookingService = {
     return { id: session.id, url: session.url };
   },
 
-  async getMyBookings(userId: string) {
+  async getMyBookings(userId: string, page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
     const myBookings = await prisma.booking.findMany({
       where: { clientId: userId },
       include: {
         review: true,
       },
+      orderBy: { date: "desc" },
+      skip,
+      take: limit,
     });
 
     const enrichedBookings = myBookings.map((booking: any) => {
