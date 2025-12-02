@@ -78,20 +78,23 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
 
   // Navigation handlers with useCallback to prevent unnecessary re-renders
   const handlePrevMonth = useCallback(() => {
-    setCurrentMonth(prev => subMonths(prev, 1));
+    setCurrentMonth((prev) => subMonths(prev, 1));
   }, []);
 
   const handleNextMonth = useCallback(() => {
-    setCurrentMonth(prev => addMonths(prev, 1));
+    setCurrentMonth((prev) => addMonths(prev, 1));
   }, []);
 
   const handleDateSelect = useCallback((date: Date) => {
     setSelectedDate(date);
   }, []);
 
-  const handleEventClick = useCallback((event: CalendarEvent) => {
-    onEventClick?.(event);
-  }, [onEventClick]);
+  const handleEventClick = useCallback(
+    (event: CalendarEvent) => {
+      onEventClick?.(event);
+    },
+    [onEventClick]
+  );
 
   const renderHeader = () => {
     return (
@@ -167,7 +170,9 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
             onClick={() => isCurrentMonth && handleDateSelect(currentDay)}
             role="button"
             tabIndex={isCurrentMonth ? 0 : -1}
-            aria-label={`${format(day, "d MMMM yyyy", { locale: it })}${hasEvents ? `, ${dayEvents.length} appuntamenti` : ""}`}
+            aria-label={`${format(day, "d MMMM yyyy", { locale: it })}${
+              hasEvents ? `, ${dayEvents.length} appuntamenti` : ""
+            }`}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();

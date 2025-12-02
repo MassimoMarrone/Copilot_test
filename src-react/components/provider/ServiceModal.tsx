@@ -190,10 +190,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
         "slotDurationMinutes",
         formData.slotDurationMinutes.toString()
       );
-      data.append(
-        "coverageRadiusKm",
-        formData.coverageRadiusKm.toString()
-      );
+      data.append("coverageRadiusKm", formData.coverageRadiusKm.toString());
 
       if (mode === "edit") {
         data.append("availability", JSON.stringify(formData.availability));
@@ -640,8 +637,15 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
           {/* Raggio di Copertura */}
           <div className="form-group">
             <label>Raggio di Copertura (km) *</label>
-            <p style={{ fontSize: "0.85em", color: "#666", marginBottom: "12px" }}>
-              Indica la distanza massima che sei disposto a percorrere per raggiungere i clienti
+            <p
+              style={{
+                fontSize: "0.85em",
+                color: "#666",
+                marginBottom: "12px",
+              }}
+            >
+              Indica la distanza massima che sei disposto a percorrere per
+              raggiungere i clienti
             </p>
             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
               {[5, 10, 15, 20, 30, 50].map((radius) => (
@@ -652,12 +656,20 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
                     alignItems: "center",
                     justifyContent: "center",
                     padding: "10px 16px",
-                    backgroundColor: formData.coverageRadiusKm === radius ? "#1a1a1a" : "#f8f9fa",
-                    color: formData.coverageRadiusKm === radius ? "white" : "#333",
+                    backgroundColor:
+                      formData.coverageRadiusKm === radius
+                        ? "#1a1a1a"
+                        : "#f8f9fa",
+                    color:
+                      formData.coverageRadiusKm === radius ? "white" : "#333",
                     borderRadius: "8px",
-                    border: formData.coverageRadiusKm === radius ? "2px solid #1a1a1a" : "1px solid #ddd",
+                    border:
+                      formData.coverageRadiusKm === radius
+                        ? "2px solid #1a1a1a"
+                        : "1px solid #ddd",
                     cursor: "pointer",
-                    fontWeight: formData.coverageRadiusKm === radius ? "600" : "400",
+                    fontWeight:
+                      formData.coverageRadiusKm === radius ? "600" : "400",
                     transition: "all 0.2s ease",
                     minWidth: "70px",
                   }}
@@ -667,7 +679,9 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
                     name="coverageRadius"
                     value={radius}
                     checked={formData.coverageRadiusKm === radius}
-                    onChange={() => setFormData({ ...formData, coverageRadiusKm: radius })}
+                    onChange={() =>
+                      setFormData({ ...formData, coverageRadiusKm: radius })
+                    }
                     style={{ display: "none" }}
                   />
                   {radius} km

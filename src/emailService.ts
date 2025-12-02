@@ -1,4 +1,5 @@
 import axios from "axios";
+import { emailLogger } from "./utils/logger";
 
 // Create a transporter using Ethereal (fake SMTP service) for development
 // In production, you would use a real service like SendGrid, Mailgun, or Gmail
@@ -13,7 +14,7 @@ export const sendEmail = async (
   const senderName = process.env.MAIL_FROM_NAME || "Domy Platform";
 
   if (!apiKey || !senderEmail) {
-    console.error("❌ Brevo API key o mittente non configurati.");
+    emailLogger.failed(to, subject, "Brevo API key o mittente non configurati");
     return;
   }
 
@@ -25,21 +26,18 @@ export const sendEmail = async (
   };
 
   try {
-    const response = await axios.post(
-      "https://api.brevo.com/v3/smtp/email",
-      data,
-      {
-        headers: {
-          "api-key": apiKey,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    console.log("📧 Email inviata via Brevo API:", response.data);
+    await axios.post("https://api.brevo.com/v3/smtp/email", data, {
+      headers: {
+        "api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+    });
+    emailLogger.sent(to, subject, "brevo");
   } catch (error: any) {
-    console.error(
-      "❌ Errore invio email via Brevo API:",
-      error.response?.data || error.message
+    emailLogger.failed(
+      to,
+      subject,
+      error.response?.data?.message || error.message
     );
   }
 };

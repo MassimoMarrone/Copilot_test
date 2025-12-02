@@ -264,9 +264,7 @@ export class ServicesService {
         slotDurationMinutes: slotDurationMinutes
           ? parseInt(slotDurationMinutes)
           : 60,
-        coverageRadiusKm: coverageRadiusKm
-          ? parseInt(coverageRadiusKm)
-          : 20,
+        coverageRadiusKm: coverageRadiusKm ? parseInt(coverageRadiusKm) : 20,
         availability: JSON.stringify({
           weekly: defaultWeeklySchedule,
           blockedDates: [],

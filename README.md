@@ -180,17 +180,18 @@ npm run dev:full
 - [ ] App mobile (React Native).
 - [ ] Dashboard analytics per fornitori.
 - [ ] Sistema referral "invita un amico".
+- [ ] **Request ID / Correlation ID** - Identificatore unico per ogni richiesta HTTP per tracciamento end-to-end nei log.
 
 ## 🎯 Prossimi Passi Prima del Lancio
 
 ### Priorità Alta (1-2 settimane)
 
-| Task                    | Descrizione                                        | Impatto |
-| ----------------------- | -------------------------------------------------- | ------- |
-| 🧪 **Testing**          | Aggiungere test unitari per auth, booking, payment | Critico |
-| 🛡️ **Error Boundaries** | Implementare error boundaries in React             | Alto    |
-| 📝 **Logging**          | Integrare Winston/Pino per logging strutturato     | Alto    |
-| 🔔 **Monitoring**       | Setup Sentry per error tracking                    | Alto    |
+| Task                    | Descrizione                                                  | Impatto | Status        |
+| ----------------------- | ------------------------------------------------------------ | ------- | ------------- |
+| 🧪 **Testing**          | Aggiungere test unitari per auth, booking, payment           | Critico | 🔲            |
+| 🛡️ **Error Boundaries** | Implementare error boundaries in React                       | Alto    | 🔲            |
+| ✅ **Logging**          | Winston con logging strutturato (auth, booking, email, HTTP) | Alto    | ✅ Completato |
+| 🔔 **Monitoring**       | Setup Sentry per error tracking                              | Alto    | 🔲            |
 
 ### Priorità Media (1 mese)
 
@@ -299,12 +300,37 @@ npm run dev:full
 
 ### 📊 Monitoring & Observability
 
-| Tool                     | Scopo                                 | Priorità |
-| ------------------------ | ------------------------------------- | -------- |
-| **Sentry**               | Error tracking e crash reporting      | Alta     |
-| **Winston/Pino**         | Logging strutturato JSON              | Alta     |
-| **Prometheus + Grafana** | Metriche applicazione e dashboard     | Media    |
-| **Uptime Monitoring**    | Alert downtime (UptimeRobot, Pingdom) | Alta     |
+| Tool                     | Scopo                                 | Priorità | Status          |
+| ------------------------ | ------------------------------------- | -------- | --------------- |
+| **Winston**              | Logging strutturato JSON              | Alta     | ✅ Implementato |
+| **Sentry**               | Error tracking e crash reporting      | Alta     | 🔲              |
+| **Prometheus + Grafana** | Metriche applicazione e dashboard     | Media    | 🔲              |
+| **Uptime Monitoring**    | Alert downtime (UptimeRobot, Pingdom) | Alta     | 🔲              |
+
+#### 📋 Sistema di Logging Implementato
+
+Il progetto utilizza **Winston** per logging strutturato con le seguenti caratteristiche:
+
+**Logger Specializzati:**
+
+- `httpLogger` - Richieste HTTP (method, URL, status, response time)
+- `authLogger` - Login, registrazione, logout
+- `paymentLogger` - Transazioni Stripe, rimborsi
+- `bookingLogger` - Creazione, completamento, cancellazione prenotazioni
+- `emailLogger` - Invio email e notifiche
+- `systemLogger` - Startup, shutdown, errori di sistema
+
+**Configurazione:**
+
+- **Console**: Output colorato con timestamp in sviluppo
+- **File**: `logs/error.log` (solo errori), `logs/combined.log` (tutti i livelli)
+- **Rotazione**: Max 5MB per file, max 5 file
+
+**Middleware Express:**
+
+- `requestLogger` - Log automatico di tutte le richieste HTTP
+- `slowRequestLogger` - Alert per richieste lente (> 2 secondi)
+- `errorLogger` - Cattura errori con stack trace
 
 ### 🧪 Testing & Quality
 

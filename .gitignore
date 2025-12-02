@@ -9,6 +9,7 @@ public/uploads/*.png
 public/uploads/*.gif
 !public/uploads/.gitkeep
 *.log
+logs/
 .env
 render.env
 

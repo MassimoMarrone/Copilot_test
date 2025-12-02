@@ -3,6 +3,7 @@ import { stripe, mockStripeSessions } from "../config/stripe";
 import { sendNotification } from "../utils/notification";
 import { sendEmail, emailTemplates } from "../emailService";
 import { schedulingService } from "./schedulingService";
+import { bookingLogger, paymentLogger } from "../utils/logger";
 
 const prisma = new PrismaClient();
 
@@ -254,6 +255,9 @@ export const bookingService = {
       });
     }
 
+    // Log payment initiated
+    paymentLogger.initiated(session.id, finalPrice, userId);
+
     return { id: session.id, url: session.url };
   },
 
@@ -344,6 +348,9 @@ export const bookingService = {
         paymentStatus: newPaymentStatus,
       },
     });
+
+    // Log booking cancelled
+    bookingLogger.cancelled(bookingId, userId, "User cancelled");
 
     // Notify the other party
     const recipientId =
@@ -437,6 +444,9 @@ export const bookingService = {
         completedAt: new Date(),
       },
     });
+
+    // Log booking completed
+    bookingLogger.completed(bookingId);
 
     await sendNotification(
       booking.clientId,
