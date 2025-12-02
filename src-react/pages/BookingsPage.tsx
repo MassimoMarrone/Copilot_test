@@ -95,7 +95,7 @@ const BookingsPage: React.FC = () => {
   const filteredBookings = bookings.filter((booking) => {
     if (activeFilter === "all") return true;
     if (activeFilter === "upcoming")
-      return booking.status === "pending" || booking.status === "accepted";
+      return booking.status === "pending" || booking.status === "confirmed";
     return booking.status === activeFilter;
   });
 
@@ -113,19 +113,25 @@ const BookingsPage: React.FC = () => {
           Tutte
         </button>
         <button
-          className={`filter-btn ${activeFilter === "upcoming" ? "active" : ""}`}
+          className={`filter-btn ${
+            activeFilter === "upcoming" ? "active" : ""
+          }`}
           onClick={() => setActiveFilter("upcoming")}
         >
           Prossime
         </button>
         <button
-          className={`filter-btn ${activeFilter === "completed" ? "active" : ""}`}
+          className={`filter-btn ${
+            activeFilter === "completed" ? "active" : ""
+          }`}
           onClick={() => setActiveFilter("completed")}
         >
           Completate
         </button>
         <button
-          className={`filter-btn ${activeFilter === "cancelled" ? "active" : ""}`}
+          className={`filter-btn ${
+            activeFilter === "cancelled" ? "active" : ""
+          }`}
           onClick={() => setActiveFilter("cancelled")}
         >
           Cancellate
