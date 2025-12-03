@@ -23,7 +23,9 @@
     "db:deploy": "npx prisma migrate deploy",
     "db:status": "npx prisma migrate status",
     "db:resolve": "npx prisma migrate resolve --applied",
-    "db:studio": "npx prisma studio"
+    "db:studio": "npx prisma studio",
+    "env:dev": "copy .env.development .env",
+    "env:prod": "copy .env.production .env"
   },
   "keywords": [],
   "author": "",
