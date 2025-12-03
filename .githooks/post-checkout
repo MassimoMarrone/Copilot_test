@@ -1,0 +1,16 @@
+#!/bin/sh
+# Questo hook cambia automaticamente .env in base al branch
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+if [ "$BRANCH" = "main" ]; then
+    if [ -f ".env.production" ]; then
+        cp .env.production .env
+        echo "✅ Switched to .env.production (main branch)"
+    fi
+elif [ "$BRANCH" = "develop" ]; then
+    if [ -f ".env.development" ]; then
+        cp .env.development .env
+        echo "✅ Switched to .env.development (develop branch)"
+    fi
+fi

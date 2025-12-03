@@ -139,31 +139,62 @@ export const chatService = {
   },
 
   async getConversations(userId: string) {
+    // Ottimizzato: query separate più leggere invece di N+1
     const userBookings = await prisma.booking.findMany({
       where: {
         OR: [{ clientId: userId }, { providerId: userId }],
       },
-      include: {
-        messages: {
-          orderBy: { createdAt: "desc" },
-          take: 1,
-        },
-        _count: {
-          select: {
-            messages: {
-              where: {
-                senderId: { not: userId },
-                read: false,
-              },
-            },
-          },
-        },
+      select: {
+        id: true,
+        serviceTitle: true,
+        clientId: true,
+        clientEmail: true,
+        providerEmail: true,
+        createdAt: true,
       },
     });
 
-    const conversations = userBookings.map((booking: any) => {
-      const lastMessage = booking.messages[0] || null;
-      const unreadCount = booking._count.messages;
+    if (userBookings.length === 0) {
+      return [];
+    }
+
+    const bookingIds = userBookings.map((b) => b.id);
+
+    // Query per ultimi messaggi (una sola query per tutti i booking)
+    const lastMessages = await prisma.$queryRaw<Array<{
+      bookingId: string;
+      id: string;
+      senderId: string;
+      senderEmail: string;
+      senderType: string;
+      message: string;
+      read: boolean;
+      createdAt: Date;
+    }>>`
+      SELECT DISTINCT ON ("bookingId") *
+      FROM "ChatMessage"
+      WHERE "bookingId" = ANY(${bookingIds})
+      ORDER BY "bookingId", "createdAt" DESC
+    `;
+
+    // Query per conteggio non letti (una sola query per tutti i booking)
+    const unreadCounts = await prisma.chatMessage.groupBy({
+      by: ['bookingId'],
+      where: {
+        bookingId: { in: bookingIds },
+        senderId: { not: userId },
+        read: false,
+      },
+      _count: { id: true },
+    });
+
+    // Mappa per lookup veloce
+    const lastMessageMap = new Map(lastMessages.map(m => [m.bookingId, m]));
+    const unreadMap = new Map(unreadCounts.map(u => [u.bookingId, u._count.id]));
+
+    const conversations = userBookings.map((booking) => {
+      const lastMessage = lastMessageMap.get(booking.id) || null;
+      const unreadCount = unreadMap.get(booking.id) || 0;
 
       return {
         bookingId: booking.id,

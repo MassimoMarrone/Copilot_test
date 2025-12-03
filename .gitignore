@@ -11,6 +11,8 @@ public/uploads/*.gif
 *.log
 logs/
 .env
+.env.development
+.env.production
 render.env
 
 # SQLite database
