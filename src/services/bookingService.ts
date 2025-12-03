@@ -3,6 +3,7 @@ import { stripe, mockStripeSessions } from "../config/stripe";
 import { sendNotification } from "../utils/notification";
 import { sendEmail, emailTemplates } from "../emailService";
 import { schedulingService } from "./schedulingService";
+import { bookingLogger, paymentLogger } from "../utils/logger";
 
 const prisma = new PrismaClient();
 
@@ -24,6 +25,7 @@ export const bookingService = {
       windowsCount?: number;
       startTime?: string;
       endTime?: string;
+      selectedExtras?: { name: string; price: number }[];
     }
   ) {
     const {
@@ -39,6 +41,7 @@ export const bookingService = {
       windowsCount,
       startTime,
       endTime,
+      selectedExtras,
     } = data;
 
     const service = await prisma.service.findUnique({
@@ -156,6 +159,13 @@ export const bookingService = {
       );
     }
 
+    // Add selected extras to the price
+    let extrasTotal = 0;
+    if (selectedExtras && selectedExtras.length > 0) {
+      extrasTotal = selectedExtras.reduce((sum, extra) => sum + extra.price, 0);
+      finalPrice += extrasTotal;
+    }
+
     if (finalPrice < 0.5) {
       throw new Error(
         "Il prezzo del servizio è inferiore al minimo consentito per i pagamenti online (€0.50)."
@@ -192,6 +202,10 @@ export const bookingService = {
       estimatedDuration: (estimatedDuration || 0).toString(),
       startTime: (startTime || "").substring(0, 10),
       endTime: (endTime || "").substring(0, 10),
+      // Selected extras (JSON stringified, max 500 chars for Stripe)
+      selectedExtras: selectedExtras
+        ? JSON.stringify(selectedExtras).substring(0, 500)
+        : "",
     };
 
     let session;
@@ -241,15 +255,22 @@ export const bookingService = {
       });
     }
 
+    // Log payment initiated
+    paymentLogger.initiated(session.id, finalPrice, userId);
+
     return { id: session.id, url: session.url };
   },
 
-  async getMyBookings(userId: string) {
+  async getMyBookings(userId: string, page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
     const myBookings = await prisma.booking.findMany({
       where: { clientId: userId },
       include: {
         review: true,
       },
+      orderBy: { date: "desc" },
+      skip,
+      take: limit,
     });
 
     const enrichedBookings = myBookings.map((booking: any) => {
@@ -331,6 +352,9 @@ export const bookingService = {
         paymentStatus: newPaymentStatus,
       },
     });
+
+    // Log booking cancelled
+    bookingLogger.cancelled(bookingId, userId, "User cancelled");
 
     // Notify the other party
     const recipientId =
@@ -424,6 +448,9 @@ export const bookingService = {
         completedAt: new Date(),
       },
     });
+
+    // Log booking completed
+    bookingLogger.completed(bookingId);
 
     await sendNotification(
       booking.clientId,

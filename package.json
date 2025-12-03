@@ -74,7 +74,8 @@
     "socket.io-client": "^4.8.1",
     "stripe": "^20.0.0",
     "typescript": "^5.9.3",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "winston": "^3.18.3"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",

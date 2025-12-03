@@ -16,10 +16,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, "src-react/index.html"),
-        clientDashboard: path.resolve(
-          __dirname,
-          "src-react/client-dashboard.html"
-        ),
       },
     },
   },

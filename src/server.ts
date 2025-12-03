@@ -11,6 +11,8 @@ import bcrypt from "bcryptjs";
 // Config & Utils
 import { initSocket } from "./socket";
 import { limiter, pageLimiter } from "./middleware/rateLimit";
+import logger, { systemLogger } from "./utils/logger";
+import { requestLogger, slowRequestLogger } from "./middleware/logging";
 
 // Routes
 import authRoutes from "./routes/auth";
@@ -123,6 +125,10 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
+
+// Logging middleware
+app.use(requestLogger);
+app.use(slowRequestLogger(2000)); // Log richieste > 2 secondi
 
 // Static files
 app.use(
@@ -257,7 +263,7 @@ const initAdmin = async (): Promise<void> => {
         createdAt: new Date(),
       },
     });
-    console.log(`Created default super admin: ${adminEmail}`);
+    logger.info(`Created default super admin: ${adminEmail}`);
   } else {
     // Ensure existing admins without adminLevel get upgraded to super if they're the first
     const firstAdmin = await prisma.user.findFirst({
@@ -270,7 +276,7 @@ const initAdmin = async (): Promise<void> => {
         where: { id: firstAdmin.id },
         data: { adminLevel: "super" },
       });
-      console.log(`Upgraded first admin to super: ${firstAdmin.email}`);
+      logger.info(`Upgraded first admin to super: ${firstAdmin.email}`);
     }
   }
 };
@@ -278,10 +284,31 @@ const initAdmin = async (): Promise<void> => {
 if (process.env.NODE_ENV !== "test") {
   initAdmin();
   httpServer.listen(Number(PORT), "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+    systemLogger.startup(Number(PORT));
   });
 }
+
+// Gestione shutdown graceful
+process.on("SIGTERM", () => {
+  systemLogger.shutdown("SIGTERM received");
+  httpServer.close(() => {
+    logger.info("HTTP server closed");
+    prisma.$disconnect();
+    process.exit(0);
+  });
+});
+
+process.on("uncaughtException", (error) => {
+  systemLogger.error(error, "Uncaught Exception");
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason: any) => {
+  systemLogger.error(
+    reason instanceof Error ? reason : new Error(String(reason)),
+    "Unhandled Rejection"
+  );
+});
 
 // Test Helper
 export const resetData = async (): Promise<void> => {

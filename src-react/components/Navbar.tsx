@@ -29,7 +29,7 @@ const Navbar: React.FC<NavbarProps> = ({
       <div className="navbar-container">
         <div className="navbar-brand">
           <Link to="/" className="brand-link">
-            <img src={logo} alt="domy" className="navbar-logo" />
+            <span className="brand-text">domy</span>
           </Link>
         </div>
 

@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 import crypto from "crypto";
 import { sendEmail, emailTemplates } from "../emailService";
+import { authLogger } from "../utils/logger";
 
 const prisma = new PrismaClient();
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -91,6 +92,9 @@ export class AuthService {
         verificationTokenExpires,
       },
     });
+
+    // Log registrazione
+    authLogger.register(user.id, user.email);
 
     const baseUrl = (
       process.env.APP_URL ||
@@ -220,23 +224,30 @@ export class AuthService {
     });
 
     if (!user) {
+      authLogger.login("", normalizedIdentifier, false, "User not found");
       throw new Error("Invalid credentials");
     }
 
     if (!user.isVerified && !user.googleId) {
+      authLogger.login(user.id, user.email, false, "Email not verified");
       throw new Error("Please verify your email before logging in");
     }
 
     if (!user.password) {
+      authLogger.login(user.id, user.email, false, "Google-only account");
       throw new Error("Please sign in with Google");
     }
 
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
+      authLogger.login(user.id, user.email, false, "Invalid password");
       throw new Error("Invalid credentials");
     }
 
     const token = this.generateToken(user);
+
+    // Log login riuscito
+    authLogger.login(user.id, user.email, true);
 
     return { user, token };
   }

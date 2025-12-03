@@ -13,14 +13,43 @@ const BookingsPage: React.FC = () => {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewBooking, setReviewBooking] = useState<Booking | null>(null);
 
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const observer = React.useRef<IntersectionObserver | null>(null);
+  const lastBookingElementRef = React.useCallback(
+    (node: HTMLDivElement) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setPage((prevPage) => prevPage + 1);
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore]
+  );
+
   useEffect(() => {
     loadBookings();
-  }, []);
+  }, [page]);
 
   const loadBookings = async () => {
     try {
-      const data = await bookingService.getMyBookings();
-      setBookings(data);
+      setLoading(true);
+      const data = await bookingService.getMyBookings(page);
+      if (data.length === 0) {
+        setHasMore(false);
+      } else {
+        setBookings((prev) => {
+          // Avoid duplicates
+          const newBookings = data.filter(
+            (newB) => !prev.some((prevB) => prevB.id === newB.id)
+          );
+          return [...prev, ...newBookings];
+        });
+        if (data.length < 10) setHasMore(false);
+      }
     } catch (error) {
       console.error("Error loading bookings:", error);
     } finally {
@@ -32,6 +61,9 @@ const BookingsPage: React.FC = () => {
     switch (status) {
       case "pending":
         return "In Attesa";
+      case "confirmed":
+      case "accepted":
+        return "Confermato";
       case "completed":
         return "Completato";
       case "cancelled":
@@ -58,94 +90,106 @@ const BookingsPage: React.FC = () => {
     }
   };
 
+  const [activeFilter, setActiveFilter] = useState("all");
+
+  const filteredBookings = bookings.filter((booking) => {
+    if (activeFilter === "all") return true;
+    if (activeFilter === "upcoming")
+      return booking.status === "pending" || booking.status === "confirmed";
+    return booking.status === activeFilter;
+  });
+
   return (
     <div className="bookings-page">
       <div className="page-header">
         <h1>Le Mie Prenotazioni</h1>
       </div>
 
-      {loading ? (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <span className="loading-text">Caricamento...</span>
-        </div>
-      ) : (
-        <div className="bookings-list">
-          {bookings.length === 0 ? (
-            <div className="empty-state">
-              <p>Non hai ancora effettuato prenotazioni.</p>
+      <div className="bookings-filters">
+        <button
+          className={`filter-btn ${activeFilter === "all" ? "active" : ""}`}
+          onClick={() => setActiveFilter("all")}
+        >
+          Tutte
+        </button>
+        <button
+          className={`filter-btn ${
+            activeFilter === "upcoming" ? "active" : ""
+          }`}
+          onClick={() => setActiveFilter("upcoming")}
+        >
+          Prossime
+        </button>
+        <button
+          className={`filter-btn ${
+            activeFilter === "completed" ? "active" : ""
+          }`}
+          onClick={() => setActiveFilter("completed")}
+        >
+          Completate
+        </button>
+        <button
+          className={`filter-btn ${
+            activeFilter === "cancelled" ? "active" : ""
+          }`}
+          onClick={() => setActiveFilter("cancelled")}
+        >
+          Cancellate
+        </button>
+      </div>
+
+      <div className="bookings-list">
+        {filteredBookings.length === 0 && !loading ? (
+          <div className="empty-state">
+            <p>Nessuna prenotazione trovata in questa categoria.</p>
+            {activeFilter === "all" && (
               <a href="/services" className="btn-browse">
                 Esplora Servizi
               </a>
-            </div>
-          ) : (
-            bookings.map((booking) => (
-              <div key={booking.id} className="booking-card">
-                <div className="booking-header">
-                  <h3>{booking.serviceTitle}</h3>
-                  <span className={`status-badge ${booking.status}`}>
-                    {getStatusLabel(booking.status)}
-                  </span>
+            )}
+          </div>
+        ) : (
+          filteredBookings.map((booking, index) => {
+            if (filteredBookings.length === index + 1) {
+              return (
+                <div
+                  ref={lastBookingElementRef}
+                  key={booking.id}
+                  className="booking-card"
+                >
+                  <BookingCardContent
+                    booking={booking}
+                    navigate={navigate}
+                    setReviewBooking={setReviewBooking}
+                    setShowReviewModal={setShowReviewModal}
+                    getStatusLabel={getStatusLabel}
+                    getPaymentStatusLabel={getPaymentStatusLabel}
+                  />
                 </div>
-
-                <div className="booking-details">
-                  <div className="detail-row">
-                    <span className="label">Data:</span>
-                    <span className="value">
-                      {new Date(booking.date).toLocaleDateString("it-IT")}
-                    </span>
-                  </div>
-                  {booking.preferredTime && (
-                    <div className="detail-row">
-                      <span className="label">Orario:</span>
-                      <span className="value">{booking.preferredTime}</span>
-                    </div>
-                  )}
-                  <div className="detail-row">
-                    <span className="label">Prezzo:</span>
-                    <span className="value">€{booking.amount.toFixed(2)}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="label">Fornitore:</span>
-                    <span className="value">{booking.providerEmail}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="label">Pagamento:</span>
-                    <span className="value payment-status">
-                      {getPaymentStatusLabel(booking.paymentStatus)}
-                    </span>
-                  </div>
+              );
+            } else {
+              return (
+                <div key={booking.id} className="booking-card">
+                  <BookingCardContent
+                    booking={booking}
+                    navigate={navigate}
+                    setReviewBooking={setReviewBooking}
+                    setShowReviewModal={setShowReviewModal}
+                    getStatusLabel={getStatusLabel}
+                    getPaymentStatusLabel={getPaymentStatusLabel}
+                  />
                 </div>
-
-                <div className="booking-actions">
-                  <button
-                    onClick={() =>
-                      navigate(`/messages?bookingId=${booking.id}`)
-                    }
-                    className="btn-chat"
-                  >
-                    💬 Chat con Fornitore
-                  </button>
-                  {booking.status === "completed" && !booking.hasReview && (
-                    <button
-                      onClick={() => {
-                        setReviewBooking(booking);
-                        setShowReviewModal(true);
-                      }}
-                      className="btn-review"
-                    >
-                      ⭐ Lascia Recensione
-                    </button>
-                  )}
-                  {booking.status === "completed" && booking.hasReview && (
-                    <span className="badge-reviewed">✅ Recensito</span>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      )}
+              );
+            }
+          })
+        )}
+        {loading && (
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <span className="loading-text">Caricamento...</span>
+          </div>
+        )}
+      </div>
 
       {showReviewModal && reviewBooking && (
         <ReviewModal
@@ -157,12 +201,114 @@ const BookingsPage: React.FC = () => {
           onReviewSubmit={() => {
             setShowReviewModal(false);
             setReviewBooking(null);
-            loadBookings();
+            // Reload current page or just update local state
+            // For simplicity, we might just update the specific booking in state
+            setBookings((prev) =>
+              prev.map((b) =>
+                b.id === reviewBooking.id ? { ...b, hasReview: true } : b
+              )
+            );
           }}
         />
       )}
     </div>
   );
 };
+
+// Helper component to avoid repetition
+const BookingCardContent = ({
+  booking,
+  navigate,
+  setReviewBooking,
+  setShowReviewModal,
+  getStatusLabel,
+  getPaymentStatusLabel,
+}: any) => (
+  <>
+    <div className="booking-header">
+      <div className="booking-title-section">
+        <h3>{booking.serviceTitle}</h3>
+        <span className="booking-id">#{booking.id.slice(-6)}</span>
+      </div>
+      <span className={`status-badge ${booking.status}`}>
+        {getStatusLabel(booking.status)}
+      </span>
+    </div>
+
+    <div className="booking-details-grid">
+      <div className="detail-item">
+        <span className="detail-icon">📅</span>
+        <div className="detail-content">
+          <span className="detail-label">Data</span>
+          <span className="detail-value">
+            {new Date(booking.date).toLocaleDateString("it-IT", {
+              weekday: "short",
+              day: "numeric",
+              month: "long",
+            })}
+          </span>
+        </div>
+      </div>
+
+      {booking.preferredTime && (
+        <div className="detail-item">
+          <span className="detail-icon">⏰</span>
+          <div className="detail-content">
+            <span className="detail-label">Orario</span>
+            <span className="detail-value">{booking.preferredTime}</span>
+          </div>
+        </div>
+      )}
+
+      <div className="detail-item">
+        <span className="detail-icon">💶</span>
+        <div className="detail-content">
+          <span className="detail-label">Prezzo</span>
+          <span className="detail-value">€{booking.amount.toFixed(2)}</span>
+        </div>
+      </div>
+
+      <div className="detail-item">
+        <span className="detail-icon">👤</span>
+        <div className="detail-content">
+          <span className="detail-label">Fornitore</span>
+          <span className="detail-value">{booking.providerEmail}</span>
+        </div>
+      </div>
+    </div>
+
+    <div className="booking-footer">
+      <div className="payment-status-container">
+        <span className={`payment-dot ${booking.paymentStatus}`}></span>
+        <span className="payment-text">
+          {getPaymentStatusLabel(booking.paymentStatus)}
+        </span>
+      </div>
+
+      <div className="booking-actions">
+        <button
+          onClick={() => navigate(`/messages?bookingId=${booking.id}`)}
+          className="btn-chat"
+        >
+          💬 Chat
+        </button>
+        {booking.status === "completed" && !booking.hasReview && (
+          <button
+            onClick={() => {
+              setReviewBooking(booking);
+              setShowReviewModal(true);
+            }}
+            className="btn-review"
+          >
+            ⭐ Recensisci
+          </button>
+        )}
+        {booking.status === "completed" && booking.hasReview && (
+          <span className="badge-reviewed">✅ Recensito</span>
+        )}
+      </div>
+    </div>
+  </>
+);
 
 export default BookingsPage;

@@ -7,6 +7,8 @@ export interface Service {
   description: string;
   price: number;
   providerEmail: string;
+  providerName?: string;
+  providerAvatar?: string;
   address?: string;
   latitude?: number;
   longitude?: number;
@@ -16,6 +18,8 @@ export interface Service {
   imageUrl?: string;
   productsUsed?: string[];
   availability?: any;
+  extraServices?: { name: string; price: number }[];
+  coverageRadiusKm?: number;
 }
 
 export interface PaginatedServices {

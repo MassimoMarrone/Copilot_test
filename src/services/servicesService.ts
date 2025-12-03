@@ -82,8 +82,8 @@ export class ServicesService {
     }
 
     // Post-filter by location (Haversine formula)
+    // Check if client's location is within the provider's coverage radius
     if (filters?.latitude && filters?.longitude) {
-      const radiusKm = filters.radiusKm || 50;
       services = services.filter((service: any) => {
         if (!service.latitude || !service.longitude) return false;
         const distance = this.calculateDistance(
@@ -92,7 +92,9 @@ export class ServicesService {
           service.latitude,
           service.longitude
         );
-        return distance <= radiusKm;
+        // Use the provider's coverage radius (default 20km if not set)
+        const providerCoverageKm = service.coverageRadiusKm || 20;
+        return distance <= providerCoverageKm;
       });
     }
 
@@ -129,10 +131,23 @@ export class ServicesService {
         }
       }
 
+      let parsedExtraServices = [];
+      if (service.extraServices) {
+        try {
+          parsedExtraServices =
+            typeof service.extraServices === "string"
+              ? JSON.parse(service.extraServices)
+              : service.extraServices;
+        } catch (e) {
+          console.error("Error parsing extraServices:", e);
+        }
+      }
+
       return {
         ...service,
         productsUsed: parsedProducts,
         availability: parsedAvailability,
+        extraServices: parsedExtraServices,
         reviewCount,
         averageRating: parseFloat(averageRating.toFixed(1)),
       };
@@ -182,6 +197,7 @@ export class ServicesService {
       description,
       category,
       price,
+      priceType,
       address,
       latitude,
       longitude,
@@ -190,7 +206,14 @@ export class ServicesService {
       workingHoursStart,
       workingHoursEnd,
       slotDurationMinutes,
+      extraServices,
+      coverageRadiusKm,
     } = data;
+
+    // Validazione indirizzo obbligatorio
+    if (!address || address.trim().length < 5) {
+      throw new Error("L'indirizzo è obbligatorio");
+    }
 
     const defaultDaySchedule = {
       enabled: true,
@@ -220,12 +243,18 @@ export class ServicesService {
         description,
         category: category || "Altro",
         price: parseFloat(price),
+        priceType: priceType || "hourly",
         productsUsed: productsUsed
           ? typeof productsUsed === "string"
             ? productsUsed
             : JSON.stringify(productsUsed)
           : JSON.stringify([]),
-        address: address || undefined,
+        extraServices: extraServices
+          ? typeof extraServices === "string"
+            ? extraServices
+            : JSON.stringify(extraServices)
+          : null,
+        address: address.trim(),
         latitude: latitude ? parseFloat(latitude) : undefined,
         longitude: longitude ? parseFloat(longitude) : undefined,
         imageUrl,
@@ -235,6 +264,7 @@ export class ServicesService {
         slotDurationMinutes: slotDurationMinutes
           ? parseInt(slotDurationMinutes)
           : 60,
+        coverageRadiusKm: coverageRadiusKm ? parseInt(coverageRadiusKm) : 20,
         availability: JSON.stringify({
           weekly: defaultWeeklySchedule,
           blockedDates: [],
@@ -263,12 +293,15 @@ export class ServicesService {
       description,
       category,
       price,
+      priceType,
       address,
       latitude,
       longitude,
       availability,
       productsUsed,
       imageUrl,
+      extraServices,
+      coverageRadiusKm,
     } = data;
 
     const updateData: any = {};
@@ -277,6 +310,7 @@ export class ServicesService {
     if (description) updateData.description = description;
     if (category) updateData.category = category;
     if (price) updateData.price = parseFloat(price);
+    if (priceType) updateData.priceType = priceType;
     if (address !== undefined) updateData.address = address;
     if (latitude) updateData.latitude = parseFloat(latitude);
     if (longitude) updateData.longitude = parseFloat(longitude);
@@ -285,6 +319,16 @@ export class ServicesService {
         typeof productsUsed === "string"
           ? productsUsed
           : JSON.stringify(productsUsed);
+    }
+    if (extraServices !== undefined) {
+      updateData.extraServices = extraServices
+        ? typeof extraServices === "string"
+          ? extraServices
+          : JSON.stringify(extraServices)
+        : null;
+    }
+    if (coverageRadiusKm !== undefined) {
+      updateData.coverageRadiusKm = parseInt(coverageRadiusKm);
     }
     if (imageUrl) {
       updateData.imageUrl = imageUrl;
@@ -338,10 +382,23 @@ export class ServicesService {
         }
       }
 
+      let parsedExtraServices = [];
+      if (service.extraServices) {
+        try {
+          parsedExtraServices =
+            typeof service.extraServices === "string"
+              ? JSON.parse(service.extraServices)
+              : service.extraServices;
+        } catch (e) {
+          console.error("Error parsing extraServices", e);
+        }
+      }
+
       return {
         ...service,
         productsUsed: parsedProducts,
         availability: parsedAvailability,
+        extraServices: parsedExtraServices,
       };
     });
   }

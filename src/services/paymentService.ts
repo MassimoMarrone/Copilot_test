@@ -66,6 +66,8 @@ export const paymentService = {
               : null,
             startTime: metadata.startTime || null,
             endTime: metadata.endTime || null,
+            // Selected extras
+            selectedExtras: metadata.selectedExtras || null,
           },
         });
 

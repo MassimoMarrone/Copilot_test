@@ -14,6 +14,8 @@ export interface Service {
   createdAt: string;
   imageUrl?: string;
   availability?: ProviderAvailability;
+  extraServices?: { name: string; price: number }[];
+  coverageRadiusKm?: number;
 }
 
 export interface Booking {

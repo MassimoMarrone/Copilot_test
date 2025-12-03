@@ -185,10 +185,15 @@
     left: 0;
     right: 0;
     min-width: 100%;
+    width: 100%;
     border-radius: 20px 20px 0 0;
     max-height: 80vh;
     overflow-y: auto;
-    animation: slideUp 0.3s ease;
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+    z-index: 2000; /* Ensure it's above everything */
+    margin: 0; /* Reset any margins */
+    transform: none; /* Reset any transforms */
   }
 
   @keyframes slideUp {

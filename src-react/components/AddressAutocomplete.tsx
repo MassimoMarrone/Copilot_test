@@ -15,6 +15,26 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const [results, setResults] = useState<LocationResult[]>([]);
   const [showResults, setShowResults] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Aggiorna query quando cambia initialValue
+  React.useEffect(() => {
+    setQuery(initialValue);
+  }, [initialValue]);
+
+  // Chiudi dropdown quando si clicca fuori
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -57,20 +77,28 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   };
 
   return (
-    <div className="address-autocomplete" style={{ position: "relative" }}>
+    <div
+      className="address-autocomplete"
+      style={{ position: "relative" }}
+      ref={wrapperRef}
+    >
       <input
         type="text"
-        className="form-control" // Assuming standard class or I'll add styles
-        placeholder="Inserisci indirizzo..."
+        className="form-control"
+        placeholder="Inizia a digitare l'indirizzo..."
         value={query}
         onChange={handleInputChange}
         onFocus={() => results.length > 0 && setShowResults(true)}
         style={{
           width: "100%",
-          padding: "12px",
+          padding: "12px 15px",
           borderRadius: "8px",
           border: "2px solid #e0e0e0",
+          fontSize: "16px",
+          transition: "border-color 0.2s",
         }}
+        onMouseOver={(e) => (e.currentTarget.style.borderColor = "#1a1a1a")}
+        onMouseOut={(e) => (e.currentTarget.style.borderColor = "#e0e0e0")}
       />
       {showResults && results.length > 0 && (
         <ul
