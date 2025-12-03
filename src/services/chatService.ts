@@ -161,16 +161,18 @@ export const chatService = {
     const bookingIds = userBookings.map((b) => b.id);
 
     // Query per ultimi messaggi (una sola query per tutti i booking)
-    const lastMessages = await prisma.$queryRaw<Array<{
-      bookingId: string;
-      id: string;
-      senderId: string;
-      senderEmail: string;
-      senderType: string;
-      message: string;
-      read: boolean;
-      createdAt: Date;
-    }>>`
+    const lastMessages = await prisma.$queryRaw<
+      Array<{
+        bookingId: string;
+        id: string;
+        senderId: string;
+        senderEmail: string;
+        senderType: string;
+        message: string;
+        read: boolean;
+        createdAt: Date;
+      }>
+    >`
       SELECT DISTINCT ON ("bookingId") *
       FROM "ChatMessage"
       WHERE "bookingId" = ANY(${bookingIds})
@@ -179,7 +181,7 @@ export const chatService = {
 
     // Query per conteggio non letti (una sola query per tutti i booking)
     const unreadCounts = await prisma.chatMessage.groupBy({
-      by: ['bookingId'],
+      by: ["bookingId"],
       where: {
         bookingId: { in: bookingIds },
         senderId: { not: userId },
@@ -189,8 +191,10 @@ export const chatService = {
     });
 
     // Mappa per lookup veloce
-    const lastMessageMap = new Map(lastMessages.map(m => [m.bookingId, m]));
-    const unreadMap = new Map(unreadCounts.map(u => [u.bookingId, u._count.id]));
+    const lastMessageMap = new Map(lastMessages.map((m) => [m.bookingId, m]));
+    const unreadMap = new Map(
+      unreadCounts.map((u) => [u.bookingId, u._count.id])
+    );
 
     const conversations = userBookings.map((booking) => {
       const lastMessage = lastMessageMap.get(booking.id) || null;
