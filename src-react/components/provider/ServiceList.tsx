@@ -1,5 +1,5 @@
 import React from "react";
-import { Service } from "../../types/provider";
+import { Service } from "../../types";
 import { defaultWeeklySchedule } from "../AvailabilityManager";
 
 interface ServiceListProps {
@@ -50,12 +50,14 @@ const ServiceList: React.FC<ServiceListProps> = ({
             <p className="service-location">📍 {service.address}</p>
           )}
           <p className="service-price">€{service.price.toFixed(2)}</p>
-          <p>
-            <small>
-              Creato il:{" "}
-              {new Date(service.createdAt).toLocaleDateString("it-IT")}
-            </small>
-          </p>
+          {service.createdAt && (
+            <p>
+              <small>
+                Creato il:{" "}
+                {new Date(service.createdAt).toLocaleDateString("it-IT")}
+              </small>
+            </p>
+          )}
           <div
             className="service-actions"
             style={{ display: "flex", gap: "10px", marginTop: "10px" }}

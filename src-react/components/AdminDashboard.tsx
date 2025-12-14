@@ -4,32 +4,8 @@ import UserMenu from "./UserMenu";
 import ServiceMap from "./ServiceMap";
 import { adminService, AdminUser, AdminStats } from "../services/adminService";
 import { useAuth } from "../context/AuthContext";
+import { Service, Booking } from "../types";
 import "../styles/AdminDashboard.css";
-
-interface Service {
-  id: string;
-  providerId: string;
-  title: string;
-  description: string;
-  providerEmail: string;
-  price: number;
-  category?: string;
-  address?: string;
-  latitude?: number;
-  longitude?: number;
-  createdAt?: string;
-}
-
-interface Booking {
-  id: string;
-  serviceTitle: string;
-  clientEmail: string;
-  providerEmail: string;
-  date: string;
-  status: string;
-  paymentStatus: string;
-  amount: number;
-}
 
 const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);

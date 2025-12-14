@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { Service } from "../types";
 
 // Fix for default marker icon in React Leaflet
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -15,23 +16,6 @@ let DefaultIcon = L.icon({
 });
 
 L.Marker.prototype.options.icon = DefaultIcon;
-
-interface Service {
-  id: string;
-  providerId: string;
-  title: string;
-  description: string;
-  price: number;
-  category?: string;
-  providerEmail: string;
-  address?: string;
-  latitude?: number;
-  longitude?: number;
-  averageRating?: number;
-  reviewCount?: number;
-  imageUrl?: string;
-  productsUsed?: string[];
-}
 
 interface ServiceMapProps {
   services: Service[];

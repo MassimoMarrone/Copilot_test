@@ -5,7 +5,6 @@ import path from "path";
 import fs from "fs";
 import helmet from "helmet";
 import dotenv from "dotenv";
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 // Config & Utils
@@ -25,11 +24,11 @@ import adminRoutes from "./routes/admin";
 import notificationRoutes from "./routes/notifications";
 import paymentRoutes from "./routes/payment";
 import schedulingRoutes from "./routes/scheduling";
+import { prisma } from "./lib/prisma";
 
 // Load environment variables
 dotenv.config();
 
-const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 3000;
 

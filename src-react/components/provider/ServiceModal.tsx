@@ -5,12 +5,7 @@ import AvailabilityManager, {
   defaultWeeklySchedule,
 } from "../AvailabilityManager";
 import { CATEGORIES, AVAILABLE_PRODUCTS } from "../../constants/provider";
-import { Service } from "../../types/provider";
-
-interface ExtraService {
-  name: string;
-  price: number;
-}
+import { Service, ExtraService } from "../../types";
 
 interface ServiceModalProps {
   isOpen: boolean;

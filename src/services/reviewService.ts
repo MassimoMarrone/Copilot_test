@@ -1,7 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma";
 import { sendNotification } from "../utils/notification";
-
-const prisma = new PrismaClient();
 
 export const reviewService = {
   async createReview(

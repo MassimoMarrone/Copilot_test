@@ -1,26 +1,7 @@
 import { get, post, put, del, upload } from "./api";
+import { Service } from "../types";
 
-export interface Service {
-  id: string;
-  providerId: string;
-  title: string;
-  description: string;
-  price: number;
-  providerEmail: string;
-  providerName?: string;
-  providerAvatar?: string;
-  address?: string;
-  latitude?: number;
-  longitude?: number;
-  category?: string;
-  averageRating?: number;
-  reviewCount?: number;
-  imageUrl?: string;
-  productsUsed?: string[];
-  availability?: any;
-  extraServices?: { name: string; price: number }[];
-  coverageRadiusKm?: number;
-}
+export type { Service };
 
 export interface PaginatedServices {
   services: Service[];

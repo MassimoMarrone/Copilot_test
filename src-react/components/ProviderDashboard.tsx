@@ -9,7 +9,7 @@ import ServiceModal from "./provider/ServiceModal";
 import CompleteBookingModal from "./provider/CompleteBookingModal";
 import AvailabilityModal from "./provider/AvailabilityModal";
 import BookingCalendar, { CalendarEvent } from "./BookingCalendar";
-import { Service, Booking, Review } from "../types/provider";
+import { Service, Booking, Review } from "../types";
 import { ProviderAvailability } from "./AvailabilityManager";
 import { authService, User } from "../services/authService";
 import { servicesService } from "../services/servicesService";

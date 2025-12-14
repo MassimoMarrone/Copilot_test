@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
 import { reviewService } from "../services/reviewService";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prisma";
 
 export const reviewController = {
   async createReview(req: Request, res: Response): Promise<void> {

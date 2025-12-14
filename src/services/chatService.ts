@@ -1,7 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma";
 import { getIO } from "../socket";
-
-const prisma = new PrismaClient();
 
 export const chatService = {
   async sendMessage(

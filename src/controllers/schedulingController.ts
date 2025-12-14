@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
 import { schedulingService } from "../services/schedulingService";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prisma";
 
 export const schedulingController = {
   /**

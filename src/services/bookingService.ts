@@ -1,11 +1,9 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma";
 import { stripe, mockStripeSessions } from "../config/stripe";
 import { sendNotification } from "../utils/notification";
 import { sendEmail, emailTemplates } from "../emailService";
 import { schedulingService } from "./schedulingService";
 import { bookingLogger, paymentLogger } from "../utils/logger";
-
-const prisma = new PrismaClient();
 
 export const bookingService = {
   async createBooking(

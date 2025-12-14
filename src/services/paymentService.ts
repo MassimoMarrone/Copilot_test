@@ -1,9 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma";
 import { stripe, mockStripeSessions } from "../config/stripe";
 import { sendNotification } from "../utils/notification";
 import { sendEmail, emailTemplates } from "../emailService";
-
-const prisma = new PrismaClient();
 
 export const paymentService = {
   async verifyPayment(sessionId: string) {

@@ -1,6 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prisma";
 
 // Square meters ranges and their base duration in minutes
 const SQUARE_METERS_DURATION: Record<string, number> = {

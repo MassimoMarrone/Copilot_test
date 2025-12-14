@@ -3,6 +3,7 @@ import {
   notificationService,
   Notification,
 } from "../services/notificationService";
+import { formatRelativeTime } from "../utils/dateFormatters";
 import "../styles/NotificationCenter.css";
 
 interface NotificationCenterProps {
@@ -90,17 +91,6 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
     // If there's a link/action, handle it here
     // For now just close menu
     // setIsOpen(false);
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (diffInSeconds < 60) return "Adesso";
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m fa`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h fa`;
-    return date.toLocaleDateString("it-IT");
   };
 
   return (
@@ -226,7 +216,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                       {notification.message}
                     </div>
                     <div className="notification-time">
-                      {formatTime(notification.createdAt)}
+                      {formatRelativeTime(notification.createdAt)}
                     </div>
                   </div>
                   {!notification.read && (

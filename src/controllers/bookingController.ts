@@ -1,9 +1,7 @@
 import { Request, Response } from "express";
 import { bookingService } from "../services/bookingService";
 import { chatService } from "../services/chatService";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prisma";
 
 export const bookingController = {
   async createBooking(req: Request, res: Response): Promise<void> {
@@ -54,7 +52,11 @@ export const bookingController = {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
 
-      const bookings = await bookingService.getMyBookings(req.user!.id, page, limit);
+      const bookings = await bookingService.getMyBookings(
+        req.user!.id,
+        page,
+        limit
+      );
       res.json(bookings);
     } catch (error: any) {
       console.error("Error fetching bookings:", error);

@@ -1,18 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { chatService } from "../services/chatService";
+import { formatRelativeTime } from "../utils/dateFormatters";
+import { ChatMessage } from "../types";
 import "../styles/ChatModal.css";
-
-interface ChatMessage {
-  id: string;
-  bookingId: string;
-  senderId: string;
-  senderEmail: string;
-  senderType: "client" | "provider";
-  message: string;
-  read?: boolean;
-  createdAt: string;
-}
 
 interface ChatModalProps {
   bookingId: string;
@@ -126,33 +117,6 @@ const ChatModal: React.FC<ChatModalProps> = ({
     }
   };
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMs = now.getTime() - date.getTime();
-    const diffInMinutes = Math.floor(diffInMs / 60000);
-    const diffInHours = Math.floor(diffInMs / 3600000);
-    const diffInDays = Math.floor(diffInMs / 86400000);
-
-    if (diffInMinutes < 1) {
-      return "Ora";
-    } else if (diffInMinutes < 60) {
-      return `${diffInMinutes} min fa`;
-    } else if (diffInHours < 24) {
-      return `${diffInHours} ora fa`;
-    } else if (diffInDays === 1) {
-      return "Ieri";
-    } else if (diffInDays < 7) {
-      return `${diffInDays} giorni fa`;
-    } else {
-      return date.toLocaleDateString("it-IT", {
-        day: "2-digit",
-        month: "short",
-        year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
-      });
-    }
-  };
-
   if (!isOpen) {
     return null;
   }
@@ -199,7 +163,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
                     <div className="message-bubble">
                       <div className="message-text">{msg.message}</div>
                       <div className="message-time">
-                        {formatTime(msg.createdAt)}
+                        {formatRelativeTime(msg.createdAt)}
                       </div>
                     </div>
                   </div>

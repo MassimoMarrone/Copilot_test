@@ -3,7 +3,7 @@ import AvailabilityManager, {
   ProviderAvailability,
   defaultWeeklySchedule,
 } from "../AvailabilityManager";
-import { Service } from "../../types/provider";
+import { Service } from "../../types";
 
 interface AvailabilityModalProps {
   isOpen: boolean;

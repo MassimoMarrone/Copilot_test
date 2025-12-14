@@ -3,36 +3,23 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { userService, ProviderProfile } from "../services/userService";
 import { reviewService } from "../services/reviewService";
+import { Service, Review } from "../types";
 import "../styles/ProviderProfilePage.css";
 
-interface Service {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  imageUrl?: string;
-  averageRating?: number;
-  reviewCount?: number;
-}
-
-interface Review {
-  id: string;
-  rating: number;
+interface ExtendedReview extends Review {
+  clientName: string;
   ratingDetails?: {
     punctuality: number;
     communication: number;
     quality: number;
   };
-  comment: string;
-  clientName: string;
-  createdAt: string;
   providerReply?: string;
   helpfulCount?: number;
 }
 
 interface ExtendedProviderProfile extends ProviderProfile {
   services: Service[];
-  reviews: Review[];
+  reviews: ExtendedReview[];
 }
 
 const ProviderProfilePage: React.FC = () => {

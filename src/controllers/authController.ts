@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { authService } from "../services/authService";
+import { setAuthCookie, clearAuthCookie } from "../utils/cookies";
 
 export class AuthController {
   async register(req: Request, res: Response): Promise<void> {
@@ -22,15 +23,7 @@ export class AuthController {
 
       const { token: authToken } = await authService.verifyEmail(token);
 
-      res.cookie("token", authToken, {
-        httpOnly: true,
-        secure:
-          process.env.NODE_ENV === "production" ||
-          req.secure ||
-          req.headers["x-forwarded-proto"] === "https",
-        sameSite: "lax",
-        maxAge: 24 * 60 * 60 * 1000,
-      });
+      setAuthCookie(res, req, authToken);
 
       // Return JSON for API calls, redirect for direct browser access
       const acceptHeader = req.headers.accept || "";
@@ -75,15 +68,7 @@ export class AuthController {
     try {
       const { user, token } = await authService.login(req.body);
 
-      res.cookie("token", token, {
-        httpOnly: true,
-        secure:
-          process.env.NODE_ENV === "production" ||
-          req.secure ||
-          req.headers["x-forwarded-proto"] === "https",
-        sameSite: "lax",
-        maxAge: 24 * 60 * 60 * 1000,
-      });
+      setAuthCookie(res, req, token);
 
       res.json({ success: true, userType: user.userType });
     } catch (error: any) {
@@ -100,15 +85,7 @@ export class AuthController {
         acceptedTerms
       );
 
-      res.cookie("token", jwtToken, {
-        httpOnly: true,
-        secure:
-          process.env.NODE_ENV === "production" ||
-          req.secure ||
-          req.headers["x-forwarded-proto"] === "https",
-        sameSite: "lax",
-        maxAge: 24 * 60 * 60 * 1000,
-      });
+      setAuthCookie(res, req, jwtToken);
 
       res.json({ success: true, userType: user.userType });
     } catch (error: any) {
@@ -122,14 +99,7 @@ export class AuthController {
   }
 
   async logout(req: Request, res: Response): Promise<void> {
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure:
-        process.env.NODE_ENV === "production" ||
-        req.secure ||
-        req.headers["x-forwarded-proto"] === "https",
-      sameSite: "lax",
-    });
+    clearAuthCookie(res, req);
     res.json({ success: true });
   }
 
@@ -172,15 +142,7 @@ export class AuthController {
         acceptedProviderTerms
       );
 
-      res.cookie("token", token, {
-        httpOnly: true,
-        secure:
-          process.env.NODE_ENV === "production" ||
-          req.secure ||
-          req.headers["x-forwarded-proto"] === "https",
-        sameSite: "lax",
-        maxAge: 24 * 60 * 60 * 1000,
-      });
+      setAuthCookie(res, req, token);
 
       res.json({ success: true, isProvider: true });
     } catch (error: any) {

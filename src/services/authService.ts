@@ -1,12 +1,11 @@
-import { PrismaClient, User } from "@prisma/client";
+import { User } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 import crypto from "crypto";
 import { sendEmail, emailTemplates } from "../emailService";
 import { authLogger } from "../utils/logger";
-
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prisma";
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-in-production";

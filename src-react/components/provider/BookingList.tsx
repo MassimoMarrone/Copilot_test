@@ -1,5 +1,5 @@
 import React from "react";
-import { Booking } from "../../types/provider";
+import { Booking } from "../../types";
 
 interface BookingListProps {
   bookings: Booking[];

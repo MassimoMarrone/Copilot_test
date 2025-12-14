@@ -1,8 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma";
 import { getIO } from "../socket";
 import { Notification } from "../types";
-
-const prisma = new PrismaClient();
 
 export const sendNotification = async (
   userId: string,
