@@ -182,7 +182,70 @@ npm run dev:full
 - [ ] Sistema referral "invita un amico".
 - [ ] **Request ID / Correlation ID** - Identificatore unico per ogni richiesta HTTP per tracciamento end-to-end nei log.
 
-## 🎯 Prossimi Passi Prima del Lancio
+---
+
+## 🔧 TODO - Miglioramenti per Produzione
+
+### 🔴 CRITICI (Prima del Go-Live)
+
+| #   | Task                       | Descrizione                                                                                              | Status |
+| --- | -------------------------- | -------------------------------------------------------------------------------------------------------- | ------ |
+| 1   | **Stripe Live Keys**       | Configurare `STRIPE_SECRET_KEY` e `STRIPE_PUBLISHABLE_KEY` live su Render                                | 🔲     |
+| 2   | **Verifica Env Vars**      | Controllare che tutte le variabili siano configurate su Render (DATABASE_URL, GOOGLE_MAPS_API_KEY, etc.) | 🔲     |
+| 3   | **Google OAuth Domini**    | Aggiungere dominio produzione nella Google Cloud Console                                                 | 🔲     |
+| 4   | **Race Condition Booking** | Implementare lock/transazione per prenotazioni simultanee (vedi sotto)                                   | 🔲     |
+
+### 🟠 IMPORTANTI (Raccomandati)
+
+| #   | Task                      | Descrizione                                                                       | Tempo Stimato |
+| --- | ------------------------- | --------------------------------------------------------------------------------- | ------------- |
+| 5   | **Health Check Endpoint** | Aggiungere `/health` per monitoring Render                                        | 10 min        |
+| 6   | **Cloud Storage**         | Migrare upload immagini su Cloudinary/S3 (i file su Render si perdono al restart) | 2-4h          |
+| 7   | **Monitoring (Sentry)**   | Setup error tracking per ricevere alert su errori in produzione                   | 1h            |
+| 8   | **Backup Database**       | Verificare backup automatici su Neon PostgreSQL                                   | 30 min        |
+| 9   | **FRONTEND_URL**          | Aggiungere variabile per CORS in produzione                                       | 5 min         |
+
+### 🟡 MIGLIORAMENTI (Post-Lancio)
+
+| #   | Task                    | Descrizione                                                      | Priorità |
+| --- | ----------------------- | ---------------------------------------------------------------- | -------- |
+| 10  | **Transazioni DB**      | Usare `$transaction` per operazioni critiche (booking + payment) | Media    |
+| 11  | **Test Coverage**       | Aggiungere test per auth, payments, chat                         | Media    |
+| 12  | **Rate Limiting Redis** | Per scaling con più istanze                                      | Bassa    |
+| 13  | **Soft Delete**         | Implementare soft delete per servizi e booking                   | Bassa    |
+
+### ⚠️ Race Condition - Prenotazioni Simultanee
+
+**Problema Attuale:** Se due utenti prenotano lo stesso slot nello stesso momento:
+
+1. Utente A controlla disponibilità → Slot libero ✅
+2. Utente B controlla disponibilità → Slot libero ✅
+3. Utente A crea prenotazione → OK
+4. Utente B crea prenotazione → OK (dovrebbe fallire!)
+
+**Soluzione da implementare:**
+
+```typescript
+// Usare Prisma transaction con lock pessimistico
+await prisma.$transaction(async (tx) => {
+  // Lock sulla riga del servizio
+  const service = await tx.service.findUnique({
+    where: { id: serviceId },
+  });
+
+  // Ri-verifica disponibilità dentro la transazione
+  const conflict = await tx.booking.findFirst({
+    where: { /* condizioni overlap */ }
+  });
+
+  if (conflict) throw new Error("Slot non più disponibile");
+
+  // Crea booking
+  return tx.booking.create({ data: {...} });
+});
+```
+
+---
 
 ### Priorità Alta (1-2 settimane)
 
