@@ -3,6 +3,12 @@ import { stripe, mockStripeSessions } from "../config/stripe";
 import { sendNotification } from "../utils/notification";
 import { sendEmail, emailTemplates } from "../emailService";
 
+// Helper function to convert time string to minutes
+function timeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
 export const paymentService = {
   async verifyPayment(sessionId: string) {
     let session;
@@ -24,9 +30,10 @@ export const paymentService = {
       const paymentIntentId = session.payment_intent as string;
 
       if (metadata?.serviceId) {
-        // New flow: Create booking after payment
+        // New flow: Create booking after payment with race condition protection
         const bookingId = `booking-${session.id}`;
 
+        // Check if booking already exists (idempotency)
         const existingBooking = await prisma.booking.findUnique({
           where: { id: bookingId },
         });
@@ -35,40 +42,96 @@ export const paymentService = {
           return { success: true, booking: existingBooking };
         }
 
-        const booking = await prisma.booking.create({
-          data: {
-            id: bookingId,
-            serviceId: metadata.serviceId,
-            clientId: metadata.clientId,
-            clientEmail: metadata.clientEmail,
-            providerId: metadata.providerId,
-            providerEmail: metadata.providerEmail,
-            serviceTitle: metadata.serviceTitle,
-            amount: parseFloat(metadata.amount),
-            date: new Date(metadata.date) as any,
-            status: "pending",
-            paymentStatus: "authorized",
-            paymentIntentId: paymentIntentId,
-            createdAt: new Date(),
-            clientPhone: metadata.clientPhone || null,
-            preferredTime: metadata.preferredTime || null,
-            notes: metadata.notes || null,
-            address: metadata.address || null,
-            // Smart booking fields
-            squareMetersRange: metadata.squareMetersRange || null,
-            windowsCount: metadata.windowsCount
-              ? parseInt(metadata.windowsCount, 10)
-              : null,
-            estimatedDuration: metadata.estimatedDuration
-              ? parseInt(metadata.estimatedDuration, 10)
-              : null,
-            startTime: metadata.startTime || null,
-            endTime: metadata.endTime || null,
-            // Selected extras
-            selectedExtras: metadata.selectedExtras || null,
-          },
-        });
+        // Use transaction to prevent race conditions
+        // This ensures atomicity: check availability + create booking in one atomic operation
+        const booking = await prisma.$transaction(
+          async (tx) => {
+            // Re-verify slot availability inside transaction
+            if (metadata.startTime && metadata.endTime) {
+              const bookingDate = new Date(metadata.date);
+              const startOfDay = new Date(bookingDate);
+              startOfDay.setHours(0, 0, 0, 0);
+              const endOfDay = new Date(bookingDate);
+              endOfDay.setHours(23, 59, 59, 999);
 
+              // Find conflicting bookings for the same service on the same day
+              const conflictingBookings = await tx.booking.findMany({
+                where: {
+                  serviceId: metadata.serviceId,
+                  status: { not: "cancelled" },
+                  date: {
+                    gte: startOfDay as any,
+                    lte: endOfDay as any,
+                  },
+                  // Only check bookings with time slots
+                  startTime: { not: null },
+                  endTime: { not: null },
+                },
+              });
+
+              // Check for time overlap
+              const newStart = timeToMinutes(metadata.startTime);
+              const newEnd = timeToMinutes(metadata.endTime);
+
+              for (const existing of conflictingBookings) {
+                if (existing.startTime && existing.endTime) {
+                  const existingStart = timeToMinutes(existing.startTime);
+                  const existingEnd = timeToMinutes(existing.endTime);
+
+                  // Overlap formula: newStart < existingEnd AND newEnd > existingStart
+                  const hasOverlap =
+                    newStart < existingEnd && newEnd > existingStart;
+                  if (hasOverlap) {
+                    throw new Error(
+                      "SLOT_NO_LONGER_AVAILABLE: Lo slot selezionato non è più disponibile. Un altro utente ha prenotato prima di te."
+                    );
+                  }
+                }
+              }
+            }
+
+            // Create booking inside transaction (atomic with availability check)
+            return tx.booking.create({
+              data: {
+                id: bookingId,
+                serviceId: metadata.serviceId,
+                clientId: metadata.clientId,
+                clientEmail: metadata.clientEmail,
+                providerId: metadata.providerId,
+                providerEmail: metadata.providerEmail,
+                serviceTitle: metadata.serviceTitle,
+                amount: parseFloat(metadata.amount),
+                date: new Date(metadata.date) as any,
+                status: "pending",
+                paymentStatus: "authorized",
+                paymentIntentId: paymentIntentId,
+                createdAt: new Date(),
+                clientPhone: metadata.clientPhone || null,
+                preferredTime: metadata.preferredTime || null,
+                notes: metadata.notes || null,
+                address: metadata.address || null,
+                // Smart booking fields
+                squareMetersRange: metadata.squareMetersRange || null,
+                windowsCount: metadata.windowsCount
+                  ? parseInt(metadata.windowsCount, 10)
+                  : null,
+                estimatedDuration: metadata.estimatedDuration
+                  ? parseInt(metadata.estimatedDuration, 10)
+                  : null,
+                startTime: metadata.startTime || null,
+                endTime: metadata.endTime || null,
+                // Selected extras
+                selectedExtras: metadata.selectedExtras || null,
+              },
+            });
+          },
+          {
+            // Serializable isolation level for maximum safety against race conditions
+            isolationLevel: "Serializable",
+          }
+        );
+
+        // Send notifications after successful transaction (outside transaction for performance)
         sendNotification(
           booking.providerId,
           "Nuova Prenotazione",

@@ -106,7 +106,22 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
       navigate("/client-dashboard");
     } catch (error: any) {
       console.error("Error verifying payment:", error);
-      alert(error.message || "Errore nella verifica del pagamento");
+
+      // Handle race condition - slot no longer available
+      if (
+        error.code === "SLOT_NO_LONGER_AVAILABLE" ||
+        error.message?.includes("slot")
+      ) {
+        alert(
+          "⚠️ Lo slot selezionato non è più disponibile.\n\n" +
+            "Un altro utente ha completato la prenotazione prima di te.\n" +
+            "Il pagamento verrà rimborsato automaticamente entro 5-10 giorni lavorativi.\n\n" +
+            "Ti invitiamo a selezionare un altro orario."
+        );
+        navigate("/services");
+      } else {
+        alert(error.message || "Errore nella verifica del pagamento");
+      }
     }
   };
 

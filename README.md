@@ -193,7 +193,7 @@ npm run dev:full
 | 1   | **Stripe Live Keys**       | Configurare `STRIPE_SECRET_KEY` e `STRIPE_PUBLISHABLE_KEY` live su Render                                | 🔲     |
 | 2   | **Verifica Env Vars**      | Controllare che tutte le variabili siano configurate su Render (DATABASE_URL, GOOGLE_MAPS_API_KEY, etc.) | 🔲     |
 | 3   | **Google OAuth Domini**    | Aggiungere dominio produzione nella Google Cloud Console                                                 | 🔲     |
-| 4   | **Race Condition Booking** | Implementare lock/transazione per prenotazioni simultanee (vedi sotto)                                   | 🔲     |
+| 4   | **Race Condition Booking** | Implementare lock/transazione per prenotazioni simultanee (vedi sotto)                                   | ✅     |
 
 ### 🟠 IMPORTANTI (Raccomandati)
 
