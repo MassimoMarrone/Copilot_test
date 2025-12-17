@@ -108,7 +108,13 @@ export const bookingController = {
   async completeBooking(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const booking = await bookingService.completeBooking(id, req.user!.id);
+      // Cloudinary returns the full URL in req.file.path
+      const photoProofUrl = req.file ? (req.file as any).path : undefined;
+      const booking = await bookingService.completeBooking(
+        id,
+        req.user!.id,
+        photoProofUrl
+      );
       res.json(booking);
     } catch (error: any) {
       console.error("Error completing booking:", error);

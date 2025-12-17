@@ -403,7 +403,11 @@ export const bookingService = {
     return updatedBooking;
   },
 
-  async completeBooking(bookingId: string, providerId: string) {
+  async completeBooking(
+    bookingId: string,
+    providerId: string,
+    photoProofUrl?: string
+  ) {
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
       include: { service: true },
@@ -444,6 +448,7 @@ export const bookingService = {
         status: "completed",
         paymentStatus: "released",
         completedAt: new Date(),
+        photoProof: photoProofUrl || null,
       },
     });
 

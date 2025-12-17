@@ -2,7 +2,7 @@ import { Router } from "express";
 import { body } from "express-validator";
 import { validate } from "../middleware/validation";
 import { authenticate } from "../middleware/auth";
-import { upload } from "../config/upload";
+import { uploadAvatar } from "../config/cloudinary";
 import { userController } from "../controllers/userController";
 
 const router = Router();
@@ -11,7 +11,7 @@ const router = Router();
 router.put(
   "/me/profile",
   authenticate,
-  upload.single("avatar"),
+  uploadAvatar.single("avatar"),
   [
     body("displayName")
       .optional()

@@ -192,18 +192,18 @@ npm run dev:full
 | --- | -------------------------- | -------------------------------------------------------------------------------------------------------- | ------ |
 | 1   | **Stripe Live Keys**       | Configurare `STRIPE_SECRET_KEY` e `STRIPE_PUBLISHABLE_KEY` live su Render                                | 🔲     |
 | 2   | **Verifica Env Vars**      | Controllare che tutte le variabili siano configurate su Render (DATABASE_URL, GOOGLE_MAPS_API_KEY, etc.) | 🔲     |
-| 3   | **Google OAuth Domini**    | Aggiungere dominio produzione nella Google Cloud Console                                                 | 🔲     |
+| 3   | **Google OAuth Domini**    | Aggiungere dominio produzione nella Google Cloud Console                                                 | ✅     |
 | 4   | **Race Condition Booking** | Implementare lock/transazione per prenotazioni simultanee (vedi sotto)                                   | ✅     |
 
 ### 🟠 IMPORTANTI (Raccomandati)
 
-| #   | Task                      | Descrizione                                                                       | Tempo Stimato |
-| --- | ------------------------- | --------------------------------------------------------------------------------- | ------------- |
-| 5   | **Health Check Endpoint** | Aggiungere `/health` per monitoring Render                                        | 10 min        |
-| 6   | **Cloud Storage**         | Migrare upload immagini su Cloudinary/S3 (i file su Render si perdono al restart) | 2-4h          |
-| 7   | **Monitoring (Sentry)**   | Setup error tracking per ricevere alert su errori in produzione                   | 1h            |
-| 8   | **Backup Database**       | Verificare backup automatici su Neon PostgreSQL                                   | 30 min        |
-| 9   | **FRONTEND_URL**          | Aggiungere variabile per CORS in produzione                                       | 5 min         |
+| #   | Task                      | Descrizione                                                                       | Tempo Stimato | Status |
+| --- | ------------------------- | --------------------------------------------------------------------------------- | ------------- | ------ |
+| 5   | **Health Check Endpoint** | Aggiungere `/health` per monitoring Render                                        | 10 min        | 🔲     |
+| 6   | **Cloud Storage**         | Migrare upload immagini su Cloudinary/S3 (i file su Render si perdono al restart) | 2-4h          | ✅     |
+| 7   | **Monitoring (Sentry)**   | Setup error tracking per ricevere alert su errori in produzione                   | 1h            | 🔲     |
+| 8   | **Backup Database**       | Verificare backup automatici su Neon PostgreSQL                                   | 30 min        | 🔲     |
+| 9   | **FRONTEND_URL**          | Aggiungere variabile per CORS in produzione                                       | 5 min         | 🔲     |
 
 ### 🟡 MIGLIORAMENTI (Post-Lancio)
 

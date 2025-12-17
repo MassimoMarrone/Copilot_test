@@ -4,6 +4,7 @@ import { validate } from "../middleware/validation";
 import { authenticate } from "../middleware/auth";
 import { bookingController } from "../controllers/bookingController";
 import { chatService } from "../services/chatService";
+import { uploadProof } from "../config/cloudinary";
 
 const router = Router();
 
@@ -73,10 +74,11 @@ router.post(
   bookingController.cancelBooking
 );
 
-// Complete booking (Provider only)
+// Complete booking (Provider only) with photo proof upload
 router.post(
   "/bookings/:id/complete",
   authenticate,
+  uploadProof.single("photo"),
   bookingController.completeBooking
 );
 

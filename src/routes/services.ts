@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import { body } from "express-validator";
 import { validate } from "../middleware/validation";
 import { authenticate } from "../middleware/auth";
-import { upload } from "../config/upload";
+import { uploadService } from "../config/cloudinary";
 import { servicesController } from "../controllers/servicesController";
 import multer from "multer";
 
@@ -16,7 +16,7 @@ router.post(
   "/services",
   authenticate,
   (req: Request, res: Response, next: NextFunction) => {
-    upload.single("image")(req, res, (err: any) => {
+    uploadService.single("image")(req, res, (err: any) => {
       if (err instanceof multer.MulterError) {
         if (err.code === "LIMIT_FILE_SIZE") {
           res
@@ -86,7 +86,7 @@ router.post(
 router.put(
   "/services/:id",
   authenticate,
-  upload.single("image"),
+  uploadService.single("image"),
   [
     body("title")
       .optional()

@@ -50,7 +50,8 @@ export class ServicesController {
       const userId = req.user!.id;
       let imageUrl = undefined;
       if (req.file) {
-        imageUrl = "/uploads/" + req.file.filename;
+        // Cloudinary returns the full URL in req.file.path
+        imageUrl = (req.file as any).path;
       } else {
         const { title, description } = req.body;
         const lowerTitle = title.toLowerCase();
@@ -84,7 +85,8 @@ export class ServicesController {
     try {
       const userId = req.user!.id;
       const { id } = req.params;
-      const imageUrl = req.file ? "/uploads/" + req.file.filename : undefined;
+      // Cloudinary returns the full URL in req.file.path
+      const imageUrl = req.file ? (req.file as any).path : undefined;
       const serviceData = { ...req.body, imageUrl };
 
       const service = await servicesService.updateService(

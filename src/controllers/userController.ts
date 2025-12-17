@@ -15,7 +15,8 @@ export class UserController {
         address,
         postalCode,
       } = req.body;
-      const avatarUrl = req.file ? "/uploads/" + req.file.filename : undefined;
+      // Cloudinary returns the full URL in req.file.path
+      const avatarUrl = req.file ? (req.file as any).path : undefined;
 
       const user = await userService.updateProfile(userId, {
         displayName,
