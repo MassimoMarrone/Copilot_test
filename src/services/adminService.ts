@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma";
 import { sendEmail, emailTemplates } from "../emailService";
+import { sendNotification } from "../utils/notification";
 
 export const adminService = {
   async getAllUsers() {
@@ -370,6 +371,20 @@ export const adminService = {
       // Non blocchiamo l'operazione se l'email fallisce
     }
 
+    // Send in-app notification
+    try {
+      await sendNotification(
+        userId,
+        "🎉 Richiesta Approvata!",
+        "Congratulazioni! Sei stato approvato come fornitore. Ora puoi creare i tuoi servizi.",
+        "success",
+        "/provider-dashboard"
+      );
+      console.log(`[AdminService] Notifica in-app approvazione inviata a ${userId}`);
+    } catch (notifError) {
+      console.error(`[AdminService] Errore invio notifica in-app:`, notifError);
+    }
+
     return { success: true, message: "Onboarding approved" };
   },
 
@@ -414,6 +429,20 @@ export const adminService = {
     } catch (emailError) {
       console.error(`[AdminService] Errore invio email rifiuto:`, emailError);
       // Non blocchiamo l'operazione se l'email fallisce
+    }
+
+    // Send in-app notification with rejection reason
+    try {
+      await sendNotification(
+        userId,
+        "❌ Richiesta Non Approvata",
+        `La tua richiesta fornitore non è stata approvata. Motivo: ${reason}`,
+        "error",
+        "/provider-onboarding"
+      );
+      console.log(`[AdminService] Notifica in-app rifiuto inviata a ${userId}`);
+    } catch (notifError) {
+      console.error(`[AdminService] Errore invio notifica in-app:`, notifError);
     }
 
     return { success: true, message: "Onboarding rejected" };
