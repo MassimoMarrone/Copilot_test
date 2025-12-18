@@ -52,12 +52,11 @@ export const uploadOnboardingDocument = async (
   } catch (error: any) {
     logger.error("Error uploading onboarding document:", error);
     logger.error("Error details:", error.message, error.http_code);
-    res
-      .status(500)
-      .json({ 
-        error: "Errore durante il caricamento del documento",
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
-      });
+    res.status(500).json({
+      error: "Errore durante il caricamento del documento",
+      details:
+        process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 };
 
