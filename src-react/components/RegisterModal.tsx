@@ -204,9 +204,29 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
             </p>
             <p className="legal-links">
               Leggi i documenti completi:{" "}
-              <a href="/terms-of-service" target="_blank" rel="noopener noreferrer">Termini e Condizioni</a> |{" "}
-              <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">Privacy Policy</a> |{" "}
-              <a href="/cookie-policy" target="_blank" rel="noopener noreferrer">Cookie Policy</a>
+              <a
+                href="/terms-of-service"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Termini e Condizioni
+              </a>{" "}
+              |{" "}
+              <a
+                href="/privacy-policy"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Privacy Policy
+              </a>{" "}
+              |{" "}
+              <a
+                href="/cookie-policy"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Cookie Policy
+              </a>
             </p>
           </div>
 
@@ -222,9 +242,21 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
               />
               <span>
                 Accetto i{" "}
-                <a href="/terms-of-service" target="_blank" rel="noopener noreferrer">Termini e Condizioni</a>{" "}
+                <a
+                  href="/terms-of-service"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Termini e Condizioni
+                </a>{" "}
                 e la{" "}
-                <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>{" "}
+                <a
+                  href="/privacy-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Privacy Policy
+                </a>{" "}
                 (obbligatorio)
               </span>
             </label>

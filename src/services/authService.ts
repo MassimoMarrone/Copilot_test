@@ -6,6 +6,8 @@ import crypto from "crypto";
 import { sendEmail, emailTemplates } from "../emailService";
 import { authLogger } from "../utils/logger";
 import { prisma } from "../lib/prisma";
+import { consentService } from "./consentService";
+
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-in-production";
@@ -90,6 +92,23 @@ export class AuthService {
         verificationToken,
         verificationTokenExpires,
       },
+    });
+
+    // Record consent for terms and privacy policy
+    await consentService.recordConsent({
+      userId: user.id,
+      consentType: "terms_of_service",
+      ipAddress: data.ipAddress,
+      userAgent: data.userAgent,
+      acceptanceMethod: "checkbox",
+    });
+
+    await consentService.recordConsent({
+      userId: user.id,
+      consentType: "privacy_policy",
+      ipAddress: data.ipAddress,
+      userAgent: data.userAgent,
+      acceptanceMethod: "checkbox",
     });
 
     // Log registrazione
@@ -323,7 +342,9 @@ export class AuthService {
 
   async becomeProvider(
     userId: string,
-    acceptedProviderTerms: boolean | string
+    acceptedProviderTerms: boolean | string,
+    ipAddress?: string,
+    userAgent?: string
   ) {
     if (acceptedProviderTerms !== true && acceptedProviderTerms !== "true") {
       throw new Error("You must accept the Provider Terms & Conditions");
@@ -346,6 +367,15 @@ export class AuthService {
         isProvider: true,
         acceptedProviderTerms: true,
       },
+    });
+
+    // Record provider contract consent for legal compliance
+    await consentService.recordConsent({
+      userId: updatedUser.id,
+      consentType: "provider_contract",
+      ipAddress,
+      userAgent,
+      acceptanceMethod: "checkbox",
     });
 
     const token = this.generateToken(updatedUser);

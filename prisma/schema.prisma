@@ -85,6 +85,7 @@ model User {
   reviewsReceived       Review[]  @relation("ProviderReviews")
   sentMessages          ChatMessage[]
   notifications         Notification[]
+  consentRecords        ConsentRecord[]
 }
 
 model Service {
@@ -197,4 +198,35 @@ model Notification {
   read      Boolean   @default(false)
   createdAt DateTime  @default(now())
   link      String?
+}
+
+// ===== CONSENT RECORDS =====
+// Traccia tutte le accettazioni di termini/contratti per validità legale
+model ConsentRecord {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  
+  // Tipo di consenso
+  consentType     String    // "terms_of_service", "privacy_policy", "provider_contract", "cookie_policy"
+  
+  // Versione del documento accettato
+  documentVersion String    // es. "1.0", "2025-12-18"
+  documentHash    String?   // Hash SHA256 del documento per prova immutabilità
+  
+  // Dettagli accettazione
+  acceptedAt      DateTime  @default(now())
+  ipAddress       String?   // IP da cui ha accettato
+  userAgent       String?   // Browser/dispositivo
+  
+  // Metodo di accettazione
+  acceptanceMethod String   // "checkbox", "button_click", "signature"
+  
+  // Stato (per revoca GDPR)
+  isActive        Boolean   @default(true)
+  revokedAt       DateTime?
+  revokedReason   String?
+  
+  @@index([userId])
+  @@index([consentType])
 }

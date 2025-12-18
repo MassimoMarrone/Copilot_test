@@ -25,7 +25,7 @@ function App() {
         <Routes>
           {/* Verify email page - outside Layout for cleaner look */}
           <Route path="/verify-email" element={<VerifyEmailPage />} />
-          
+
           {/* Legal pages - outside Layout for cleaner look */}
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />

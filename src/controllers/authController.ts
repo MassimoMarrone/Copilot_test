@@ -2,10 +2,26 @@ import { Request, Response } from "express";
 import { authService } from "../services/authService";
 import { setAuthCookie, clearAuthCookie } from "../utils/cookies";
 
+// Helper to get client IP address
+function getClientIp(req: Request): string {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string") {
+    return forwarded.split(",")[0].trim();
+  }
+  return req.ip || req.socket.remoteAddress || "unknown";
+}
+
 export class AuthController {
   async register(req: Request, res: Response): Promise<void> {
     try {
-      const result = await authService.register(req.body);
+      // Add IP and user agent for consent tracking
+      const registrationData = {
+        ...req.body,
+        ipAddress: getClientIp(req),
+        userAgent: req.headers["user-agent"] || "unknown",
+      };
+      
+      const result = await authService.register(registrationData);
       res.json({ success: true, message: result.message });
     } catch (error: any) {
       console.error("Registration error:", error);
@@ -138,9 +154,14 @@ export class AuthController {
   async becomeProvider(req: Request, res: Response): Promise<void> {
     try {
       const { acceptedProviderTerms } = req.body;
+      const ipAddress = getClientIp(req);
+      const userAgent = req.headers["user-agent"];
+      
       const { token } = await authService.becomeProvider(
         req.user!.id,
-        acceptedProviderTerms
+        acceptedProviderTerms,
+        ipAddress,
+        userAgent
       );
 
       setAuthCookie(res, req, token);

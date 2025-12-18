@@ -19,14 +19,15 @@ const LandingPage: React.FC<LandingPageProps> = ({
   return (
     <>
       {/* Hero Section - Premium Full Width */}
-      <div className="hero-section full-width-hero" style={{ backgroundImage: `url(${heroImage})` }}>
+      <div
+        className="hero-section full-width-hero"
+        style={{ backgroundImage: `url(${heroImage})` }}
+      >
         <div className="hero-overlay"></div>
         <div className="container">
           <div className="hero-content-centered">
             <h1 className="hero-title">domy</h1>
-            <p className="hero-subtitle">
-              IL TUO SPAZIO, PERFETTO
-            </p>
+            <p className="hero-subtitle">IL TUO SPAZIO, PERFETTO</p>
             <button
               className="btn btn-primary btn-large hero-cta"
               onClick={() => navigate("/services")}
