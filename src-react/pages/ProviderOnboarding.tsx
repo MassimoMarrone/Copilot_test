@@ -70,9 +70,11 @@ const validators = {
     const today = new Date();
     const age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) 
-      ? age - 1 
-      : age;
+    const actualAge =
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+        ? age - 1
+        : age;
     if (actualAge < 18) {
       return "Devi essere maggiorenne per registrarti come fornitore";
     }
@@ -324,53 +326,60 @@ const ProviderOnboarding: React.FC = () => {
   // Validate all fields for a specific step
   const validateStep = (step: number): boolean => {
     const errors: Record<string, string> = {};
-    
+
     if (step === 1) {
-      if (!formData.firstName.trim()) errors.firstName = "Il nome è obbligatorio";
-      if (!formData.lastName.trim()) errors.lastName = "Il cognome è obbligatorio";
-      
+      if (!formData.firstName.trim())
+        errors.firstName = "Il nome è obbligatorio";
+      if (!formData.lastName.trim())
+        errors.lastName = "Il cognome è obbligatorio";
+
       const dobError = validators.dateOfBirth(formData.dateOfBirth);
       if (dobError) errors.dateOfBirth = dobError;
-      
+
       const cfError = validators.fiscalCode(formData.fiscalCode);
       if (cfError) errors.fiscalCode = cfError;
-      
+
       const vatError = validators.vatNumber(formData.vatNumber);
       if (vatError) errors.vatNumber = vatError;
-      
+
       const phoneError = validators.phone(formData.phone);
       if (phoneError) errors.phone = phoneError;
-      
-      if (!formData.address.trim()) errors.address = "L'indirizzo è obbligatorio";
+
+      if (!formData.address.trim())
+        errors.address = "L'indirizzo è obbligatorio";
       if (!formData.city.trim()) errors.city = "La città è obbligatoria";
-      
+
       const capError = validators.postalCode(formData.postalCode);
       if (capError) errors.postalCode = capError;
     }
-    
+
     if (step === 2) {
-      const docNumError = validators.idDocumentNumber(formData.idDocumentNumber);
+      const docNumError = validators.idDocumentNumber(
+        formData.idDocumentNumber
+      );
       if (docNumError) errors.idDocumentNumber = docNumError;
-      
-      const docExpError = validators.idDocumentExpiry(formData.idDocumentExpiry);
+
+      const docExpError = validators.idDocumentExpiry(
+        formData.idDocumentExpiry
+      );
       if (docExpError) errors.idDocumentExpiry = docExpError;
     }
-    
+
     if (step === 3) {
       const ibanError = validators.iban(formData.iban);
       if (ibanError) errors.iban = ibanError;
-      
+
       if (!formData.bankAccountHolder.trim()) {
         errors.bankAccountHolder = "L'intestatario del conto è obbligatorio";
       }
     }
-    
+
     if (step === 4) {
       if (!formData.workingZones.trim()) {
         errors.workingZones = "Le zone di lavoro sono obbligatorie";
       }
     }
-    
+
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -380,7 +389,7 @@ const ProviderOnboarding: React.FC = () => {
     const value = formData[fieldName as keyof typeof formData];
     if (typeof value === "string") {
       const error = validateField(fieldName, value);
-      setFieldErrors(prev => {
+      setFieldErrors((prev) => {
         if (error) {
           return { ...prev, [fieldName]: error };
         } else {
@@ -533,119 +542,169 @@ const ProviderOnboarding: React.FC = () => {
         <div className="step-content">
           <h2>Dati Personali</h2>
           <div className="form-grid">
-            <div className={`form-group ${fieldErrors.firstName ? 'has-error' : ''}`}>
+            <div
+              className={`form-group ${
+                fieldErrors.firstName ? "has-error" : ""
+              }`}
+            >
               <label>Nome *</label>
               <input
                 type="text"
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleInputChange}
-                onBlur={() => handleFieldBlur('firstName')}
+                onBlur={() => handleFieldBlur("firstName")}
                 required
               />
-              {fieldErrors.firstName && <span className="field-error">{fieldErrors.firstName}</span>}
+              {fieldErrors.firstName && (
+                <span className="field-error">{fieldErrors.firstName}</span>
+              )}
             </div>
-            <div className={`form-group ${fieldErrors.lastName ? 'has-error' : ''}`}>
+            <div
+              className={`form-group ${
+                fieldErrors.lastName ? "has-error" : ""
+              }`}
+            >
               <label>Cognome *</label>
               <input
                 type="text"
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleInputChange}
-                onBlur={() => handleFieldBlur('lastName')}
+                onBlur={() => handleFieldBlur("lastName")}
                 required
               />
-              {fieldErrors.lastName && <span className="field-error">{fieldErrors.lastName}</span>}
+              {fieldErrors.lastName && (
+                <span className="field-error">{fieldErrors.lastName}</span>
+              )}
             </div>
-            <div className={`form-group ${fieldErrors.dateOfBirth ? 'has-error' : ''}`}>
+            <div
+              className={`form-group ${
+                fieldErrors.dateOfBirth ? "has-error" : ""
+              }`}
+            >
               <label>Data di Nascita *</label>
               <input
                 type="date"
                 name="dateOfBirth"
                 value={formData.dateOfBirth}
                 onChange={handleInputChange}
-                onBlur={() => handleFieldBlur('dateOfBirth')}
+                onBlur={() => handleFieldBlur("dateOfBirth")}
                 required
               />
-              {fieldErrors.dateOfBirth && <span className="field-error">{fieldErrors.dateOfBirth}</span>}
+              {fieldErrors.dateOfBirth && (
+                <span className="field-error">{fieldErrors.dateOfBirth}</span>
+              )}
             </div>
-            <div className={`form-group ${fieldErrors.fiscalCode ? 'has-error' : ''}`}>
+            <div
+              className={`form-group ${
+                fieldErrors.fiscalCode ? "has-error" : ""
+              }`}
+            >
               <label>Codice Fiscale *</label>
               <input
                 type="text"
                 name="fiscalCode"
                 value={formData.fiscalCode}
                 onChange={handleInputChange}
-                onBlur={() => handleFieldBlur('fiscalCode')}
+                onBlur={() => handleFieldBlur("fiscalCode")}
                 maxLength={16}
                 placeholder="RSSMRA85M01H501Z"
                 required
               />
-              {fieldErrors.fiscalCode && <span className="field-error">{fieldErrors.fiscalCode}</span>}
+              {fieldErrors.fiscalCode && (
+                <span className="field-error">{fieldErrors.fiscalCode}</span>
+              )}
             </div>
-            <div className={`form-group ${fieldErrors.vatNumber ? 'has-error' : ''}`}>
+            <div
+              className={`form-group ${
+                fieldErrors.vatNumber ? "has-error" : ""
+              }`}
+            >
               <label>Partita IVA (opzionale)</label>
               <input
                 type="text"
                 name="vatNumber"
                 value={formData.vatNumber}
                 onChange={handleInputChange}
-                onBlur={() => handleFieldBlur('vatNumber')}
+                onBlur={() => handleFieldBlur("vatNumber")}
                 maxLength={11}
                 placeholder="12345678901"
               />
-              {fieldErrors.vatNumber && <span className="field-error">{fieldErrors.vatNumber}</span>}
+              {fieldErrors.vatNumber && (
+                <span className="field-error">{fieldErrors.vatNumber}</span>
+              )}
             </div>
-            <div className={`form-group ${fieldErrors.phone ? 'has-error' : ''}`}>
+            <div
+              className={`form-group ${fieldErrors.phone ? "has-error" : ""}`}
+            >
               <label>Telefono *</label>
               <input
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
-                onBlur={() => handleFieldBlur('phone')}
+                onBlur={() => handleFieldBlur("phone")}
                 placeholder="+39 333 1234567"
                 required
               />
-              {fieldErrors.phone && <span className="field-error">{fieldErrors.phone}</span>}
+              {fieldErrors.phone && (
+                <span className="field-error">{fieldErrors.phone}</span>
+              )}
             </div>
-            <div className={`form-group full-width ${fieldErrors.address ? 'has-error' : ''}`}>
+            <div
+              className={`form-group full-width ${
+                fieldErrors.address ? "has-error" : ""
+              }`}
+            >
               <label>Indirizzo *</label>
               <input
                 type="text"
                 name="address"
                 value={formData.address}
                 onChange={handleInputChange}
-                onBlur={() => handleFieldBlur('address')}
+                onBlur={() => handleFieldBlur("address")}
                 required
               />
-              {fieldErrors.address && <span className="field-error">{fieldErrors.address}</span>}
+              {fieldErrors.address && (
+                <span className="field-error">{fieldErrors.address}</span>
+              )}
             </div>
-            <div className={`form-group ${fieldErrors.city ? 'has-error' : ''}`}>
+            <div
+              className={`form-group ${fieldErrors.city ? "has-error" : ""}`}
+            >
               <label>Città *</label>
               <input
                 type="text"
                 name="city"
                 value={formData.city}
                 onChange={handleInputChange}
-                onBlur={() => handleFieldBlur('city')}
+                onBlur={() => handleFieldBlur("city")}
                 required
               />
-              {fieldErrors.city && <span className="field-error">{fieldErrors.city}</span>}
+              {fieldErrors.city && (
+                <span className="field-error">{fieldErrors.city}</span>
+              )}
             </div>
-            <div className={`form-group ${fieldErrors.postalCode ? 'has-error' : ''}`}>
+            <div
+              className={`form-group ${
+                fieldErrors.postalCode ? "has-error" : ""
+              }`}
+            >
               <label>CAP *</label>
               <input
                 type="text"
                 name="postalCode"
                 value={formData.postalCode}
                 onChange={handleInputChange}
-                onBlur={() => handleFieldBlur('postalCode')}
+                onBlur={() => handleFieldBlur("postalCode")}
                 maxLength={5}
                 placeholder="00100"
                 required
               />
-              {fieldErrors.postalCode && <span className="field-error">{fieldErrors.postalCode}</span>}
+              {fieldErrors.postalCode && (
+                <span className="field-error">{fieldErrors.postalCode}</span>
+              )}
             </div>
           </div>
           <div className="step-actions">
@@ -677,29 +736,45 @@ const ProviderOnboarding: React.FC = () => {
                 <option value="passaporto">Passaporto</option>
               </select>
             </div>
-            <div className={`form-group ${fieldErrors.idDocumentNumber ? 'has-error' : ''}`}>
+            <div
+              className={`form-group ${
+                fieldErrors.idDocumentNumber ? "has-error" : ""
+              }`}
+            >
               <label>Numero Documento *</label>
               <input
                 type="text"
                 name="idDocumentNumber"
                 value={formData.idDocumentNumber}
                 onChange={handleInputChange}
-                onBlur={() => handleFieldBlur('idDocumentNumber')}
+                onBlur={() => handleFieldBlur("idDocumentNumber")}
                 required
               />
-              {fieldErrors.idDocumentNumber && <span className="field-error">{fieldErrors.idDocumentNumber}</span>}
+              {fieldErrors.idDocumentNumber && (
+                <span className="field-error">
+                  {fieldErrors.idDocumentNumber}
+                </span>
+              )}
             </div>
-            <div className={`form-group ${fieldErrors.idDocumentExpiry ? 'has-error' : ''}`}>
+            <div
+              className={`form-group ${
+                fieldErrors.idDocumentExpiry ? "has-error" : ""
+              }`}
+            >
               <label>Scadenza Documento *</label>
               <input
                 type="date"
                 name="idDocumentExpiry"
                 value={formData.idDocumentExpiry}
                 onChange={handleInputChange}
-                onBlur={() => handleFieldBlur('idDocumentExpiry')}
+                onBlur={() => handleFieldBlur("idDocumentExpiry")}
                 required
               />
-              {fieldErrors.idDocumentExpiry && <span className="field-error">{fieldErrors.idDocumentExpiry}</span>}
+              {fieldErrors.idDocumentExpiry && (
+                <span className="field-error">
+                  {fieldErrors.idDocumentExpiry}
+                </span>
+              )}
             </div>
           </div>
 
@@ -768,30 +843,44 @@ const ProviderOnboarding: React.FC = () => {
             servizi.
           </p>
           <div className="form-grid">
-            <div className={`form-group full-width ${fieldErrors.iban ? 'has-error' : ''}`}>
+            <div
+              className={`form-group full-width ${
+                fieldErrors.iban ? "has-error" : ""
+              }`}
+            >
               <label>IBAN *</label>
               <input
                 type="text"
                 name="iban"
                 value={formData.iban}
                 onChange={handleInputChange}
-                onBlur={() => handleFieldBlur('iban')}
+                onBlur={() => handleFieldBlur("iban")}
                 placeholder="IT60X0542811101000000123456"
                 required
               />
-              {fieldErrors.iban && <span className="field-error">{fieldErrors.iban}</span>}
+              {fieldErrors.iban && (
+                <span className="field-error">{fieldErrors.iban}</span>
+              )}
             </div>
-            <div className={`form-group full-width ${fieldErrors.bankAccountHolder ? 'has-error' : ''}`}>
+            <div
+              className={`form-group full-width ${
+                fieldErrors.bankAccountHolder ? "has-error" : ""
+              }`}
+            >
               <label>Intestatario Conto *</label>
               <input
                 type="text"
                 name="bankAccountHolder"
                 value={formData.bankAccountHolder}
                 onChange={handleInputChange}
-                onBlur={() => handleFieldBlur('bankAccountHolder')}
+                onBlur={() => handleFieldBlur("bankAccountHolder")}
                 required
               />
-              {fieldErrors.bankAccountHolder && <span className="field-error">{fieldErrors.bankAccountHolder}</span>}
+              {fieldErrors.bankAccountHolder && (
+                <span className="field-error">
+                  {fieldErrors.bankAccountHolder}
+                </span>
+              )}
             </div>
           </div>
           <div className="step-actions">
