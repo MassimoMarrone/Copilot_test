@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma";
+import { sendEmail, emailTemplates } from "../emailService";
 
 export const adminService = {
   async getAllUsers() {
@@ -343,6 +344,14 @@ export const adminService = {
       },
     });
 
+    // Send approval email
+    const userName = user.firstName || user.email.split("@")[0];
+    sendEmail(
+      user.email,
+      "🎉 Sei stato approvato come Fornitore Domy!",
+      emailTemplates.onboardingApproved(userName)
+    );
+
     return { success: true, message: "Onboarding approved" };
   },
 
@@ -365,6 +374,14 @@ export const adminService = {
         onboardingRejectionReason: reason,
       },
     });
+
+    // Send rejection email
+    const userName = user.firstName || user.email.split("@")[0];
+    sendEmail(
+      user.email,
+      "Aggiornamento sulla tua richiesta Fornitore Domy",
+      emailTemplates.onboardingRejected(userName, reason)
+    );
 
     return { success: true, message: "Onboarding rejected" };
   },

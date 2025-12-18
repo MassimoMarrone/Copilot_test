@@ -231,8 +231,11 @@ const ProviderOnboarding: React.FC = () => {
               : "",
           });
 
-          // Set current step based on progress
-          if (data.user.onboardingStep) {
+          // Set current step based on progress or status
+          if (data.user.onboardingStatus === "rejected") {
+            // Show rejection message first (step 0)
+            setCurrentStep(0);
+          } else if (data.user.onboardingStep) {
             setCurrentStep(Math.min(data.user.onboardingStep + 1, 4));
           }
         }
@@ -475,7 +478,7 @@ const ProviderOnboarding: React.FC = () => {
         <div className="onboarding-review">
           <h2>⏳ In Revisione</h2>
           <p>
-            I tuoi documenti sono in fase di revisione. Riceverai una notifica
+            I tuoi documenti sono in fase di revisione. Riceverai una email
             quando il processo sarà completato.
           </p>
         </div>
@@ -483,8 +486,11 @@ const ProviderOnboarding: React.FC = () => {
     );
   }
 
-  // If rejected
-  if (status?.user.onboardingStatus === "rejected") {
+  // If rejected - show form to allow modifications
+  const isRejected = status?.user.onboardingStatus === "rejected";
+
+  if (isRejected && currentStep === 0) {
+    // Show rejection message first
     return (
       <div className="onboarding-container">
         <div className="onboarding-rejected">
@@ -495,14 +501,18 @@ const ProviderOnboarding: React.FC = () => {
               <strong>Motivo:</strong> {status.user.onboardingRejectionReason}
             </div>
           )}
+          <p className="rejection-help">
+            Puoi correggere i problemi indicati e inviare nuovamente la
+            richiesta.
+          </p>
           <button
             className="btn-primary"
             onClick={() => {
-              // Reset and allow retry
+              // Start editing from step 1
               setCurrentStep(1);
             }}
           >
-            Riprova
+            Modifica Richiesta
           </button>
         </div>
       </div>
@@ -512,6 +522,15 @@ const ProviderOnboarding: React.FC = () => {
   return (
     <div className="onboarding-container">
       <h1>Completa il tuo Profilo Provider</h1>
+
+      {/* Rejection warning banner */}
+      {isRejected && currentStep > 0 && (
+        <div className="alert alert-warning rejection-banner">
+          <strong>⚠️ Richiesta precedentemente rifiutata</strong>
+          <p>Motivo: {status?.user.onboardingRejectionReason}</p>
+          <p>Correggi i dati e invia nuovamente la richiesta.</p>
+        </div>
+      )}
 
       {/* Progress indicator */}
       <div className="progress-steps">

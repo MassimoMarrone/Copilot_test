@@ -119,4 +119,45 @@ export const emailTemplates = {
       <a href="http://localhost:3000/bookings" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Lascia una Recensione</a>
     </div>
   `,
+  onboardingApproved: (name: string) => `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #28a745;">🎉 Congratulazioni! Sei un Fornitore Domy</h2>
+      <p>Ciao ${name},</p>
+      <p>La tua richiesta per diventare fornitore è stata <strong>approvata</strong>!</p>
+      <p>Ora puoi:</p>
+      <ul>
+        <li>Creare e pubblicare i tuoi servizi</li>
+        <li>Ricevere prenotazioni dai clienti</li>
+        <li>Gestire il tuo calendario di disponibilità</li>
+      </ul>
+      <p style="text-align: center; margin: 30px 0;">
+        <a href="${
+          process.env.FRONTEND_URL || "http://localhost:3000"
+        }/provider-dashboard" style="display: inline-block; padding: 12px 24px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Vai alla Dashboard Fornitore</a>
+      </p>
+      <p>Benvenuto nel team Domy! 🏠</p>
+      <br>
+      <p>Il team di Domy</p>
+    </div>
+  `,
+  onboardingRejected: (name: string, reason: string) => `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #dc3545;">Richiesta Fornitore Non Approvata</h2>
+      <p>Ciao ${name},</p>
+      <p>Purtroppo la tua richiesta per diventare fornitore non è stata approvata.</p>
+      <p><strong>Motivo:</strong></p>
+      <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+        ${reason}
+      </div>
+      <p>Non preoccuparti! Puoi correggere i problemi indicati e inviare nuovamente la richiesta.</p>
+      <p style="text-align: center; margin: 30px 0;">
+        <a href="${
+          process.env.FRONTEND_URL || "http://localhost:3000"
+        }/provider-onboarding" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Modifica Richiesta</a>
+      </p>
+      <p>Se hai domande, non esitare a contattarci.</p>
+      <br>
+      <p>Il team di Domy</p>
+    </div>
+  `,
 };

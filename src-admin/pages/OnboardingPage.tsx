@@ -49,7 +49,8 @@ interface OnboardingDetails {
 const OnboardingPage: React.FC = () => {
   const [requests, setRequests] = useState<OnboardingRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedRequest, setSelectedRequest] = useState<OnboardingDetails | null>(null);
+  const [selectedRequest, setSelectedRequest] =
+    useState<OnboardingDetails | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -96,10 +97,13 @@ const OnboardingPage: React.FC = () => {
     if (!selectedRequest) return;
     setActionLoading(true);
     try {
-      const response = await fetch(`/api/admin/onboarding/${selectedRequest.id}/approve`, {
-        method: "POST",
-        credentials: "include",
-      });
+      const response = await fetch(
+        `/api/admin/onboarding/${selectedRequest.id}/approve`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
       if (response.ok) {
         alert("Fornitore approvato con successo!");
         setSelectedRequest(null);
@@ -122,12 +126,15 @@ const OnboardingPage: React.FC = () => {
     }
     setActionLoading(true);
     try {
-      const response = await fetch(`/api/admin/onboarding/${selectedRequest.id}/reject`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason: rejectionReason }),
-      });
+      const response = await fetch(
+        `/api/admin/onboarding/${selectedRequest.id}/reject`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reason: rejectionReason }),
+        }
+      );
       if (response.ok) {
         alert("Richiesta rifiutata");
         setSelectedRequest(null);
@@ -148,12 +155,18 @@ const OnboardingPage: React.FC = () => {
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { label: string; className: string }> = {
       pending: { label: "In attesa", className: "badge-warning" },
-      documents_uploaded: { label: "Documenti caricati", className: "badge-info" },
+      documents_uploaded: {
+        label: "Documenti caricati",
+        className: "badge-info",
+      },
       under_review: { label: "In revisione", className: "badge-primary" },
       approved: { label: "Approvato", className: "badge-success" },
       rejected: { label: "Rifiutato", className: "badge-danger" },
     };
-    const badge = badges[status] || { label: status, className: "badge-secondary" };
+    const badge = badges[status] || {
+      label: status,
+      className: "badge-secondary",
+    };
     return <span className={`badge ${badge.className}`}>{badge.label}</span>;
   };
 
@@ -188,7 +201,9 @@ const OnboardingPage: React.FC = () => {
               {requests.map((request) => (
                 <li
                   key={request.id}
-                  className={`request-item ${selectedRequest?.id === request.id ? "selected" : ""}`}
+                  className={`request-item ${
+                    selectedRequest?.id === request.id ? "selected" : ""
+                  }`}
                   onClick={() => fetchDetails(request.id)}
                 >
                   <div className="request-name">
@@ -200,7 +215,9 @@ const OnboardingPage: React.FC = () => {
                   </div>
                   <div className="request-status">
                     {getStatusBadge(request.onboardingStatus)}
-                    <span className="step-indicator">Step {request.onboardingStep}/4</span>
+                    <span className="step-indicator">
+                      Step {request.onboardingStep}/4
+                    </span>
                   </div>
                 </li>
               ))}
@@ -215,41 +232,82 @@ const OnboardingPage: React.FC = () => {
           ) : selectedRequest ? (
             <>
               <h2>Dettagli Richiesta</h2>
-              
+
               <div className="details-section">
                 <h3>👤 Dati Personali</h3>
                 <div className="details-grid">
-                  <div><strong>Nome:</strong> {selectedRequest.firstName || "N/D"}</div>
-                  <div><strong>Cognome:</strong> {selectedRequest.lastName || "N/D"}</div>
-                  <div><strong>Email:</strong> {selectedRequest.email}</div>
-                  <div><strong>Telefono:</strong> {selectedRequest.phone || "N/D"}</div>
-                  <div><strong>Data di nascita:</strong> {selectedRequest.dateOfBirth ? formatDate(selectedRequest.dateOfBirth) : "N/D"}</div>
-                  <div><strong>Codice Fiscale:</strong> {selectedRequest.fiscalCode || "N/D"}</div>
-                  <div><strong>P.IVA:</strong> {selectedRequest.vatNumber || "N/D"}</div>
+                  <div>
+                    <strong>Nome:</strong> {selectedRequest.firstName || "N/D"}
+                  </div>
+                  <div>
+                    <strong>Cognome:</strong>{" "}
+                    {selectedRequest.lastName || "N/D"}
+                  </div>
+                  <div>
+                    <strong>Email:</strong> {selectedRequest.email}
+                  </div>
+                  <div>
+                    <strong>Telefono:</strong> {selectedRequest.phone || "N/D"}
+                  </div>
+                  <div>
+                    <strong>Data di nascita:</strong>{" "}
+                    {selectedRequest.dateOfBirth
+                      ? formatDate(selectedRequest.dateOfBirth)
+                      : "N/D"}
+                  </div>
+                  <div>
+                    <strong>Codice Fiscale:</strong>{" "}
+                    {selectedRequest.fiscalCode || "N/D"}
+                  </div>
+                  <div>
+                    <strong>P.IVA:</strong> {selectedRequest.vatNumber || "N/D"}
+                  </div>
                 </div>
               </div>
 
               <div className="details-section">
                 <h3>📍 Indirizzo</h3>
                 <div className="details-grid">
-                  <div><strong>Indirizzo:</strong> {selectedRequest.address || "N/D"}</div>
-                  <div><strong>Città:</strong> {selectedRequest.city || "N/D"}</div>
-                  <div><strong>CAP:</strong> {selectedRequest.postalCode || "N/D"}</div>
+                  <div>
+                    <strong>Indirizzo:</strong>{" "}
+                    {selectedRequest.address || "N/D"}
+                  </div>
+                  <div>
+                    <strong>Città:</strong> {selectedRequest.city || "N/D"}
+                  </div>
+                  <div>
+                    <strong>CAP:</strong> {selectedRequest.postalCode || "N/D"}
+                  </div>
                 </div>
               </div>
 
               <div className="details-section">
                 <h3>🪪 Documento di Identità</h3>
                 <div className="details-grid">
-                  <div><strong>Tipo:</strong> {selectedRequest.idDocumentType || "N/D"}</div>
-                  <div><strong>Numero:</strong> {selectedRequest.idDocumentNumber || "N/D"}</div>
-                  <div><strong>Scadenza:</strong> {selectedRequest.idDocumentExpiry ? formatDate(selectedRequest.idDocumentExpiry) : "N/D"}</div>
+                  <div>
+                    <strong>Tipo:</strong>{" "}
+                    {selectedRequest.idDocumentType || "N/D"}
+                  </div>
+                  <div>
+                    <strong>Numero:</strong>{" "}
+                    {selectedRequest.idDocumentNumber || "N/D"}
+                  </div>
+                  <div>
+                    <strong>Scadenza:</strong>{" "}
+                    {selectedRequest.idDocumentExpiry
+                      ? formatDate(selectedRequest.idDocumentExpiry)
+                      : "N/D"}
+                  </div>
                 </div>
                 <div className="document-images">
                   {selectedRequest.idDocumentFrontUrl && (
                     <div className="document-preview">
                       <strong>Fronte:</strong>
-                      <a href={selectedRequest.idDocumentFrontUrl} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={selectedRequest.idDocumentFrontUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         Visualizza documento
                       </a>
                     </div>
@@ -257,7 +315,11 @@ const OnboardingPage: React.FC = () => {
                   {selectedRequest.idDocumentBackUrl && (
                     <div className="document-preview">
                       <strong>Retro:</strong>
-                      <a href={selectedRequest.idDocumentBackUrl} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={selectedRequest.idDocumentBackUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         Visualizza documento
                       </a>
                     </div>
@@ -268,19 +330,41 @@ const OnboardingPage: React.FC = () => {
               <div className="details-section">
                 <h3>🏦 Dati Bancari</h3>
                 <div className="details-grid">
-                  <div><strong>IBAN:</strong> {selectedRequest.iban || "N/D"}</div>
-                  <div><strong>Intestatario:</strong> {selectedRequest.bankAccountHolder || "N/D"}</div>
+                  <div>
+                    <strong>IBAN:</strong> {selectedRequest.iban || "N/D"}
+                  </div>
+                  <div>
+                    <strong>Intestatario:</strong>{" "}
+                    {selectedRequest.bankAccountHolder || "N/D"}
+                  </div>
                 </div>
               </div>
 
               <div className="details-section">
                 <h3>🔧 Informazioni Lavorative</h3>
                 <div className="details-grid">
-                  <div><strong>Zone di lavoro:</strong> {selectedRequest.workingZones || "N/D"}</div>
-                  <div><strong>Anni esperienza:</strong> {selectedRequest.yearsOfExperience || "N/D"}</div>
-                  <div><strong>Attrezzatura propria:</strong> {selectedRequest.hasOwnEquipment ? "Sì" : "No"}</div>
-                  <div><strong>N. Assicurazione:</strong> {selectedRequest.insuranceNumber || "N/D"}</div>
-                  <div><strong>Scadenza assicurazione:</strong> {selectedRequest.insuranceExpiry ? formatDate(selectedRequest.insuranceExpiry) : "N/D"}</div>
+                  <div>
+                    <strong>Zone di lavoro:</strong>{" "}
+                    {selectedRequest.workingZones || "N/D"}
+                  </div>
+                  <div>
+                    <strong>Anni esperienza:</strong>{" "}
+                    {selectedRequest.yearsOfExperience || "N/D"}
+                  </div>
+                  <div>
+                    <strong>Attrezzatura propria:</strong>{" "}
+                    {selectedRequest.hasOwnEquipment ? "Sì" : "No"}
+                  </div>
+                  <div>
+                    <strong>N. Assicurazione:</strong>{" "}
+                    {selectedRequest.insuranceNumber || "N/D"}
+                  </div>
+                  <div>
+                    <strong>Scadenza assicurazione:</strong>{" "}
+                    {selectedRequest.insuranceExpiry
+                      ? formatDate(selectedRequest.insuranceExpiry)
+                      : "N/D"}
+                  </div>
                 </div>
               </div>
 
@@ -314,7 +398,10 @@ const OnboardingPage: React.FC = () => {
 
       {/* Modal Rifiuto */}
       {showRejectModal && (
-        <div className="modal-backdrop" onClick={() => setShowRejectModal(false)}>
+        <div
+          className="modal-backdrop"
+          onClick={() => setShowRejectModal(false)}
+        >
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>Rifiuta Richiesta</h3>
             <p>Inserisci il motivo del rifiuto:</p>
@@ -325,10 +412,17 @@ const OnboardingPage: React.FC = () => {
               rows={4}
             />
             <div className="modal-actions">
-              <button className="btn btn-secondary" onClick={() => setShowRejectModal(false)}>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowRejectModal(false)}
+              >
                 Annulla
               </button>
-              <button className="btn btn-danger" onClick={handleReject} disabled={actionLoading}>
+              <button
+                className="btn btn-danger"
+                onClick={handleReject}
+                disabled={actionLoading}
+              >
                 Conferma Rifiuto
               </button>
             </div>
