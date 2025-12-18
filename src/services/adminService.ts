@@ -380,7 +380,9 @@ export const adminService = {
         "success",
         "/provider-dashboard"
       );
-      console.log(`[AdminService] Notifica in-app approvazione inviata a ${userId}`);
+      console.log(
+        `[AdminService] Notifica in-app approvazione inviata a ${userId}`
+      );
     } catch (notifError) {
       console.error(`[AdminService] Errore invio notifica in-app:`, notifError);
     }

@@ -80,12 +80,14 @@ Applicazione web moderna per la prenotazione di servizi di pulizia professionale
 
 - **Frontend**: React 19, Vite 7, TypeScript, React Router 7, React DatePicker, Leaflet Maps.
 - **Backend**: Node.js, Express 5, TypeScript.
-- **Database**: PostgreSQL (Neon) con Prisma ORM.
+- **Database**: PostgreSQL (Neon) con Prisma ORM + backup PITR automatici.
 - **Real-time**: Socket.IO per chat e notifiche.
 - **Pagamenti**: Stripe API con sistema escrow.
-- **Email**: Nodemailer con supporto SMTP.
-- **Auth**: JWT + Google OAuth.
+- **Email**: Brevo (Sendinblue) API per email transazionali.
+- **Storage**: Cloudinary per immagini e documenti.
+- **Auth**: JWT (HttpOnly Cookie) + Google OAuth.
 - **Sicurezza**: Helmet, Rate Limiting, Express Validator, BCrypt.
+- **Monitoring**: Sentry per error tracking, Winston per logging.
 - **Deploy**: Render.com con build automatizzati.
 
 ## 🚀 Installazione e Avvio
@@ -117,11 +119,39 @@ Applicazione web moderna per la prenotazione di servizi di pulizia professionale
    Copia il file `.env.example` in `.env` e configura le variabili:
 
    ```env
+   # Database
    DATABASE_URL="postgresql://..."
-   JWT_SECRET="your-secret"
+   
+   # Auth
+   JWT_SECRET="your-secret-key-min-32-chars"
+   
+   # Stripe (usa sk_test_ per development, sk_live_ per produzione)
    STRIPE_SECRET_KEY="sk_..."
+   STRIPE_PUBLISHABLE_KEY="pk_..."
    STRIPE_WEBHOOK_SECRET="whsec_..."
-   RESEND_API_KEY="re_..."
+   
+   # Email (Brevo/Sendinblue)
+   BREVO_API_KEY="xkeysib-..."
+   MAIL_FROM="noreply@tuodominio.it"
+   MAIL_FROM_NAME="Domy Platform"
+   
+   # Cloudinary (per upload immagini/documenti)
+   CLOUDINARY_CLOUD_NAME="..."
+   CLOUDINARY_API_KEY="..."
+   CLOUDINARY_API_SECRET="..."
+   
+   # Google OAuth (opzionale)
+   GOOGLE_CLIENT_ID="..."
+   GOOGLE_CLIENT_SECRET="..."
+   
+   # Google Maps
+   GOOGLE_MAPS_API_KEY="..."
+   
+   # Monitoring (opzionale, solo produzione)
+   SENTRY_DSN="https://..."
+   
+   # URLs
+   FRONTEND_URL="http://localhost:5173"  # o URL produzione
    ```
 
 4. **Inizializza il Database:**
@@ -175,12 +205,58 @@ npm run dev:full
 
 ### 🚧 Roadmap Futura
 
-- [ ] Code splitting e lazy loading componenti.
-- [ ] PWA con supporto offline e notifiche push.
-- [ ] App mobile (React Native).
-- [ ] Dashboard analytics per fornitori.
-- [ ] Sistema referral "invita un amico".
-- [ ] **Request ID / Correlation ID** - Identificatore unico per ogni richiesta HTTP per tracciamento end-to-end nei log.
+#### 🔴 Da Fare Prima del Lancio
+- [ ] **Stripe Live Keys** - Configurare chiavi Stripe di produzione
+- [ ] **Verifica Env Vars** - Checklist finale variabili ambiente su Render
+- [ ] **Privacy & Legal** - Privacy Policy, Terms of Service, Cookie Policy
+
+#### ✅ Completati
+- [x] Health Check endpoint (`/api/health`)
+- [x] Sentry error tracking
+- [x] Provider Onboarding con upload documenti
+- [x] Email notifiche approvazione/rifiuto onboarding
+- [x] Notifiche in-app real-time (Socket.IO)
+- [x] Cloud Storage (Cloudinary)
+- [x] Code splitting e lazy loading componenti.
+
+#### 🟡 Post-Lancio (Priorità Media)
+- [ ] PWA con supporto offline e notifiche push
+- [ ] 2FA (Two-Factor Authentication)
+- [ ] Grafici analytics nella dashboard admin
+- [ ] Sistema referral "invita un amico"
+- [ ] Codici sconto/coupon
+- [ ] Chat migliorata (invio immagini, messaggi vocali)
+
+#### 🟢 Lungo Termine (Priorità Bassa)
+- [ ] App mobile (React Native)
+- [ ] Multi-lingua (i18n)
+- [ ] Sistema abbonamenti fornitori
+- [ ] Fatturazione automatica PDF
+- [ ] AI Chatbot supporto
+
+---
+
+## 🗄️ Storage & Backup
+
+### Cloudinary vs S3
+
+| Uso | Cloudinary | S3 |
+|-----|------------|-----|
+| **Foto/Video** | ⭐⭐⭐⭐⭐ (ottimizzazione auto) | ⭐⭐⭐ |
+| **Backup DB** | ❌ Non adatto | ⭐⭐⭐⭐⭐ |
+| **PDF/Documenti** | 🟡 Possibile | ⭐⭐⭐⭐⭐ |
+| **Costo** | €€ | € |
+
+**Configurazione attuale:**
+- **Cloudinary** → Documenti ID fornitori, foto servizi ✅
+- **Neon PostgreSQL** → Backup automatici PITR (7 giorni) ✅
+
+### Backup Database
+
+Neon include **Point-in-Time Recovery (PITR)**:
+- **7 giorni di retention** (piano Free)
+- **30 giorni** (piano Pro)
+- Backup automatici, nessuna configurazione richiesta
 
 ---
 
