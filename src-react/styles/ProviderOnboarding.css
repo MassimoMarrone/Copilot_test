@@ -139,6 +139,33 @@
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
+/* Field Validation Errors */
+.form-group.has-error input,
+.form-group.has-error select,
+.form-group.has-error textarea {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.form-group.has-error input:focus,
+.form-group.has-error select:focus,
+.form-group.has-error textarea:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.field-error {
+  color: #ef4444;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.form-group input::placeholder {
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
 .checkbox-group {
   flex-direction: row !important;
   align-items: center;
