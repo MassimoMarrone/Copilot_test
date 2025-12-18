@@ -18,6 +18,7 @@ const AdminLayout: React.FC = () => {
     { path: "/onboarding", icon: "📋", label: "Onboarding" },
     { path: "/services", icon: "🛠️", label: "Servizi" },
     { path: "/bookings", icon: "📅", label: "Prenotazioni" },
+    { path: "/disputes", icon: "⚠️", label: "Controversie" },
     { path: "/settings", icon: "⚙️", label: "Impostazioni" },
   ];
 

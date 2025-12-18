@@ -252,4 +252,76 @@ export const adminController = {
       }
     }
   },
+
+  // ============ DISPUTE MANAGEMENT ============
+
+  async getDisputes(req: Request, res: Response): Promise<void> {
+    try {
+      const status = req.query.status as string | undefined;
+      const disputes = await adminService.getDisputes(status);
+      res.json(disputes);
+    } catch (error: any) {
+      console.error("Error fetching disputes:", error);
+      res.status(500).json({ error: "Failed to fetch disputes" });
+    }
+  },
+
+  async getDisputeDetails(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const details = await adminService.getDisputeDetails(id);
+      res.json(details);
+    } catch (error: any) {
+      console.error("Error fetching dispute details:", error);
+      if (
+        error.message === "Booking not found" ||
+        error.message === "This booking has no dispute"
+      ) {
+        res.status(404).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Failed to fetch dispute details" });
+      }
+    }
+  },
+
+  async resolveDispute(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { resolution, notes } = req.body;
+
+      if (!resolution || !["refund", "release"].includes(resolution)) {
+        res
+          .status(400)
+          .json({ error: "Invalid resolution. Must be 'refund' or 'release'" });
+        return;
+      }
+
+      if (!notes || notes.trim().length < 5) {
+        res
+          .status(400)
+          .json({ error: "Notes are required (min 5 characters)" });
+        return;
+      }
+
+      const adminId = req.user!.id;
+      const result = await adminService.resolveDispute(
+        id,
+        adminId,
+        resolution,
+        notes
+      );
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error resolving dispute:", error);
+      if (error.message === "Booking not found") {
+        res.status(404).json({ error: error.message });
+      } else if (error.message === "This dispute is not pending") {
+        res.status(400).json({ error: error.message });
+      } else {
+        res
+          .status(500)
+          .json({ error: "Failed to resolve dispute: " + error.message });
+      }
+    }
+  },
 };

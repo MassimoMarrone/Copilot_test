@@ -138,4 +138,30 @@ router.post(
   adminController.rejectOnboarding
 );
 
+// ============ DISPUTE MANAGEMENT ============
+
+// Get all disputes
+router.get(
+  "/disputes",
+  authenticate,
+  requireAdmin,
+  adminController.getDisputes
+);
+
+// Get dispute details
+router.get(
+  "/disputes/:id",
+  authenticate,
+  requireAdmin,
+  adminController.getDisputeDetails
+);
+
+// Resolve dispute (refund client or release to provider)
+router.post(
+  "/disputes/:id/resolve",
+  authenticate,
+  requireAdmin,
+  adminController.resolveDispute
+);
+
 export default router;

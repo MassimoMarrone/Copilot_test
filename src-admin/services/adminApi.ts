@@ -66,6 +66,66 @@ export interface Stats {
   completedBookings: number;
 }
 
+export interface AdminDispute {
+  id: string;
+  serviceId: string;
+  serviceTitle: string;
+  serviceCategory?: string;
+  clientId: string;
+  clientEmail: string;
+  clientName: string;
+  providerId: string;
+  providerEmail: string;
+  providerName: string;
+  date: string;
+  amount: number;
+  status: string;
+  paymentStatus: string;
+  photoProof?: string;
+  photoProofs: string[];
+  disputeStatus: string;
+  disputeReason: string;
+  disputeOpenedAt: string;
+  disputeResolvedAt?: string;
+  disputeResolvedBy?: string;
+  disputeNotes?: string;
+  createdAt: string;
+}
+
+export interface AdminDisputeDetails extends AdminDispute {
+  client: {
+    id: string;
+    email: string;
+    displayName?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+  };
+  provider: {
+    id: string;
+    email: string;
+    displayName?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+  };
+  service: {
+    id: string;
+    title: string;
+    description: string;
+    price: number;
+    category?: string;
+  };
+  messages: Array<{
+    id: string;
+    senderId: string;
+    senderEmail: string;
+    senderType: string;
+    message: string;
+    createdAt: string;
+  }>;
+}
+
 export interface RecentActivity {
   id: string;
   type: "booking" | "user" | "service";
@@ -151,5 +211,28 @@ export const adminApi = {
 
   async demoteAdmin(userId: string): Promise<void> {
     await api.post(`/users/${userId}/demote`);
+  },
+
+  // ============ DISPUTE MANAGEMENT ============
+
+  async getDisputes(status?: string): Promise<AdminDispute[]> {
+    const params = status && status !== "all" ? `?status=${status}` : "";
+    const response = await api.get<AdminDispute[]>(`/disputes${params}`);
+    return response.data;
+  },
+
+  async getDisputeDetails(disputeId: string): Promise<AdminDisputeDetails> {
+    const response = await api.get<AdminDisputeDetails>(
+      `/disputes/${disputeId}`
+    );
+    return response.data;
+  },
+
+  async resolveDispute(
+    disputeId: string,
+    resolution: "refund" | "release",
+    notes: string
+  ): Promise<void> {
+    await api.post(`/disputes/${disputeId}/resolve`, { resolution, notes });
   },
 };

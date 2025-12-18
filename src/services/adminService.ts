@@ -449,4 +449,266 @@ export const adminService = {
 
     return { success: true, message: "Onboarding rejected" };
   },
+
+  // ============ DISPUTE MANAGEMENT ============
+
+  async getDisputes(status?: string) {
+    const where =
+      status && status !== "all"
+        ? { disputeStatus: status }
+        : { disputeStatus: { not: null } };
+
+    const disputes = await prisma.booking.findMany({
+      where,
+      include: {
+        client: {
+          select: {
+            id: true,
+            email: true,
+            displayName: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        provider: {
+          select: {
+            id: true,
+            email: true,
+            displayName: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        service: {
+          select: {
+            id: true,
+            title: true,
+            category: true,
+          },
+        },
+      },
+      orderBy: { disputeOpenedAt: "desc" },
+    });
+
+    return disputes.map((booking) => ({
+      id: booking.id,
+      serviceId: booking.serviceId,
+      serviceTitle: booking.serviceTitle,
+      serviceCategory: booking.service?.category,
+      clientId: booking.clientId,
+      clientEmail: booking.clientEmail,
+      clientName:
+        booking.client?.displayName ||
+        `${booking.client?.firstName || ""} ${
+          booking.client?.lastName || ""
+        }`.trim() ||
+        booking.clientEmail.split("@")[0],
+      providerId: booking.providerId,
+      providerEmail: booking.providerEmail,
+      providerName:
+        booking.provider?.displayName ||
+        `${booking.provider?.firstName || ""} ${
+          booking.provider?.lastName || ""
+        }`.trim() ||
+        booking.providerEmail.split("@")[0],
+      date: booking.date,
+      amount: booking.amount,
+      status: booking.status,
+      paymentStatus: booking.paymentStatus,
+      photoProof: booking.photoProof,
+      photoProofs: booking.photoProofs ? JSON.parse(booking.photoProofs) : [],
+      disputeStatus: booking.disputeStatus,
+      disputeReason: booking.disputeReason,
+      disputeOpenedAt: booking.disputeOpenedAt,
+      disputeResolvedAt: booking.disputeResolvedAt,
+      disputeResolvedBy: booking.disputeResolvedBy,
+      disputeNotes: booking.disputeNotes,
+      createdAt: booking.createdAt,
+    }));
+  },
+
+  async getDisputeDetails(bookingId: string) {
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        client: {
+          select: {
+            id: true,
+            email: true,
+            displayName: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+          },
+        },
+        provider: {
+          select: {
+            id: true,
+            email: true,
+            displayName: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+          },
+        },
+        service: true,
+        messages: {
+          orderBy: { createdAt: "asc" },
+          take: 50,
+        },
+      },
+    });
+
+    if (!booking) {
+      throw new Error("Booking not found");
+    }
+
+    if (!booking.disputeStatus) {
+      throw new Error("This booking has no dispute");
+    }
+
+    return {
+      ...booking,
+      photoProofs: booking.photoProofs ? JSON.parse(booking.photoProofs) : [],
+    };
+  },
+
+  async resolveDispute(
+    bookingId: string,
+    adminId: string,
+    resolution: "refund" | "release",
+    notes: string
+  ) {
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        client: true,
+        provider: true,
+        service: true,
+      },
+    });
+
+    if (!booking) {
+      throw new Error("Booking not found");
+    }
+
+    if (booking.disputeStatus !== "pending") {
+      throw new Error("This dispute is not pending");
+    }
+
+    // Import escrowService dynamically to avoid circular dependency
+    const { escrowService } = await import("./escrowService");
+
+    if (resolution === "refund") {
+      // Refund to client
+      await escrowService.refundPaymentToClient(
+        bookingId,
+        `Dispute resolved in client's favor: ${notes}`
+      );
+
+      await prisma.booking.update({
+        where: { id: bookingId },
+        data: {
+          disputeStatus: "resolved_refund",
+          disputeResolvedAt: new Date(),
+          disputeResolvedBy: adminId,
+          disputeNotes: notes,
+        },
+      });
+
+      // Notify both parties
+      await sendNotification(
+        booking.clientId,
+        "Controversia Risolta ✅",
+        `La controversia per "${booking.serviceTitle}" è stata risolta a tuo favore. Riceverai un rimborso.`,
+        "success"
+      );
+
+      await sendNotification(
+        booking.providerId,
+        "Controversia Risolta",
+        `La controversia per "${booking.serviceTitle}" è stata risolta. Il pagamento è stato rimborsato al cliente.`,
+        "info"
+      );
+
+      // Send emails
+      await sendEmail(
+        booking.clientEmail,
+        "Controversia Risolta - Rimborso Approvato",
+        emailTemplates.disputeResolved(
+          booking.client?.displayName || booking.clientEmail.split("@")[0],
+          booking.serviceTitle,
+          `Il rimborso è stato approvato. ${notes}`,
+          false
+        )
+      );
+
+      await sendEmail(
+        booking.providerEmail,
+        "Controversia Risolta",
+        emailTemplates.disputeResolved(
+          booking.provider?.displayName || booking.providerEmail.split("@")[0],
+          booking.serviceTitle,
+          `La controversia è stata risolta a favore del cliente. ${notes}`,
+          true
+        )
+      );
+    } else {
+      // Release to provider
+      await escrowService.releasePaymentToProvider(
+        bookingId,
+        "client_confirmed"
+      );
+
+      await prisma.booking.update({
+        where: { id: bookingId },
+        data: {
+          disputeStatus: "resolved_payment",
+          disputeResolvedAt: new Date(),
+          disputeResolvedBy: adminId,
+          disputeNotes: notes,
+        },
+      });
+
+      // Notify both parties
+      await sendNotification(
+        booking.providerId,
+        "Controversia Risolta ✅",
+        `La controversia per "${booking.serviceTitle}" è stata risolta a tuo favore. Il pagamento è stato rilasciato.`,
+        "success"
+      );
+
+      await sendNotification(
+        booking.clientId,
+        "Controversia Risolta",
+        `La controversia per "${booking.serviceTitle}" è stata risolta. Il pagamento è stato rilasciato al fornitore.`,
+        "info"
+      );
+
+      // Send emails
+      await sendEmail(
+        booking.providerEmail,
+        "Controversia Risolta - Pagamento Rilasciato",
+        emailTemplates.disputeResolved(
+          booking.provider?.displayName || booking.providerEmail.split("@")[0],
+          booking.serviceTitle,
+          `Il pagamento è stato rilasciato. ${notes}`,
+          true
+        )
+      );
+
+      await sendEmail(
+        booking.clientEmail,
+        "Controversia Risolta",
+        emailTemplates.disputeResolved(
+          booking.client?.displayName || booking.clientEmail.split("@")[0],
+          booking.serviceTitle,
+          `La controversia è stata risolta a favore del fornitore. ${notes}`,
+          false
+        )
+      );
+    }
+
+    return { success: true, resolution };
+  },
 };
