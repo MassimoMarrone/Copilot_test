@@ -6,6 +6,27 @@ import fs from "fs";
 import helmet from "helmet";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
+import * as Sentry from "@sentry/node";
+
+// Load environment variables FIRST
+dotenv.config();
+
+// Initialize Sentry (before other imports that might throw)
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || "development",
+    tracesSampleRate: 1.0, // Capture 100% of transactions for performance monitoring
+    integrations: [
+      // Automatically instrument Node.js libraries
+      Sentry.httpIntegration(),
+      Sentry.expressIntegration(),
+    ],
+  });
+  console.log("✅ Sentry initialized");
+} else {
+  console.log("⚠️ Sentry DSN not configured - error tracking disabled");
+}
 
 // Config & Utils
 import { initSocket } from "./socket";
@@ -33,6 +54,11 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Sentry request handler (must be first middleware)
+if (process.env.SENTRY_DSN) {
+  Sentry.setupExpressErrorHandler(app);
+}
 
 // Security & Middleware
 app.set("trust proxy", 1);
@@ -145,6 +171,42 @@ app.use(express.static("public"));
 // Rate Limiting
 app.use("/api/", limiter);
 
+// Health Check Endpoint (no rate limiting)
+app.get("/api/health", async (_req: Request, res: Response) => {
+  const startTime = Date.now();
+  
+  try {
+    // Check database connection
+    await prisma.$queryRaw`SELECT 1`;
+    const dbLatency = Date.now() - startTime;
+    
+    res.json({
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      version: process.env.npm_package_version || "1.2.0",
+      environment: process.env.NODE_ENV || "development",
+      uptime: process.uptime(),
+      checks: {
+        database: {
+          status: "healthy",
+          latency: `${dbLatency}ms`
+        },
+        memory: {
+          used: `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`,
+          total: `${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)}MB`
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Health check failed:", error);
+    res.status(503).json({
+      status: "unhealthy",
+      timestamp: new Date().toISOString(),
+      error: "Database connection failed"
+    });
+  }
+});
+
 // Routes
 app.use("/api", authRoutes);
 app.use("/api", userRoutes);
@@ -226,11 +288,25 @@ app.get("*splat", pageLimiter, (req: Request, res: Response) => {
 });
 
 // Error Handling
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
+  // Log error
   console.error("Unhandled Error:", err);
+  
+  // Send to Sentry if configured
+  if (process.env.SENTRY_DSN) {
+    Sentry.captureException(err, {
+      extra: {
+        url: req.url,
+        method: req.method,
+        body: req.body,
+        query: req.query,
+      }
+    });
+  }
+  
   res.status(500).json({
     error: "Internal server error",
-    message: err.message,
+    message: process.env.NODE_ENV === "development" ? err.message : "Something went wrong",
     stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
   });
 });

@@ -199,10 +199,10 @@ npm run dev:full
 
 | #   | Task                      | Descrizione                                                                       | Tempo Stimato | Status |
 | --- | ------------------------- | --------------------------------------------------------------------------------- | ------------- | ------ |
-| 5   | **Health Check Endpoint** | Aggiungere `/health` per monitoring Render                                        | 10 min        | 🔲     |
+| 5   | **Health Check Endpoint** | Aggiungere `/api/health` per monitoring Render                                    | 10 min        | ✅     |
 | 6   | **Cloud Storage**         | Migrare upload immagini su Cloudinary/S3 (i file su Render si perdono al restart) | 2-4h          | ✅     |
 | 7   | **Provider Onboarding**   | Sistema di onboarding provider con upload documenti e approvazione admin          | 4h            | ✅     |
-| 8   | **Monitoring (Sentry)**   | Setup error tracking per ricevere alert su errori in produzione                   | 1h            | 🔲     |
+| 8   | **Monitoring (Sentry)**   | Setup error tracking per ricevere alert su errori in produzione                   | 1h            | ✅     |
 | 9   | **Backup Database**       | Verificare backup automatici su Neon PostgreSQL                                   | 30 min        | 🔲     |
 
 ### 🟡 MIGLIORAMENTI (Post-Lancio)
@@ -216,11 +216,11 @@ npm run dev:full
 
 ### 🎯 PROSSIMI PASSI
 
-1. **Health Check Endpoint** - Aggiungere `/api/health` per monitoring Render (10 min)
+1. ~~**Health Check Endpoint** - Aggiungere `/api/health` per monitoring Render~~ ✅
 2. **Stripe Live Keys** - Configurare chiavi Stripe di produzione su Render
 3. **Verifica Env Vars** - Checklist finale variabili ambiente su Render
 4. **Test Onboarding** - Testare il flusso completo di onboarding provider
-5. **Sentry** (opzionale) - Setup error tracking per produzione
+5. ~~**Sentry** - Setup error tracking per produzione~~ ✅ (aggiungere `SENTRY_DSN` su Render)
 
 ### ⚠️ Race Condition - Prenotazioni Simultanee
 
