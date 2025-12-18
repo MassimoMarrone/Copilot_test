@@ -25,12 +25,15 @@ export const paymentController = {
             session_id as string
           );
           if (session.payment_intent) {
+            // With Stripe Connect, include reverse_transfer and refund_application_fee
             await stripe.refunds.create({
               payment_intent: session.payment_intent as string,
               reason: "requested_by_customer",
+              reverse_transfer: true,
+              refund_application_fee: true,
             });
             console.log(
-              `Refund issued for session ${session_id} due to race condition`
+              `Stripe Connect refund issued for session ${session_id} due to race condition`
             );
           }
         } catch (refundError) {

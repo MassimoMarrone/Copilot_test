@@ -342,7 +342,10 @@ export const bookingService = {
 
     // Handle refund if payment was made
     let newPaymentStatus = booking.paymentStatus;
+    
+    // Check if refund is needed - now includes "paid" status for Stripe Connect
     const needsRefund =
+      booking.paymentStatus === "paid" ||
       booking.paymentStatus === "authorized" ||
       booking.paymentStatus === "held_in_escrow";
 
@@ -356,11 +359,16 @@ export const bookingService = {
           newPaymentStatus = "refunded";
         } else {
           // Real Stripe refund
+          // With Stripe Connect, this refunds from the platform and reverses the transfer to the provider
           await stripe.refunds.create({
             payment_intent: booking.paymentIntentId,
+            // reverse_transfer: true automatically reverses the transfer to connected account
+            reverse_transfer: true,
+            // refund_application_fee: true returns the platform fee as well
+            refund_application_fee: true,
           });
           console.log(
-            `Stripe refund processed for booking ${booking.id}, paymentIntent: ${booking.paymentIntentId}`
+            `Stripe Connect refund processed for booking ${booking.id}, paymentIntent: ${booking.paymentIntentId}`
           );
           newPaymentStatus = "refunded";
         }
