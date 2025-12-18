@@ -138,6 +138,12 @@ const ProviderDashboard: React.FC = () => {
       const isProviderUser = user.isProvider || user.userType === "provider";
       if (!isProviderUser) {
         navigate("/client-dashboard");
+        return;
+      }
+      // Redirect to onboarding if not approved
+      if (user.onboardingStatus !== "approved") {
+        navigate("/provider-onboarding");
+        return;
       }
     } catch (error) {
       navigate("/");

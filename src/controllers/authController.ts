@@ -124,6 +124,7 @@ export class AuthController {
         isProvider: user.isProvider,
         isAdmin: user.isAdmin,
         adminLevel: user.adminLevel,
+        onboardingStatus: user.onboardingStatus,
         createdAt: user.createdAt,
       });
     } catch (error: any) {

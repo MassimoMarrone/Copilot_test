@@ -17,6 +17,7 @@ export interface User {
   isClient: boolean;
   isProvider: boolean;
   isAdmin?: boolean;
+  onboardingStatus?: string; // "pending", "documents_uploaded", "under_review", "approved", "rejected"
   createdAt?: string;
 }
 

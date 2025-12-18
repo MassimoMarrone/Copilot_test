@@ -52,10 +52,10 @@ const BecomeProviderModal: React.FC<BecomeProviderModalProps> = ({
       }
       onClose();
       alert(
-        "Congratulazioni! Ora sei anche un fornitore. Puoi pubblicare i tuoi servizi."
+        "Ottimo! Ora completa il tuo profilo fornitore per iniziare a ricevere richieste."
       );
-      // Redirect to provider dashboard
-      navigate("/provider-dashboard");
+      // Redirect to onboarding to complete profile
+      navigate("/provider-onboarding");
     } catch (error: any) {
       setErrorMessage(error.message || "Registrazione come fornitore fallita");
     } finally {
