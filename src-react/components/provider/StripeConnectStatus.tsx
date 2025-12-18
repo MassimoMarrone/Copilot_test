@@ -10,7 +10,13 @@ interface StripeAccountStatus {
   requirements: any;
 }
 
-const StripeConnectStatus: React.FC = () => {
+interface StripeConnectStatusProps {
+  onStatusChange?: (connected: boolean) => void;
+}
+
+const StripeConnectStatus: React.FC<StripeConnectStatusProps> = ({
+  onStatusChange,
+}) => {
   const [status, setStatus] = useState<StripeAccountStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -28,6 +34,13 @@ const StripeConnectStatus: React.FC = () => {
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
+
+  // Notify parent of status changes
+  useEffect(() => {
+    if (status && onStatusChange) {
+      onStatusChange(status.hasAccount && status.chargesEnabled);
+    }
+  }, [status, onStatusChange]);
 
   const loadStatus = async () => {
     try {

@@ -64,6 +64,18 @@
   box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
 }
 
+.btn-primary.btn-disabled {
+  background: #ccc;
+  color: #888;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-primary.btn-disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
 .btn-secondary {
   background: #f0f0f0;
   color: #333;

@@ -190,6 +190,13 @@ export class ServicesService {
       throw new Error("Only providers can create services");
     }
 
+    // Check if provider has Stripe Connect account
+    if (!user.stripeAccountId) {
+      throw new Error(
+        "Devi collegare il tuo account Stripe prima di poter pubblicare servizi. Vai nelle impostazioni pagamenti."
+      );
+    }
+
     const {
       title,
       description,

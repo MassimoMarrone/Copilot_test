@@ -16,6 +16,7 @@ import { authService, User } from "../services/authService";
 import { servicesService } from "../services/servicesService";
 import { bookingService } from "../services/bookingService";
 import { reviewService } from "../services/reviewService";
+import { stripeConnectService } from "../services/stripeConnectService";
 import "../styles/ProviderDashboard.css";
 import "../styles/ToastNotification.css";
 
@@ -33,6 +34,7 @@ const ProviderDashboard: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [stripeConnected, setStripeConnected] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<
     "services" | "bookings" | "reviews" | "calendar"
   >("bookings");
@@ -72,7 +74,19 @@ const ProviderDashboard: React.FC = () => {
     loadServices();
     loadBookings();
     loadReviews();
+    checkStripeStatus();
   }, []);
+
+  // Check Stripe Connect status
+  const checkStripeStatus = async () => {
+    try {
+      const status = await stripeConnectService.getAccountStatus();
+      setStripeConnected(status.hasAccount && status.chargesEnabled);
+    } catch (error) {
+      console.error("Error checking Stripe status:", error);
+      setStripeConnected(false);
+    }
+  };
 
   // Calculate stats when data changes
   useEffect(() => {
@@ -308,12 +322,25 @@ const ProviderDashboard: React.FC = () => {
             Dashboard Cliente
           </button>
           <button
-            className="btn btn-primary"
+            className={`btn btn-primary ${
+              !stripeConnected ? "btn-disabled" : ""
+            }`}
             onClick={() => {
+              if (!stripeConnected) {
+                alert(
+                  "Devi prima collegare il tuo account Stripe per poter pubblicare servizi."
+                );
+                return;
+              }
               setServiceModalMode("create");
               setEditingService(null);
               setShowServiceModal(true);
             }}
+            title={
+              !stripeConnected
+                ? "Collega Stripe per pubblicare servizi"
+                : "Crea un nuovo servizio"
+            }
           >
             <svg
               width="18"
@@ -332,7 +359,7 @@ const ProviderDashboard: React.FC = () => {
       </div>
 
       {/* Stripe Connect Status */}
-      <StripeConnectStatus />
+      <StripeConnectStatus onStatusChange={setStripeConnected} />
 
       {/* Stats Cards */}
       <div className="stats-grid">
