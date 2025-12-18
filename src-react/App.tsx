@@ -13,6 +13,9 @@ import UserProfile from "./components/UserProfile";
 import ProviderProfilePage from "./pages/ProviderProfilePage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import ProviderOnboarding from "./pages/ProviderOnboarding";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import CookiePolicy from "./pages/CookiePolicy";
 import "./styles/App.css";
 
 function App() {
@@ -22,6 +25,11 @@ function App() {
         <Routes>
           {/* Verify email page - outside Layout for cleaner look */}
           <Route path="/verify-email" element={<VerifyEmailPage />} />
+          
+          {/* Legal pages - outside Layout for cleaner look */}
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/cookie-policy" element={<CookiePolicy />} />
 
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />

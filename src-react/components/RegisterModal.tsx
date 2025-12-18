@@ -202,6 +202,12 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
               7. <strong>Risoluzione delle Controversie</strong>: Eventuali
               controversie saranno risolte tramite mediazione.
             </p>
+            <p className="legal-links">
+              Leggi i documenti completi:{" "}
+              <a href="/terms-of-service" target="_blank" rel="noopener noreferrer">Termini e Condizioni</a> |{" "}
+              <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">Privacy Policy</a> |{" "}
+              <a href="/cookie-policy" target="_blank" rel="noopener noreferrer">Cookie Policy</a>
+            </p>
           </div>
 
           <div className="form-group checkbox-group">
@@ -214,7 +220,13 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
                 required
                 disabled={isLoading || !hasScrolledToBottom}
               />
-              <span>Accetto i Termini e Condizioni (obbligatorio)</span>
+              <span>
+                Accetto i{" "}
+                <a href="/terms-of-service" target="_blank" rel="noopener noreferrer">Termini e Condizioni</a>{" "}
+                e la{" "}
+                <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>{" "}
+                (obbligatorio)
+              </span>
             </label>
             {!hasScrolledToBottom && (
               <p className="scroll-hint">

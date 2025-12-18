@@ -164,15 +164,15 @@ const LandingPage: React.FC<LandingPageProps> = ({
                 <a href="#">Lavora con Noi</a>
               </div>
               <div className="footer-column">
-                <h4>Supporto</h4>
-                <a href="#">Contatti</a>
-                <a href="#">FAQ</a>
-                <a href="#">Privacy Policy</a>
+                <h4>Legale</h4>
+                <a href="/privacy-policy">Privacy Policy</a>
+                <a href="/terms-of-service">Termini e Condizioni</a>
+                <a href="/cookie-policy">Cookie Policy</a>
               </div>
             </div>
           </div>
           <div className="footer-bottom">
-            <p>&copy; 2024 domy. Tutti i diritti riservati.</p>
+            <p>&copy; 2025 Domy. Tutti i diritti riservati.</p>
           </div>
         </div>
       </footer>
