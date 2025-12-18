@@ -445,7 +445,10 @@ const ProviderOnboarding: React.FC = () => {
   if (loading) {
     return (
       <div className="onboarding-container">
-        <div className="loading-spinner">Caricamento...</div>
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Caricamento...</p>
+        </div>
       </div>
     );
   }

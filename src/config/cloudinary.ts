@@ -65,7 +65,6 @@ const documentStorage = new CloudinaryStorage({
     folder: "domy/documents",
     allowed_formats: ["jpg", "jpeg", "png", "pdf"],
     resource_type: "auto",
-    type: "private", // Private URLs, not publicly accessible
     transformation: [{ quality: "auto:best" }],
   } as any,
 });
