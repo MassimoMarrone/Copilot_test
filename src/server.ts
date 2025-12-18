@@ -25,6 +25,7 @@ import notificationRoutes from "./routes/notifications";
 import paymentRoutes from "./routes/payment";
 import schedulingRoutes from "./routes/scheduling";
 import cleanupRoutes from "./routes/cleanup";
+import onboardingRoutes from "./routes/onboarding";
 import { prisma } from "./lib/prisma";
 
 // Load environment variables
@@ -156,6 +157,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api", paymentRoutes);
 app.use("/api/scheduling", schedulingRoutes);
 app.use("/api", cleanupRoutes);
+app.use("/api/onboarding", onboardingRoutes);
 
 // SPA Fallback (Only used in development or if FRONTEND_URL is not set)
 const serveSpa = (_req: Request, res: Response) => {

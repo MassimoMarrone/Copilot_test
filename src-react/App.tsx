@@ -12,6 +12,7 @@ import AdminDashboard from "./components/AdminDashboard";
 import UserProfile from "./components/UserProfile";
 import ProviderProfilePage from "./pages/ProviderProfilePage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
+import ProviderOnboarding from "./pages/ProviderOnboarding";
 import "./styles/App.css";
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
             <Route path="/messages" element={<MessagesPage />} />
             <Route path="/client-dashboard" element={<ClientDashboard />} />
             <Route path="/profile" element={<UserProfile />} />
+            <Route path="/provider-onboarding" element={<ProviderOnboarding />} />
             <Route
               path="/provider/:providerId"
               element={<ProviderProfilePage />}

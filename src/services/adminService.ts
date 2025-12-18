@@ -248,4 +248,122 @@ export const adminService = {
 
     return { success: true, message: "Admin demoted to user" };
   },
+
+  // ============ PROVIDER ONBOARDING ============
+
+  async getPendingOnboardings() {
+    const pending = await prisma.user.findMany({
+      where: {
+        isProvider: true,
+        onboardingStatus: { in: ["under_review", "documents_uploaded", "pending"] },
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        onboardingStatus: true,
+        onboardingStep: true,
+        createdAt: true,
+        phone: true,
+        city: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return pending;
+  },
+
+  async getOnboardingDetails(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        onboardingStatus: true,
+        onboardingStep: true,
+        onboardingCompletedAt: true,
+        onboardingRejectedAt: true,
+        onboardingRejectionReason: true,
+        createdAt: true,
+        // Step 1
+        dateOfBirth: true,
+        fiscalCode: true,
+        vatNumber: true,
+        phone: true,
+        address: true,
+        city: true,
+        postalCode: true,
+        // Step 2
+        idDocumentType: true,
+        idDocumentNumber: true,
+        idDocumentExpiry: true,
+        idDocumentFrontUrl: true,
+        idDocumentBackUrl: true,
+        // Step 3
+        iban: true,
+        bankAccountHolder: true,
+        // Step 4
+        workingZones: true,
+        yearsOfExperience: true,
+        hasOwnEquipment: true,
+        insuranceNumber: true,
+        insuranceExpiry: true,
+      },
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return user;
+  },
+
+  async approveOnboarding(userId: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (user.onboardingStatus !== "under_review") {
+      throw new Error("Onboarding not under review");
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        onboardingStatus: "approved",
+        onboardingCompletedAt: new Date(),
+        onboardingRejectedAt: null,
+        onboardingRejectionReason: null,
+      },
+    });
+
+    return { success: true, message: "Onboarding approved" };
+  },
+
+  async rejectOnboarding(userId: string, reason: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (user.onboardingStatus !== "under_review") {
+      throw new Error("Onboarding not under review");
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        onboardingStatus: "rejected",
+        onboardingRejectedAt: new Date(),
+        onboardingRejectionReason: reason,
+      },
+    });
+
+    return { success: true, message: "Onboarding rejected" };
+  },
 };

@@ -186,4 +186,70 @@ export const adminController = {
       }
     }
   },
+
+  // ============ PROVIDER ONBOARDING ============
+
+  async getPendingOnboardings(_req: Request, res: Response): Promise<void> {
+    try {
+      const pending = await adminService.getPendingOnboardings();
+      res.json(pending);
+    } catch (error: any) {
+      console.error("Error fetching pending onboardings:", error);
+      res.status(500).json({ error: "Failed to fetch pending onboardings" });
+    }
+  },
+
+  async getOnboardingDetails(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const details = await adminService.getOnboardingDetails(id);
+      res.json(details);
+    } catch (error: any) {
+      console.error("Error fetching onboarding details:", error);
+      if (error.message === "User not found") {
+        res.status(404).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Failed to fetch onboarding details" });
+      }
+    }
+  },
+
+  async approveOnboarding(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const result = await adminService.approveOnboarding(id);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error approving onboarding:", error);
+      if (error.message === "User not found") {
+        res.status(404).json({ error: error.message });
+      } else if (error.message === "Onboarding not under review") {
+        res.status(400).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Failed to approve onboarding" });
+      }
+    }
+  },
+
+  async rejectOnboarding(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+      if (!reason) {
+        res.status(400).json({ error: "Rejection reason is required" });
+        return;
+      }
+      const result = await adminService.rejectOnboarding(id, reason);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error rejecting onboarding:", error);
+      if (error.message === "User not found") {
+        res.status(404).json({ error: error.message });
+      } else if (error.message === "Onboarding not under review") {
+        res.status(400).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Failed to reject onboarding" });
+      }
+    }
+  },
 };

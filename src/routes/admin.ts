@@ -104,4 +104,38 @@ router.post(
   adminController.demoteAdmin
 );
 
+// ============ PROVIDER ONBOARDING ============
+
+// Get pending onboardings
+router.get(
+  "/onboarding/pending",
+  authenticate,
+  requireAdmin,
+  adminController.getPendingOnboardings
+);
+
+// Get onboarding details
+router.get(
+  "/onboarding/:id",
+  authenticate,
+  requireAdmin,
+  adminController.getOnboardingDetails
+);
+
+// Approve onboarding
+router.post(
+  "/onboarding/:id/approve",
+  authenticate,
+  requireAdmin,
+  adminController.approveOnboarding
+);
+
+// Reject onboarding
+router.post(
+  "/onboarding/:id/reject",
+  authenticate,
+  requireAdmin,
+  adminController.rejectOnboarding
+);
+
 export default router;

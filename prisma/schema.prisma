@@ -45,6 +45,38 @@ model User {
   bio                   String?
   avatarUrl             String?
 
+  // ===== PROVIDER ONBOARDING FIELDS =====
+  // Status
+  onboardingStatus      String?   // "pending", "documents_uploaded", "under_review", "approved", "rejected"
+  onboardingStep        Int       @default(0)  // Current step in onboarding (0-4)
+  onboardingCompletedAt DateTime?
+  onboardingRejectedAt  DateTime?
+  onboardingRejectionReason String?
+  
+  // Personal Data (Step 1)
+  dateOfBirth           DateTime?
+  fiscalCode            String?   // Codice Fiscale italiano
+  vatNumber             String?   // Partita IVA (optional)
+  
+  // Documents (Step 2)
+  idDocumentFrontUrl    String?   // Foto documento fronte
+  idDocumentBackUrl     String?   // Foto documento retro
+  idDocumentType        String?   // "carta_identita", "patente", "passaporto"
+  idDocumentNumber      String?   // Numero documento
+  idDocumentExpiry      DateTime? // Scadenza documento
+  
+  // Payment Info (Step 3)
+  iban                  String?
+  bankAccountHolder     String?   // Intestatario conto
+  
+  // Work Info (Step 4)
+  workingZones          String?   // JSON array of zones/CAPs
+  yearsOfExperience     Int?
+  hasOwnEquipment       Boolean   @default(false)
+  insuranceNumber       String?   // Numero polizza RC (optional)
+  insuranceExpiry       DateTime? // Scadenza polizza
+  // ===== END PROVIDER ONBOARDING =====
+
   // Relations
   services              Service[]
   bookingsAsClient      Booking[] @relation("ClientBookings")
