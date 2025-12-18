@@ -15,8 +15,9 @@ export function startEscrowCronJobs() {
 
     try {
       const result = await escrowService.processAutoReleases();
+      const totalProcessed = result.released + result.failed;
 
-      if (result.processed > 0) {
+      if (totalProcessed > 0) {
         console.log(
           `[CRON] Auto-released ${result.released} payments, ${result.failed} failed`
         );

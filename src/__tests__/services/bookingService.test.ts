@@ -276,11 +276,13 @@ describe("BookingService", () => {
   });
 
   describe("completeBooking", () => {
+    const mockPhotoUrls = ["https://example.com/photo1.jpg"];
+
     it("should throw error if booking not found", async () => {
       prismaMock.booking.findUnique.mockResolvedValue(null);
 
       await expect(
-        bookingService.completeBooking("booking-123", "provider-123")
+        bookingService.completeBooking("booking-123", "provider-123", mockPhotoUrls)
       ).rejects.toThrow("Booking not found");
     });
 
@@ -291,7 +293,7 @@ describe("BookingService", () => {
       });
 
       await expect(
-        bookingService.completeBooking("booking-123", "provider-123")
+        bookingService.completeBooking("booking-123", "provider-123", mockPhotoUrls)
       ).rejects.toThrow("Only provider can complete booking");
     });
 
@@ -305,13 +307,27 @@ describe("BookingService", () => {
       });
 
       await expect(
-        bookingService.completeBooking("booking-123", "provider-123")
+        bookingService.completeBooking("booking-123", "provider-123", mockPhotoUrls)
       ).rejects.toThrow(
         "Payment must be authorized or held in escrow before completing the service"
       );
     });
 
-    it("should complete booking successfully", async () => {
+    it("should throw error if no photos provided", async () => {
+      prismaMock.booking.findUnique.mockResolvedValue({
+        ...createMockBooking({
+          providerId: "provider-123",
+          paymentStatus: "held_in_escrow",
+        }),
+        service: createMockService(),
+      });
+
+      await expect(
+        bookingService.completeBooking("booking-123", "provider-123", [])
+      ).rejects.toThrow("Devi caricare almeno 1 foto");
+    });
+
+    it("should complete booking successfully with photos", async () => {
       const mockBooking = {
         ...createMockBooking({
           providerId: "provider-123",
@@ -322,18 +338,18 @@ describe("BookingService", () => {
       prismaMock.booking.findUnique.mockResolvedValue(mockBooking);
       prismaMock.booking.update.mockResolvedValue({
         ...mockBooking,
-        status: "completed",
-        paymentStatus: "released",
-        completedAt: new Date(),
+        status: "awaiting_confirmation",
+        photoProofs: JSON.stringify(mockPhotoUrls),
+        awaitingClientConfirmation: true,
       });
 
       const result = await bookingService.completeBooking(
         "booking-123",
-        "provider-123"
+        "provider-123",
+        mockPhotoUrls
       );
 
-      expect(result.status).toBe("completed");
-      expect(result.paymentStatus).toBe("released");
+      expect(result.status).toBe("awaiting_confirmation");
       expect(bookingLogger.completed).toHaveBeenCalledWith("booking-123");
       expect(sendNotification).toHaveBeenCalled();
       expect(sendEmail).toHaveBeenCalled();
