@@ -135,10 +135,59 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
     }
   };
 
+  // Confirm service completion - releases payment to provider
+  const handleConfirmService = async (booking: Booking) => {
+    if (
+      !window.confirm(
+        "Confermi che il servizio è stato completato correttamente?\n\n" +
+          "Il pagamento verrà rilasciato al fornitore."
+      )
+    )
+      return;
+
+    try {
+      await bookingService.confirmServiceCompletion(booking.id);
+      alert(
+        "Servizio confermato! Il pagamento è stato rilasciato al fornitore."
+      );
+      loadBookings();
+    } catch (error: any) {
+      alert(error.message || "Errore nella conferma del servizio");
+    }
+  };
+
+  // Open dispute - blocks payment, notifies admin
+  const handleOpenDispute = async (booking: Booking) => {
+    const reason = window.prompt(
+      "Descrivi il problema riscontrato (min. 10 caratteri):\n\n" +
+        "Un amministratore verificherà la situazione e ti contatterà."
+    );
+
+    if (!reason) return;
+
+    if (reason.trim().length < 10) {
+      alert("La motivazione deve essere di almeno 10 caratteri");
+      return;
+    }
+
+    try {
+      await bookingService.openDispute(booking.id, reason);
+      alert(
+        "Controversia aperta. Un amministratore verificherà la situazione e ti contatterà."
+      );
+      loadBookings();
+    } catch (error: any) {
+      alert(error.message || "Errore nell'apertura della controversia");
+    }
+  };
+
   const getFilteredBookings = () => {
     switch (activeTab) {
       case "upcoming":
-        return bookings.filter((b) => b.status === "pending");
+        // Include pending and awaiting_confirmation in upcoming
+        return bookings.filter(
+          (b) => b.status === "pending" || b.status === "awaiting_confirmation"
+        );
       case "completed":
         return bookings.filter((b) => b.status === "completed");
       default:
@@ -460,6 +509,10 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                       <span className={`status-badge status-${booking.status}`}>
                         {booking.status === "pending"
                           ? "In attesa"
+                          : booking.status === "awaiting_confirmation"
+                          ? "⏳ Da confermare"
+                          : booking.status === "disputed"
+                          ? "⚠️ Controversia"
                           : "Completato"}
                       </span>
                       <span
@@ -646,6 +699,99 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                       </span>
                     )}
                   </div>
+
+                  {/* Escrow Confirmation Section */}
+                  {booking.status === "awaiting_confirmation" && (
+                    <div
+                      className="escrow-confirmation-section"
+                      style={{
+                        background: "#fff3cd",
+                        border: "1px solid #ffc107",
+                        borderRadius: "8px",
+                        padding: "16px",
+                        marginTop: "16px",
+                      }}
+                    >
+                      <h4 style={{ margin: "0 0 8px 0", color: "#856404" }}>
+                        📸 Il fornitore ha completato il servizio
+                      </h4>
+                      <p
+                        style={{
+                          margin: "0 0 12px 0",
+                          fontSize: "14px",
+                          color: "#856404",
+                        }}
+                      >
+                        Verifica le foto e conferma il completamento oppure apri
+                        una controversia.
+                        {booking.confirmationDeadline && (
+                          <strong
+                            style={{ display: "block", marginTop: "4px" }}
+                          >
+                            ⏰ Scadenza:{" "}
+                            {new Date(
+                              booking.confirmationDeadline
+                            ).toLocaleString("it-IT")}
+                          </strong>
+                        )}
+                      </p>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <button
+                          onClick={() => handleConfirmService(booking)}
+                          className="btn btn-success"
+                          style={{ flex: "1", minWidth: "140px" }}
+                        >
+                          ✅ Conferma Servizio
+                        </button>
+                        <button
+                          onClick={() => handleOpenDispute(booking)}
+                          className="btn btn-warning"
+                          style={{
+                            flex: "1",
+                            minWidth: "140px",
+                            background: "#dc3545",
+                            color: "white",
+                          }}
+                        >
+                          ⚠️ Apri Controversia
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Disputed Status */}
+                  {booking.status === "disputed" && (
+                    <div
+                      className="dispute-status-section"
+                      style={{
+                        background: "#f8d7da",
+                        border: "1px solid #f5c6cb",
+                        borderRadius: "8px",
+                        padding: "16px",
+                        marginTop: "16px",
+                      }}
+                    >
+                      <h4 style={{ margin: "0 0 8px 0", color: "#721c24" }}>
+                        ⚠️ Controversia in corso
+                      </h4>
+                      <p
+                        style={{
+                          margin: "0",
+                          fontSize: "14px",
+                          color: "#721c24",
+                        }}
+                      >
+                        Un amministratore sta verificando la situazione. Ti
+                        contatteremo presto.
+                      </p>
+                    </div>
+                  )}
 
                   {booking.photoProof && (
                     <div className="photo-proof">

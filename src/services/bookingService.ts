@@ -242,7 +242,7 @@ export const bookingService = {
       const mockSession = {
         id: mockSessionId,
         status: "complete",
-        payment_status: "paid", // Changed from "unpaid" to "paid" for immediate capture
+        payment_status: "paid",
         payment_intent: "pi_mock_" + Date.now(),
         metadata: safeMetadata,
       };
@@ -253,7 +253,9 @@ export const bookingService = {
         url: `${protocol}://${host}/client-dashboard?payment=success&session_id=${mockSessionId}`,
       };
     } else {
-      // Stripe Connect: immediate capture with split payment
+      // Escrow: Payment goes to PLATFORM first, NOT directly to provider
+      // Transfer to provider happens only after client confirms service completion
+      // This ensures we never have to "take back" money from providers
       session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         line_items: [
@@ -270,17 +272,21 @@ export const bookingService = {
           },
         ],
         mode: "payment",
-        // Stripe Connect: payment goes to provider, platform takes fee
+        // NO transfer_data - money stays on platform until service is confirmed
+        // We store provider's stripeAccountId in metadata for later transfer
         payment_intent_data: {
-          application_fee_amount: platformFeeInCents,
-          transfer_data: {
-            destination: provider.stripeAccountId!,
+          metadata: {
+            providerStripeAccountId: provider.stripeAccountId!,
+            platformFeeAmount: platformFeeInCents.toString(),
           },
-          // Note: NO capture_method: "manual" - payment is captured immediately
         },
         success_url: `${protocol}://${host}/client-dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${protocol}://${host}/client-dashboard?payment=cancel`,
-        metadata: safeMetadata,
+        metadata: {
+          ...safeMetadata,
+          providerStripeAccountId: provider.stripeAccountId!,
+          platformFeeAmount: platformFeeInCents.toString(),
+        },
       });
     }
 
@@ -342,7 +348,7 @@ export const bookingService = {
 
     // Handle refund if payment was made
     let newPaymentStatus = booking.paymentStatus;
-    
+
     // Check if refund is needed - now includes "paid" status for Stripe Connect
     const needsRefund =
       booking.paymentStatus === "paid" ||
@@ -442,10 +448,15 @@ export const bookingService = {
     return updatedBooking;
   },
 
+  /**
+   * Provider marks service as completed by uploading proof photos
+   * This puts the booking in "awaiting_confirmation" state
+   * Client has 24h to confirm or dispute
+   */
   async completeBooking(
     bookingId: string,
     providerId: string,
-    photoProofUrl?: string
+    photoProofUrls: string[] // Now accepts array of 1-10 photos
   ) {
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
@@ -460,49 +471,181 @@ export const bookingService = {
       throw new Error("Only provider can complete booking");
     }
 
-    // With Stripe Connect, payment is already captured at checkout
-    // We just need to verify the payment was successful
-    if (
-      booking.paymentStatus !== "paid" &&
-      booking.paymentStatus !== "held_in_escrow" &&
-      booking.paymentStatus !== "authorized" // Legacy support
-    ) {
+    // Validate photo count (1-10 photos required)
+    if (!photoProofUrls || photoProofUrls.length === 0) {
       throw new Error(
-        "Payment must be completed before marking the service as done"
+        "Devi caricare almeno 1 foto come prova del servizio completato"
+      );
+    }
+    if (photoProofUrls.length > 10) {
+      throw new Error("Puoi caricare massimo 10 foto");
+    }
+
+    // Verify payment is in escrow
+    if (booking.paymentStatus !== "held_in_escrow") {
+      throw new Error(
+        "Il pagamento deve essere in escrow per completare il servizio"
       );
     }
 
-    // Note: With Stripe Connect, no manual capture needed
-    // Payment was captured immediately and transferred to provider's account
-    // minus platform fee
+    // Already awaiting confirmation?
+    if (booking.awaitingClientConfirmation) {
+      throw new Error("Il servizio è già in attesa di conferma dal cliente");
+    }
+
+    // Calculate 24h deadline
+    const confirmationDeadline = new Date();
+    confirmationDeadline.setHours(confirmationDeadline.getHours() + 24);
 
     const updatedBooking = await prisma.booking.update({
       where: { id: bookingId },
       data: {
-        status: "completed",
-        paymentStatus: "released",
-        completedAt: new Date(),
-        photoProof: photoProofUrl || null,
+        status: "awaiting_confirmation",
+        photoProof: photoProofUrls[0], // Legacy field - first photo
+        photoProofs: JSON.stringify(photoProofUrls), // All photos as JSON array
+        awaitingClientConfirmation: true,
+        confirmationDeadline: confirmationDeadline,
       },
     });
 
-    // Log booking completed
+    // Log booking awaiting confirmation
     bookingLogger.completed(bookingId);
 
+    // Notify client to confirm or dispute
     await sendNotification(
       booking.clientId,
-      "Booking Completed",
-      `The service ${booking.service.title} has been marked as completed.`
+      "Servizio Completato - Conferma Richiesta ✅",
+      `Il provider ha completato "${booking.service.title}". Hai 24 ore per confermare o aprire una controversia.`,
+      "info"
     );
 
-    // Send completion email
-    sendEmail(
+    // Send email to client
+    await sendEmail(
       booking.clientEmail,
-      "Servizio Completato - Lascia una recensione",
-      emailTemplates.bookingCompleted(
+      "Conferma il Servizio Completato",
+      emailTemplates.awaitingConfirmation(
         booking.clientEmail.split("@")[0],
-        booking.serviceTitle
+        booking.serviceTitle,
+        confirmationDeadline,
+        photoProofUrls.length
       )
+    );
+
+    return updatedBooking;
+  },
+
+  /**
+   * Client confirms service was completed satisfactorily
+   * This releases the payment to the provider
+   */
+  async confirmServiceCompletion(bookingId: string, clientId: string) {
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { service: true, provider: true },
+    });
+
+    if (!booking) {
+      throw new Error("Booking not found");
+    }
+
+    if (booking.clientId !== clientId) {
+      throw new Error("Only the client can confirm service completion");
+    }
+
+    if (!booking.awaitingClientConfirmation) {
+      throw new Error("This booking is not awaiting confirmation");
+    }
+
+    if (booking.disputeStatus) {
+      throw new Error("Cannot confirm a disputed booking");
+    }
+
+    // Import escrowService dynamically to avoid circular dependency
+    const { escrowService } = await import("./escrowService");
+
+    // Release payment to provider
+    const updatedBooking = await escrowService.releasePaymentToProvider(
+      bookingId,
+      "client_confirmed"
+    );
+
+    // Notify provider
+    await sendNotification(
+      booking.providerId,
+      "Servizio Confermato! 🎉",
+      `Il cliente ha confermato il completamento di "${booking.serviceTitle}". Pagamento in arrivo!`,
+      "success"
+    );
+
+    return updatedBooking;
+  },
+
+  /**
+   * Client opens a dispute for unsatisfactory service
+   * This blocks the payment and notifies admin
+   */
+  async openDispute(bookingId: string, clientId: string, reason: string) {
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { service: true, provider: true },
+    });
+
+    if (!booking) {
+      throw new Error("Booking not found");
+    }
+
+    if (booking.clientId !== clientId) {
+      throw new Error("Only the client can open a dispute");
+    }
+
+    if (!booking.awaitingClientConfirmation) {
+      throw new Error("This booking is not awaiting confirmation");
+    }
+
+    if (booking.disputeStatus) {
+      throw new Error("A dispute has already been opened for this booking");
+    }
+
+    if (!reason || reason.trim().length < 10) {
+      throw new Error("Devi fornire una motivazione di almeno 10 caratteri");
+    }
+
+    const updatedBooking = await prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        status: "disputed",
+        disputeStatus: "pending",
+        disputeReason: reason,
+        disputeOpenedAt: new Date(),
+        awaitingClientConfirmation: false, // No longer auto-releases
+      },
+    });
+
+    // Notify provider
+    await sendNotification(
+      booking.providerId,
+      "Controversia Aperta ⚠️",
+      `Il cliente ha aperto una controversia per "${booking.serviceTitle}". Un amministratore verificherà la situazione.`,
+      "warning"
+    );
+
+    // Notify admins (you might want to create a specific admin notification system)
+    console.log(`DISPUTE OPENED: Booking ${bookingId} - Reason: ${reason}`);
+
+    // Send email to support (you can configure this email)
+    await sendEmail(
+      process.env.SUPPORT_EMAIL || "support@domy.com",
+      `Nuova Controversia - Booking ${bookingId}`,
+      `
+        <h2>Nuova Controversia</h2>
+        <p><strong>Booking ID:</strong> ${bookingId}</p>
+        <p><strong>Servizio:</strong> ${booking.serviceTitle}</p>
+        <p><strong>Cliente:</strong> ${booking.clientEmail}</p>
+        <p><strong>Provider:</strong> ${booking.providerEmail}</p>
+        <p><strong>Importo:</strong> €${booking.amount.toFixed(2)}</p>
+        <p><strong>Motivo:</strong> ${reason}</p>
+        <p>Accedi al pannello admin per gestire la controversia.</p>
+      `
     );
 
     return updatedBooking;

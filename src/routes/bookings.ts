@@ -74,12 +74,33 @@ router.post(
   bookingController.cancelBooking
 );
 
-// Complete booking (Provider only) with photo proof upload
+// Complete booking (Provider only) with photo proof upload (multiple photos)
 router.post(
   "/bookings/:id/complete",
   authenticate,
-  uploadProof.single("photo"),
+  uploadProof.array("photos", 10), // Allow up to 10 photos
   bookingController.completeBooking
+);
+
+// Confirm service completion (Client only) - Releases payment to provider
+router.post(
+  "/bookings/:id/confirm",
+  authenticate,
+  bookingController.confirmServiceCompletion
+);
+
+// Open dispute (Client only) - Blocks payment, notifies admin
+router.post(
+  "/bookings/:id/dispute",
+  authenticate,
+  [
+    body("reason")
+      .trim()
+      .isLength({ min: 10, max: 1000 })
+      .withMessage("La motivazione deve essere tra 10 e 1000 caratteri"),
+  ],
+  validate,
+  bookingController.openDispute
 );
 
 // Legacy/Compatibility routes for messages

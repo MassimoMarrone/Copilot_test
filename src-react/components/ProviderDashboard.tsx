@@ -236,13 +236,13 @@ const ProviderDashboard: React.FC = () => {
     }
   };
 
-  const handleCompleteBooking = async (photo: File) => {
+  const handleCompleteBooking = async (photos: File[]) => {
     if (!selectedBooking) return;
 
     try {
-      await bookingService.completeBooking(selectedBooking.id, photo);
+      await bookingService.completeBooking(selectedBooking.id, photos);
       alert(
-        "Servizio completato! Il pagamento è stato rilasciato dall'escrow."
+        "Servizio completato! Il cliente ha 24 ore per confermare. Dopo la conferma il pagamento verrà trasferito sul tuo account."
       );
       setShowCompleteModal(false);
       setSelectedBooking(null);

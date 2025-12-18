@@ -164,6 +164,20 @@ export const paymentLogger = {
   refund: (bookingId: string, amount: number, reason: string) => {
     logger.info("Payment refunded", { bookingId, amount, reason });
   },
+  captured: (paymentIntentId: string, amount: number, reason: string) => {
+    logger.info("Payment captured/released", {
+      paymentIntentId,
+      amount,
+      reason,
+    });
+  },
+  released: (bookingId: string, amount: number, destinationAccount: string) => {
+    logger.info("Payment released to provider", {
+      bookingId,
+      amount,
+      destinationAccount,
+    });
+  },
 };
 
 // Helper per loggare booking

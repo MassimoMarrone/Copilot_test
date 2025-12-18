@@ -109,11 +109,16 @@ export const bookingController = {
     try {
       const { id } = req.params;
       // Cloudinary returns the full URL in req.file.path
-      const photoProofUrl = req.file ? (req.file as any).path : undefined;
+      // Now we support multiple files (up to 10)
+      const files = req.files as Express.Multer.File[] | undefined;
+      const photoProofUrls = files
+        ? files.map((file) => (file as any).path)
+        : [];
+
       const booking = await bookingService.completeBooking(
         id,
         req.user!.id,
-        photoProofUrl
+        photoProofUrls
       );
       res.json(booking);
     } catch (error: any) {
@@ -123,12 +128,67 @@ export const bookingController = {
       } else if (error.message === "Only provider can complete booking") {
         res.status(403).json({ error: error.message });
       } else if (
-        error.message.includes("Payment must be authorized") ||
-        error.message.includes("Payment processing failed")
+        error.message.includes("foto") ||
+        error.message.includes("Payment") ||
+        error.message.includes("processed")
       ) {
         res.status(400).json({ error: error.message });
       } else {
         res.status(500).json({ error: "Failed to complete booking" });
+      }
+    }
+  },
+
+  async confirmServiceCompletion(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const booking = await bookingService.confirmServiceCompletion(
+        id,
+        req.user!.id
+      );
+      res.json(booking);
+    } catch (error: any) {
+      console.error("Error confirming service completion:", error);
+      if (error.message === "Booking not found") {
+        res.status(404).json({ error: error.message });
+      } else if (error.message.includes("Only the client")) {
+        res.status(403).json({ error: error.message });
+      } else if (
+        error.message.includes("awaiting confirmation") ||
+        error.message.includes("already confirmed") ||
+        error.message.includes("disputed")
+      ) {
+        res.status(400).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Failed to confirm service completion" });
+      }
+    }
+  },
+
+  async openDispute(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+      const booking = await bookingService.openDispute(
+        id,
+        req.user!.id,
+        reason
+      );
+      res.json(booking);
+    } catch (error: any) {
+      console.error("Error opening dispute:", error);
+      if (error.message === "Booking not found") {
+        res.status(404).json({ error: error.message });
+      } else if (error.message.includes("Only the client")) {
+        res.status(403).json({ error: error.message });
+      } else if (
+        error.message.includes("awaiting confirmation") ||
+        error.message.includes("already been opened") ||
+        error.message.includes("motivazione")
+      ) {
+        res.status(400).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Failed to open dispute" });
       }
     }
   },

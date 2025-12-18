@@ -67,6 +67,7 @@
     "leaflet": "^1.9.4",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
+    "node-cron": "^4.2.1",
     "nodemailer": "^7.0.10",
     "react": "^19.2.0",
     "react-datepicker": "^8.9.0",
@@ -82,6 +83,7 @@
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
+    "@types/node-cron": "^3.0.11",
     "@types/react-datepicker": "^6.2.0",
     "@types/supertest": "^6.0.2",
     "concurrently": "^9.2.1",

@@ -48,6 +48,7 @@ import schedulingRoutes from "./routes/scheduling";
 import cleanupRoutes from "./routes/cleanup";
 import onboardingRoutes from "./routes/onboarding";
 import stripeConnectRoutes from "./routes/stripeConnect";
+import { startEscrowCronJobs } from "./cron/escrowCron";
 import { prisma } from "./lib/prisma";
 
 // Load environment variables
@@ -376,6 +377,10 @@ const initAdmin = async (): Promise<void> => {
 
 if (process.env.NODE_ENV !== "test") {
   initAdmin();
+
+  // Start cron jobs
+  startEscrowCronJobs();
+
   httpServer.listen(Number(PORT), "0.0.0.0", () => {
     systemLogger.startup(Number(PORT));
   });

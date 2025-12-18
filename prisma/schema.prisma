@@ -135,7 +135,8 @@ model Booking {
   status          String
   paymentStatus   String
   paymentIntentId String?
-  photoProof      String?
+  photoProof      String?   // Legacy single photo (deprecated)
+  photoProofs     String?   // JSON array of photo URLs (1-10 photos)
   createdAt       DateTime  @default(now())
   completedAt     DateTime?
   clientPhone     String?
@@ -150,6 +151,19 @@ model Booking {
   startTime           String?   // Booking start time "HH:MM"
   endTime             String?   // Booking end time "HH:MM"
   selectedExtras      String?   // JSON string [{name: string, price: number}]
+  
+  // Client confirmation flow (escrow release)
+  awaitingClientConfirmation  Boolean   @default(false)
+  confirmationDeadline        DateTime? // 24h after provider completes
+  clientConfirmedAt           DateTime?
+  
+  // Dispute handling
+  disputeStatus     String?   // "pending", "resolved_refund", "resolved_payment", null
+  disputeReason     String?
+  disputeOpenedAt   DateTime?
+  disputeResolvedAt DateTime?
+  disputeResolvedBy String?   // Admin user ID who resolved
+  disputeNotes      String?   // Admin notes on resolution
 
   messages        ChatMessage[]
   review          Review?

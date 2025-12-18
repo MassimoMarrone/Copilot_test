@@ -160,4 +160,113 @@ export const emailTemplates = {
       <p>Il team di Domy</p>
     </div>
   `,
+
+  // Escrow system templates
+  awaitingConfirmation: (
+    clientName: string,
+    serviceTitle: string,
+    deadline: Date,
+    photoCount: number
+  ) => `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #17a2b8;">📸 Servizio Completato - Conferma Richiesta</h2>
+      <p>Ciao ${clientName},</p>
+      <p>Il fornitore ha completato il servizio <strong>${serviceTitle}</strong> e ha caricato ${photoCount} foto come prova.</p>
+      <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #ffc107;">
+        <strong>⏰ Hai tempo fino al ${deadline.toLocaleString("it-IT", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })} per confermare.</strong>
+        <p style="margin: 5px 0 0 0; font-size: 14px;">Se non confermi entro questa data, il pagamento verrà rilasciato automaticamente al fornitore.</p>
+      </div>
+      <p>Accedi alla tua dashboard per:</p>
+      <ul>
+        <li>✅ <strong>Confermare</strong> - Il pagamento verrà rilasciato al fornitore</li>
+        <li>⚠️ <strong>Aprire una controversia</strong> - Un amministratore verificherà la situazione</li>
+      </ul>
+      <p style="text-align: center; margin: 30px 0;">
+        <a href="${
+          process.env.FRONTEND_URL || "http://localhost:3000"
+        }/client-dashboard" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Vai alla Dashboard</a>
+      </p>
+      <br>
+      <p>Il team di Domy</p>
+    </div>
+  `,
+
+  paymentReleased: (
+    providerName: string,
+    serviceTitle: string,
+    amount: number,
+    releaseType: "client_confirmed" | "auto_released"
+  ) => `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #28a745;">💰 Pagamento Rilasciato!</h2>
+      <p>Ciao ${providerName},</p>
+      <p>Il pagamento per il servizio <strong>${serviceTitle}</strong> è stato trasferito sul tuo account Stripe.</p>
+      <div style="background: #d4edda; padding: 15px; border-radius: 5px; margin: 15px 0; text-align: center;">
+        <span style="font-size: 24px; font-weight: bold; color: #155724;">€${amount.toFixed(
+          2
+        )}</span>
+      </div>
+      <p><strong>Motivo:</strong> ${
+        releaseType === "client_confirmed"
+          ? "Il cliente ha confermato il completamento del servizio"
+          : "Rilascio automatico (24h senza risposta)"
+      }</p>
+      <p>Il trasferimento potrebbe richiedere alcuni giorni per essere visibile sul tuo conto bancario, secondo le tempistiche di Stripe.</p>
+      <br>
+      <p>Grazie per usare Domy! 🏠</p>
+      <br>
+      <p>Il team di Domy</p>
+    </div>
+  `,
+
+  disputeOpened: (
+    providerName: string,
+    serviceTitle: string,
+    reason: string
+  ) => `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #dc3545;">⚠️ Controversia Aperta</h2>
+      <p>Ciao ${providerName},</p>
+      <p>Il cliente ha aperto una controversia per il servizio <strong>${serviceTitle}</strong>.</p>
+      <div style="background: #f8d7da; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #dc3545;">
+        <strong>Motivo indicato dal cliente:</strong>
+        <p style="margin: 5px 0 0 0;">${reason}</p>
+      </div>
+      <p>Il pagamento è stato temporaneamente bloccato e un amministratore Domy verificherà la situazione.</p>
+      <p>Ti contatteremo presto per raccogliere anche la tua versione dei fatti.</p>
+      <br>
+      <p>Il team di Domy</p>
+    </div>
+  `,
+
+  disputeResolved: (
+    userName: string,
+    serviceTitle: string,
+    resolution: string,
+    isProvider: boolean
+  ) => `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #17a2b8;">📋 Controversia Risolta</h2>
+      <p>Ciao ${userName},</p>
+      <p>La controversia per il servizio <strong>${serviceTitle}</strong> è stata risolta.</p>
+      <div style="background: #e2e3e5; padding: 15px; border-radius: 5px; margin: 15px 0;">
+        <strong>Decisione:</strong>
+        <p style="margin: 5px 0 0 0;">${resolution}</p>
+      </div>
+      ${
+        isProvider
+          ? "<p>Se la decisione prevedeva il rilascio del pagamento a tuo favore, vedrai l'importo sul tuo account Stripe nei prossimi giorni.</p>"
+          : "<p>Se la decisione prevedeva un rimborso, l'importo verrà accreditato sul metodo di pagamento originale entro 5-10 giorni lavorativi.</p>"
+      }
+      <p>Se hai domande sulla decisione, non esitare a contattarci.</p>
+      <br>
+      <p>Il team di Domy</p>
+    </div>
+  `,
 };

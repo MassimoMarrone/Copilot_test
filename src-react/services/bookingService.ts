@@ -10,7 +10,13 @@ export interface Booking {
   amount: number;
   providerEmail: string;
   clientEmail: string;
-  status: "pending" | "confirmed" | "completed" | "cancelled";
+  status:
+    | "pending"
+    | "confirmed"
+    | "completed"
+    | "cancelled"
+    | "awaiting_confirmation"
+    | "disputed";
   paymentStatus:
     | "unpaid"
     | "authorized"
@@ -18,6 +24,7 @@ export interface Booking {
     | "released"
     | "refunded";
   photoProof?: string;
+  photoProofs?: string; // JSON array of photo URLs
   clientPhone?: string;
   preferredTime?: string;
   notes?: string;
@@ -29,6 +36,13 @@ export interface Booking {
   estimatedDuration?: number;
   startTime?: string;
   endTime?: string;
+  // Escrow confirmation fields
+  awaitingClientConfirmation?: boolean;
+  confirmationDeadline?: string;
+  clientConfirmedAt?: string;
+  // Dispute fields
+  disputeStatus?: "pending" | "resolved_refund" | "resolved_payment";
+  disputeReason?: string;
 }
 
 export interface CreateBookingData {
@@ -71,11 +85,23 @@ export const bookingService = {
     return post<Booking>(`/api/bookings/${id}/cancel`, {});
   },
 
-  // Complete a booking (Provider)
-  completeBooking: async (id: string, photoProof: File): Promise<Booking> => {
+  // Complete a booking (Provider) - Upload 1-10 photos
+  completeBooking: async (id: string, photos: File[]): Promise<Booking> => {
     const formData = new FormData();
-    formData.append("photo", photoProof);
+    photos.forEach((photo) => {
+      formData.append("photos", photo);
+    });
     return upload<Booking>(`/api/bookings/${id}/complete`, formData, "POST");
+  },
+
+  // Confirm service completion (Client) - Releases payment to provider
+  confirmServiceCompletion: async (id: string): Promise<Booking> => {
+    return post<Booking>(`/api/bookings/${id}/confirm`, {});
+  },
+
+  // Open dispute (Client) - Blocks payment, notifies admin
+  openDispute: async (id: string, reason: string): Promise<Booking> => {
+    return post<Booking>(`/api/bookings/${id}/dispute`, { reason });
   },
 
   // Verify payment

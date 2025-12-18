@@ -103,7 +103,7 @@ export const paymentService = {
                 amount: parseFloat(metadata.amount),
                 date: new Date(metadata.date) as any,
                 status: "pending",
-                paymentStatus: "paid", // Changed from "authorized" to "paid" - immediate capture with Connect
+                paymentStatus: "held_in_escrow", // Money is on platform, waiting for service completion
                 paymentIntentId: paymentIntentId,
                 createdAt: new Date(),
                 clientPhone: metadata.clientPhone || null,
