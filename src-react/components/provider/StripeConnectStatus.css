@@ -1,0 +1,151 @@
+.stripe-connect-status {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+}
+
+.stripe-connect-status.loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #666;
+}
+
+.stripe-connect-status .spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #635bff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.stripe-connect-status .status-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.stripe-connect-status .status-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.stripe-connect-status .status-info h4 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.stripe-connect-status .status-info p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+/* Not Connected State */
+.stripe-connect-status.not-connected {
+  border: 2px dashed #ddd;
+  background: #fafafa;
+}
+
+.stripe-connect-status.not-connected .status-icon {
+  opacity: 0.6;
+}
+
+/* Pending State */
+.stripe-connect-status.pending {
+  border-left: 4px solid #f59e0b;
+  background: #fffbeb;
+}
+
+/* Connected State */
+.stripe-connect-status.connected {
+  border-left: 4px solid #10b981;
+  background: #ecfdf5;
+}
+
+/* Badges */
+.stripe-connect-status .status-badges {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.stripe-connect-status .badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.stripe-connect-status .badge-success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+/* Buttons */
+.stripe-connect-status .btn-connect {
+  width: 100%;
+  padding: 12px 20px;
+  background: #635bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.stripe-connect-status .btn-connect:hover:not(:disabled) {
+  background: #4f46e5;
+}
+
+.stripe-connect-status .btn-connect:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.stripe-connect-status .btn-dashboard {
+  width: 100%;
+  padding: 10px 20px;
+  background: white;
+  color: #635bff;
+  border: 2px solid #635bff;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.stripe-connect-status .btn-dashboard:hover:not(:disabled) {
+  background: #635bff;
+  color: white;
+}
+
+.stripe-connect-status .btn-dashboard:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Error Message */
+.stripe-connect-status .error-message {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 10px;
+}

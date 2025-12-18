@@ -103,7 +103,7 @@ export const paymentService = {
                 amount: parseFloat(metadata.amount),
                 date: new Date(metadata.date) as any,
                 status: "pending",
-                paymentStatus: "authorized",
+                paymentStatus: "paid", // Changed from "authorized" to "paid" - immediate capture with Connect
                 paymentIntentId: paymentIntentId,
                 createdAt: new Date(),
                 clientPhone: metadata.clientPhone || null,
@@ -162,7 +162,7 @@ export const paymentService = {
 
         return { success: true, booking };
       } else {
-        // Old flow
+        // Old flow (legacy)
         const bookingId = metadata?.bookingId;
         if (!bookingId) {
           throw new Error("Booking ID missing in metadata");
@@ -175,7 +175,7 @@ export const paymentService = {
           const updatedBooking = await prisma.booking.update({
             where: { id: bookingId },
             data: {
-              paymentStatus: "authorized",
+              paymentStatus: "paid", // Changed from "authorized" to "paid"
               paymentIntentId: paymentIntentId,
             },
           });

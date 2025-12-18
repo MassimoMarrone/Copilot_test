@@ -4,6 +4,7 @@ import { sendNotification } from "../utils/notification";
 import { sendEmail, emailTemplates } from "../emailService";
 import { schedulingService } from "./schedulingService";
 import { bookingLogger, paymentLogger } from "../utils/logger";
+import { stripeConnectService } from "./stripeConnectService";
 
 export const bookingService = {
   async createBooking(
@@ -49,6 +50,24 @@ export const bookingService = {
 
     if (!service) {
       throw new Error("Service not found");
+    }
+
+    // Verify provider has Stripe Connect account set up
+    const provider = service.provider;
+    if (!provider.stripeAccountId) {
+      throw new Error(
+        "Il provider non ha ancora configurato i pagamenti. Contattalo per completare la configurazione."
+      );
+    }
+
+    // Verify provider can receive payments (account is onboarded)
+    const canReceive = await stripeConnectService.canReceivePayments(
+      provider.id
+    );
+    if (!canReceive) {
+      throw new Error(
+        "Il provider non può ancora ricevere pagamenti. L'onboarding Stripe non è completo."
+      );
     }
 
     // Check service availability
@@ -208,6 +227,12 @@ export const bookingService = {
 
     let session;
 
+    // Calculate platform fee (application fee)
+    const amountInCents = Math.round(finalPrice * 100);
+    const platformFeeInCents = Math.round(
+      amountInCents * (stripeConnectService.getPlatformFeePercent() / 100)
+    );
+
     if (
       process.env.STRIPE_SECRET_KEY === "sk_test_dummy" ||
       !process.env.STRIPE_SECRET_KEY
@@ -217,7 +242,7 @@ export const bookingService = {
       const mockSession = {
         id: mockSessionId,
         status: "complete",
-        payment_status: "unpaid",
+        payment_status: "paid", // Changed from "unpaid" to "paid" for immediate capture
         payment_intent: "pi_mock_" + Date.now(),
         metadata: safeMetadata,
       };
@@ -228,6 +253,7 @@ export const bookingService = {
         url: `${protocol}://${host}/client-dashboard?payment=success&session_id=${mockSessionId}`,
       };
     } else {
+      // Stripe Connect: immediate capture with split payment
       session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         line_items: [
@@ -238,14 +264,19 @@ export const bookingService = {
                 name: service.title,
                 description: bookingDescription,
               },
-              unit_amount: Math.round(finalPrice * 100),
+              unit_amount: amountInCents,
             },
             quantity: 1,
           },
         ],
         mode: "payment",
+        // Stripe Connect: payment goes to provider, platform takes fee
         payment_intent_data: {
-          capture_method: "manual",
+          application_fee_amount: platformFeeInCents,
+          transfer_data: {
+            destination: provider.stripeAccountId!,
+          },
+          // Note: NO capture_method: "manual" - payment is captured immediately
         },
         success_url: `${protocol}://${host}/client-dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${protocol}://${host}/client-dashboard?payment=cancel`,
@@ -421,26 +452,21 @@ export const bookingService = {
       throw new Error("Only provider can complete booking");
     }
 
+    // With Stripe Connect, payment is already captured at checkout
+    // We just need to verify the payment was successful
     if (
+      booking.paymentStatus !== "paid" &&
       booking.paymentStatus !== "held_in_escrow" &&
-      booking.paymentStatus !== "authorized"
+      booking.paymentStatus !== "authorized" // Legacy support
     ) {
       throw new Error(
-        "Payment must be authorized or held in escrow before completing the service"
+        "Payment must be completed before marking the service as done"
       );
     }
 
-    try {
-      if (booking.paymentStatus === "authorized" && booking.paymentIntentId) {
-        if (booking.paymentIntentId.startsWith("pi_mock_")) {
-          console.log(`Mock captured payment for booking ${booking.id}`);
-        } else {
-          await stripe.paymentIntents.capture(booking.paymentIntentId);
-        }
-      }
-    } catch (e: any) {
-      throw new Error("Payment processing failed: " + e.message);
-    }
+    // Note: With Stripe Connect, no manual capture needed
+    // Payment was captured immediately and transferred to provider's account
+    // minus platform fee
 
     const updatedBooking = await prisma.booking.update({
       where: { id: bookingId },

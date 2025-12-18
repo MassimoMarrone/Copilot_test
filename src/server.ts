@@ -47,6 +47,7 @@ import paymentRoutes from "./routes/payment";
 import schedulingRoutes from "./routes/scheduling";
 import cleanupRoutes from "./routes/cleanup";
 import onboardingRoutes from "./routes/onboarding";
+import stripeConnectRoutes from "./routes/stripeConnect";
 import { prisma } from "./lib/prisma";
 
 // Load environment variables
@@ -149,6 +150,12 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   }
 });
 
+// Raw body parser for Stripe webhooks (must be before express.json)
+app.use(
+  "/api/stripe-connect/webhook",
+  express.raw({ type: "application/json" })
+);
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
@@ -222,6 +229,7 @@ app.use("/api", paymentRoutes);
 app.use("/api/scheduling", schedulingRoutes);
 app.use("/api", cleanupRoutes);
 app.use("/api/onboarding", onboardingRoutes);
+app.use("/api/stripe-connect", stripeConnectRoutes);
 
 // SPA Fallback (Only used in development or if FRONTEND_URL is not set)
 const serveSpa = (_req: Request, res: Response) => {

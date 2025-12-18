@@ -8,6 +8,7 @@ import ReviewList from "./provider/ReviewList";
 import ServiceModal from "./provider/ServiceModal";
 import CompleteBookingModal from "./provider/CompleteBookingModal";
 import AvailabilityModal from "./provider/AvailabilityModal";
+import StripeConnectStatus from "./provider/StripeConnectStatus";
 import BookingCalendar, { CalendarEvent } from "./BookingCalendar";
 import { Service, Booking, Review } from "../types";
 import { ProviderAvailability } from "./AvailabilityManager";
@@ -329,6 +330,9 @@ const ProviderDashboard: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Stripe Connect Status */}
+      <StripeConnectStatus />
 
       {/* Stats Cards */}
       <div className="stats-grid">

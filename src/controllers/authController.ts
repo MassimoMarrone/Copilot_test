@@ -20,7 +20,7 @@ export class AuthController {
         ipAddress: getClientIp(req),
         userAgent: req.headers["user-agent"] || "unknown",
       };
-      
+
       const result = await authService.register(registrationData);
       res.json({ success: true, message: result.message });
     } catch (error: any) {
@@ -156,7 +156,7 @@ export class AuthController {
       const { acceptedProviderTerms } = req.body;
       const ipAddress = getClientIp(req);
       const userAgent = req.headers["user-agent"];
-      
+
       const { token } = await authService.becomeProvider(
         req.user!.id,
         acceptedProviderTerms,
