@@ -15,6 +15,7 @@ const AdminLayout: React.FC = () => {
   const menuItems = [
     { path: "/", icon: "📊", label: "Dashboard", end: true },
     { path: "/users", icon: "👥", label: "Utenti" },
+    { path: "/onboarding", icon: "📋", label: "Onboarding" },
     { path: "/services", icon: "🛠️", label: "Servizi" },
     { path: "/bookings", icon: "📅", label: "Prenotazioni" },
     { path: "/settings", icon: "⚙️", label: "Impostazioni" },

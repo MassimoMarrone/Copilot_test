@@ -8,6 +8,7 @@ import UsersPage from "./pages/UsersPage";
 import ServicesPage from "./pages/ServicesPage";
 import BookingsPage from "./pages/BookingsPage";
 import SettingsPage from "./pages/SettingsPage";
+import OnboardingPage from "./pages/OnboardingPage";
 
 // Protected Route wrapper
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
@@ -52,6 +53,7 @@ function AppRoutes() {
         <Route path="users" element={<UsersPage />} />
         <Route path="services" element={<ServicesPage />} />
         <Route path="bookings" element={<BookingsPage />} />
+        <Route path="onboarding" element={<OnboardingPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
