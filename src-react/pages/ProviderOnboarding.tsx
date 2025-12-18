@@ -47,7 +47,7 @@ interface OnboardingStatus {
 }
 
 const ProviderOnboarding: React.FC = () => {
-  const { user: authUser, token } = useAuth();
+  const { user: authUser } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -91,9 +91,7 @@ const ProviderOnboarding: React.FC = () => {
   const fetchStatus = useCallback(async () => {
     try {
       const response = await fetch("/api/onboarding/status", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
       if (response.ok) {
         const data = await response.json();
@@ -140,7 +138,7 @@ const ProviderOnboarding: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     fetchStatus();
@@ -172,9 +170,7 @@ const ProviderOnboarding: React.FC = () => {
 
       const response = await fetch("/api/onboarding/upload-document", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
         body: formDataUpload,
       });
 
@@ -221,9 +217,9 @@ const ProviderOnboarding: React.FC = () => {
     try {
       const response = await fetch("/api/onboarding", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           step,

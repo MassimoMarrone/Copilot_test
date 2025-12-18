@@ -174,12 +174,12 @@ app.use("/api/", limiter);
 // Health Check Endpoint (no rate limiting)
 app.get("/api/health", async (_req: Request, res: Response) => {
   const startTime = Date.now();
-  
+
   try {
     // Check database connection
     await prisma.$queryRaw`SELECT 1`;
     const dbLatency = Date.now() - startTime;
-    
+
     res.json({
       status: "healthy",
       timestamp: new Date().toISOString(),
@@ -189,20 +189,22 @@ app.get("/api/health", async (_req: Request, res: Response) => {
       checks: {
         database: {
           status: "healthy",
-          latency: `${dbLatency}ms`
+          latency: `${dbLatency}ms`,
         },
         memory: {
           used: `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`,
-          total: `${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)}MB`
-        }
-      }
+          total: `${Math.round(
+            process.memoryUsage().heapTotal / 1024 / 1024
+          )}MB`,
+        },
+      },
     });
   } catch (error) {
     console.error("Health check failed:", error);
     res.status(503).json({
       status: "unhealthy",
       timestamp: new Date().toISOString(),
-      error: "Database connection failed"
+      error: "Database connection failed",
     });
   }
 });
@@ -291,7 +293,7 @@ app.get("*splat", pageLimiter, (req: Request, res: Response) => {
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   // Log error
   console.error("Unhandled Error:", err);
-  
+
   // Send to Sentry if configured
   if (process.env.SENTRY_DSN) {
     Sentry.captureException(err, {
@@ -300,13 +302,16 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
         method: req.method,
         body: req.body,
         query: req.query,
-      }
+      },
     });
   }
-  
+
   res.status(500).json({
     error: "Internal server error",
-    message: process.env.NODE_ENV === "development" ? err.message : "Something went wrong",
+    message:
+      process.env.NODE_ENV === "development"
+        ? err.message
+        : "Something went wrong",
     stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
   });
 });
