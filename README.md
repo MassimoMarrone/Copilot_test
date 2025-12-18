@@ -193,7 +193,7 @@ npm run dev:full
 | 1   | **Stripe Live Keys**       | Configurare `STRIPE_SECRET_KEY` e `STRIPE_PUBLISHABLE_KEY` live su Render                                | 🔲     |
 | 2   | **Verifica Env Vars**      | Controllare che tutte le variabili siano configurate su Render (DATABASE_URL, GOOGLE_MAPS_API_KEY, etc.) | 🔲     |
 | 3   | **Google OAuth Domini**    | Aggiungere dominio produzione nella Google Cloud Console                                                 | ✅     |
-| 4   | **Race Condition Booking** | Implementare lock/transazione per prenotazioni simultanee (vedi sotto)                                   | ✅     |
+| 4   | **Race Condition Booking** | Implementare lock/transazione per prenotazioni simultanee                                                | ✅     |
 
 ### 🟠 IMPORTANTI (Raccomandati)
 
@@ -201,18 +201,26 @@ npm run dev:full
 | --- | ------------------------- | --------------------------------------------------------------------------------- | ------------- | ------ |
 | 5   | **Health Check Endpoint** | Aggiungere `/health` per monitoring Render                                        | 10 min        | 🔲     |
 | 6   | **Cloud Storage**         | Migrare upload immagini su Cloudinary/S3 (i file su Render si perdono al restart) | 2-4h          | ✅     |
-| 7   | **Monitoring (Sentry)**   | Setup error tracking per ricevere alert su errori in produzione                   | 1h            | 🔲     |
-| 8   | **Backup Database**       | Verificare backup automatici su Neon PostgreSQL                                   | 30 min        | 🔲     |
-| 9   | **FRONTEND_URL**          | Aggiungere variabile per CORS in produzione                                       | 5 min         | 🔲     |
+| 7   | **Provider Onboarding**   | Sistema di onboarding provider con upload documenti e approvazione admin          | 4h            | ✅     |
+| 8   | **Monitoring (Sentry)**   | Setup error tracking per ricevere alert su errori in produzione                   | 1h            | 🔲     |
+| 9   | **Backup Database**       | Verificare backup automatici su Neon PostgreSQL                                   | 30 min        | 🔲     |
 
 ### 🟡 MIGLIORAMENTI (Post-Lancio)
 
 | #   | Task                    | Descrizione                                                      | Priorità |
 | --- | ----------------------- | ---------------------------------------------------------------- | -------- |
-| 10  | **Transazioni DB**      | Usare `$transaction` per operazioni critiche (booking + payment) | Media    |
+| 10  | **Transazioni DB**      | Usare `$transaction` per operazioni critiche (booking + payment) | ✅ Fatto |
 | 11  | **Test Coverage**       | Aggiungere test per auth, payments, chat                         | Media    |
 | 12  | **Rate Limiting Redis** | Per scaling con più istanze                                      | Bassa    |
 | 13  | **Soft Delete**         | Implementare soft delete per servizi e booking                   | Bassa    |
+
+### 🎯 PROSSIMI PASSI
+
+1. **Health Check Endpoint** - Aggiungere `/api/health` per monitoring Render (10 min)
+2. **Stripe Live Keys** - Configurare chiavi Stripe di produzione su Render
+3. **Verifica Env Vars** - Checklist finale variabili ambiente su Render
+4. **Test Onboarding** - Testare il flusso completo di onboarding provider
+5. **Sentry** (opzionale) - Setup error tracking per produzione
 
 ### ⚠️ Race Condition - Prenotazioni Simultanee
 

@@ -255,7 +255,9 @@ export const adminService = {
     const pending = await prisma.user.findMany({
       where: {
         isProvider: true,
-        onboardingStatus: { in: ["under_review", "documents_uploaded", "pending"] },
+        onboardingStatus: {
+          in: ["under_review", "documents_uploaded", "pending"],
+        },
       },
       select: {
         id: true,

@@ -98,13 +98,15 @@ const ProviderOnboarding: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setStatus(data);
-        
+
         // Pre-fill form with existing data
         if (data.user) {
           setFormData({
             firstName: data.user.firstName || "",
             lastName: data.user.lastName || "",
-            dateOfBirth: data.user.dateOfBirth ? data.user.dateOfBirth.split("T")[0] : "",
+            dateOfBirth: data.user.dateOfBirth
+              ? data.user.dateOfBirth.split("T")[0]
+              : "",
             fiscalCode: data.user.fiscalCode || "",
             vatNumber: data.user.vatNumber || "",
             phone: data.user.phone || "",
@@ -113,16 +115,20 @@ const ProviderOnboarding: React.FC = () => {
             postalCode: data.user.postalCode || "",
             idDocumentType: data.user.idDocumentType || "carta_identita",
             idDocumentNumber: data.user.idDocumentNumber || "",
-            idDocumentExpiry: data.user.idDocumentExpiry ? data.user.idDocumentExpiry.split("T")[0] : "",
+            idDocumentExpiry: data.user.idDocumentExpiry
+              ? data.user.idDocumentExpiry.split("T")[0]
+              : "",
             iban: data.user.iban || "",
             bankAccountHolder: data.user.bankAccountHolder || "",
             workingZones: data.user.workingZones || "",
             yearsOfExperience: data.user.yearsOfExperience?.toString() || "",
             hasOwnEquipment: data.user.hasOwnEquipment || false,
             insuranceNumber: data.user.insuranceNumber || "",
-            insuranceExpiry: data.user.insuranceExpiry ? data.user.insuranceExpiry.split("T")[0] : "",
+            insuranceExpiry: data.user.insuranceExpiry
+              ? data.user.insuranceExpiry.split("T")[0]
+              : "",
           });
-          
+
           // Set current step based on progress
           if (data.user.onboardingStep) {
             setCurrentStep(Math.min(data.user.onboardingStep + 1, 4));
@@ -140,17 +146,22 @@ const ProviderOnboarding: React.FC = () => {
     fetchStatus();
   }, [fetchStatus]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   const uploadDocument = async (file: File, side: "front" | "back") => {
-    const setUploading = side === "front" ? setUploadingFront : setUploadingBack;
+    const setUploading =
+      side === "front" ? setUploadingFront : setUploadingBack;
     setUploading(true);
     setError(null);
 
@@ -169,7 +180,11 @@ const ProviderOnboarding: React.FC = () => {
 
       if (response.ok) {
         await fetchStatus();
-        setSuccess(`Documento ${side === "front" ? "fronte" : "retro"} caricato con successo!`);
+        setSuccess(
+          `Documento ${
+            side === "front" ? "fronte" : "retro"
+          } caricato con successo!`
+        );
         setTimeout(() => setSuccess(null), 3000);
       } else {
         const errorData = await response.json();
@@ -182,7 +197,10 @@ const ProviderOnboarding: React.FC = () => {
     }
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, side: "front" | "back") => {
+  const handleFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    side: "front" | "back"
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -217,7 +235,7 @@ const ProviderOnboarding: React.FC = () => {
         await fetchStatus();
         setSuccess("Dati salvati con successo!");
         setTimeout(() => setSuccess(null), 3000);
-        
+
         if (step < 4) {
           setCurrentStep(step + 1);
         }
@@ -246,7 +264,10 @@ const ProviderOnboarding: React.FC = () => {
       <div className="onboarding-container">
         <div className="onboarding-success">
           <h2>✅ Onboarding Completato</h2>
-          <p>Il tuo profilo è stato verificato e approvato. Puoi iniziare a offrire i tuoi servizi!</p>
+          <p>
+            Il tuo profilo è stato verificato e approvato. Puoi iniziare a
+            offrire i tuoi servizi!
+          </p>
         </div>
       </div>
     );
@@ -258,7 +279,10 @@ const ProviderOnboarding: React.FC = () => {
       <div className="onboarding-container">
         <div className="onboarding-review">
           <h2>⏳ In Revisione</h2>
-          <p>I tuoi documenti sono in fase di revisione. Riceverai una notifica quando il processo sarà completato.</p>
+          <p>
+            I tuoi documenti sono in fase di revisione. Riceverai una notifica
+            quando il processo sarà completato.
+          </p>
         </div>
       </div>
     );
@@ -276,10 +300,13 @@ const ProviderOnboarding: React.FC = () => {
               <strong>Motivo:</strong> {status.user.onboardingRejectionReason}
             </div>
           )}
-          <button className="btn-primary" onClick={() => {
-            // Reset and allow retry
-            setCurrentStep(1);
-          }}>
+          <button
+            className="btn-primary"
+            onClick={() => {
+              // Reset and allow retry
+              setCurrentStep(1);
+            }}
+          >
             Riprova
           </button>
         </div>
@@ -290,14 +317,17 @@ const ProviderOnboarding: React.FC = () => {
   return (
     <div className="onboarding-container">
       <h1>Completa il tuo Profilo Provider</h1>
-      
+
       {/* Progress indicator */}
       <div className="progress-steps">
-        {[1, 2, 3, 4].map(step => (
+        {[1, 2, 3, 4].map((step) => (
           <div
             key={step}
             className={`step ${currentStep === step ? "active" : ""} ${
-              status?.steps[`step${step}` as keyof typeof status.steps]?.complete ? "completed" : ""
+              status?.steps[`step${step}` as keyof typeof status.steps]
+                ?.complete
+                ? "completed"
+                : ""
             }`}
             onClick={() => setCurrentStep(step)}
           >
@@ -473,7 +503,9 @@ const ProviderOnboarding: React.FC = () => {
                 onChange={(e) => handleFileChange(e, "front")}
                 disabled={uploadingFront}
               />
-              {uploadingFront && <span className="uploading">Caricamento...</span>}
+              {uploadingFront && (
+                <span className="uploading">Caricamento...</span>
+              )}
               {status?.user.idDocumentFrontUrl && (
                 <div className="uploaded-preview">
                   ✅ Documento fronte caricato
@@ -488,7 +520,9 @@ const ProviderOnboarding: React.FC = () => {
                 onChange={(e) => handleFileChange(e, "back")}
                 disabled={uploadingBack}
               />
-              {uploadingBack && <span className="uploading">Caricamento...</span>}
+              {uploadingBack && (
+                <span className="uploading">Caricamento...</span>
+              )}
               {status?.user.idDocumentBackUrl && (
                 <div className="uploaded-preview">
                   ✅ Documento retro caricato
@@ -504,7 +538,11 @@ const ProviderOnboarding: React.FC = () => {
             <button
               className="btn-primary"
               onClick={() => saveStep(2)}
-              disabled={saving || !status?.user.idDocumentFrontUrl || !status?.user.idDocumentBackUrl}
+              disabled={
+                saving ||
+                !status?.user.idDocumentFrontUrl ||
+                !status?.user.idDocumentBackUrl
+              }
             >
               {saving ? "Salvataggio..." : "Salva e Continua"}
             </button>
@@ -517,7 +555,8 @@ const ProviderOnboarding: React.FC = () => {
         <div className="step-content">
           <h2>Dati Bancari</h2>
           <p className="step-description">
-            Questi dati verranno utilizzati per accreditare i pagamenti dei tuoi servizi.
+            Questi dati verranno utilizzati per accreditare i pagamenti dei tuoi
+            servizi.
           </p>
           <div className="form-grid">
             <div className="form-group full-width">

@@ -30,7 +30,10 @@ function App() {
             <Route path="/messages" element={<MessagesPage />} />
             <Route path="/client-dashboard" element={<ClientDashboard />} />
             <Route path="/profile" element={<UserProfile />} />
-            <Route path="/provider-onboarding" element={<ProviderOnboarding />} />
+            <Route
+              path="/provider-onboarding"
+              element={<ProviderOnboarding />}
+            />
             <Route
               path="/provider/:providerId"
               element={<ProviderProfilePage />}

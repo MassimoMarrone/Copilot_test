@@ -22,15 +22,18 @@ export const uploadOnboardingDocument = async (
 
     const { documentSide } = req.body; // "front" or "back"
     if (!documentSide || !["front", "back"].includes(documentSide)) {
-      res.status(400).json({ error: "Specificare documentSide: 'front' o 'back'" });
+      res
+        .status(400)
+        .json({ error: "Specificare documentSide: 'front' o 'back'" });
       return;
     }
 
     const documentUrl = file.path; // Cloudinary URL
 
-    const updateData = documentSide === "front"
-      ? { idDocumentFrontUrl: documentUrl }
-      : { idDocumentBackUrl: documentUrl };
+    const updateData =
+      documentSide === "front"
+        ? { idDocumentFrontUrl: documentUrl }
+        : { idDocumentBackUrl: documentUrl };
 
     await prisma.user.update({
       where: { id: userId },
@@ -40,13 +43,17 @@ export const uploadOnboardingDocument = async (
     logger.info(`Document ${documentSide} uploaded for user ${userId}`);
 
     res.json({
-      message: `Documento ${documentSide === "front" ? "fronte" : "retro"} caricato con successo`,
+      message: `Documento ${
+        documentSide === "front" ? "fronte" : "retro"
+      } caricato con successo`,
       url: documentUrl,
       side: documentSide,
     });
   } catch (error) {
     logger.error("Error uploading onboarding document:", error);
-    res.status(500).json({ error: "Errore durante il caricamento del documento" });
+    res
+      .status(500)
+      .json({ error: "Errore durante il caricamento del documento" });
   }
 };
 
@@ -70,7 +77,9 @@ export const providerOnboarding = async (
 
     // Verifica che sia un provider o che voglia diventarlo
     if (user.userType !== "provider" && !user.isProvider) {
-      res.status(403).json({ error: "Solo i provider possono completare l'onboarding" });
+      res
+        .status(403)
+        .json({ error: "Solo i provider possono completare l'onboarding" });
       return;
     }
 
@@ -123,19 +132,21 @@ export const providerOnboarding = async (
       if (address) updateData.address = address;
       if (city) updateData.city = city;
       if (postalCode) updateData.postalCode = postalCode;
-      
+
       updateData.onboardingStep = Math.max(user.onboardingStep || 0, 1);
       updateData.onboardingStatus = "pending";
     }
 
     if (step === 2 || step === undefined) {
       // Step 2: Documents
-      if (idDocumentFrontUrl) updateData.idDocumentFrontUrl = idDocumentFrontUrl;
+      if (idDocumentFrontUrl)
+        updateData.idDocumentFrontUrl = idDocumentFrontUrl;
       if (idDocumentBackUrl) updateData.idDocumentBackUrl = idDocumentBackUrl;
       if (idDocumentType) updateData.idDocumentType = idDocumentType;
       if (idDocumentNumber) updateData.idDocumentNumber = idDocumentNumber;
-      if (idDocumentExpiry) updateData.idDocumentExpiry = new Date(idDocumentExpiry);
-      
+      if (idDocumentExpiry)
+        updateData.idDocumentExpiry = new Date(idDocumentExpiry);
+
       if (idDocumentFrontUrl && idDocumentBackUrl) {
         updateData.onboardingStep = Math.max(user.onboardingStep || 0, 2);
         updateData.onboardingStatus = "documents_uploaded";
@@ -146,7 +157,7 @@ export const providerOnboarding = async (
       // Step 3: Payment Info
       if (iban) updateData.iban = iban.replace(/\s/g, "").toUpperCase();
       if (bankAccountHolder) updateData.bankAccountHolder = bankAccountHolder;
-      
+
       if (iban && bankAccountHolder) {
         updateData.onboardingStep = Math.max(user.onboardingStep || 0, 3);
       }
@@ -155,15 +166,20 @@ export const providerOnboarding = async (
     if (step === 4 || step === undefined) {
       // Step 4: Work Info
       if (workingZones) {
-        updateData.workingZones = typeof workingZones === "string" 
-          ? workingZones 
-          : JSON.stringify(workingZones);
+        updateData.workingZones =
+          typeof workingZones === "string"
+            ? workingZones
+            : JSON.stringify(workingZones);
       }
-      if (yearsOfExperience !== undefined) updateData.yearsOfExperience = parseInt(yearsOfExperience);
-      if (hasOwnEquipment !== undefined) updateData.hasOwnEquipment = Boolean(hasOwnEquipment);
-      if (insuranceNumber !== undefined) updateData.insuranceNumber = insuranceNumber || null;
-      if (insuranceExpiry) updateData.insuranceExpiry = new Date(insuranceExpiry);
-      
+      if (yearsOfExperience !== undefined)
+        updateData.yearsOfExperience = parseInt(yearsOfExperience);
+      if (hasOwnEquipment !== undefined)
+        updateData.hasOwnEquipment = Boolean(hasOwnEquipment);
+      if (insuranceNumber !== undefined)
+        updateData.insuranceNumber = insuranceNumber || null;
+      if (insuranceExpiry)
+        updateData.insuranceExpiry = new Date(insuranceExpiry);
+
       // If all required fields are filled, set status to under_review
       const isComplete = checkOnboardingComplete(user, updateData);
       if (isComplete) {
@@ -208,7 +224,11 @@ export const providerOnboarding = async (
       },
     });
 
-    logger.info(`Provider onboarding updated for user ${userId}, step: ${step || 'all'}, status: ${updatedUser.onboardingStatus}`);
+    logger.info(
+      `Provider onboarding updated for user ${userId}, step: ${
+        step || "all"
+      }, status: ${updatedUser.onboardingStatus}`
+    );
 
     res.json({
       message: "Dati onboarding salvati con successo",
@@ -280,7 +300,16 @@ export const getProviderOnboardingStatus = async (
     // Calcola completamento per ogni step
     const steps = {
       step1: {
-        complete: Boolean(user.firstName && user.lastName && user.dateOfBirth && user.fiscalCode && user.phone && user.address && user.city && user.postalCode),
+        complete: Boolean(
+          user.firstName &&
+            user.lastName &&
+            user.dateOfBirth &&
+            user.fiscalCode &&
+            user.phone &&
+            user.address &&
+            user.city &&
+            user.postalCode
+        ),
         fields: {
           firstName: !!user.firstName,
           lastName: !!user.lastName,
@@ -294,7 +323,13 @@ export const getProviderOnboardingStatus = async (
         },
       },
       step2: {
-        complete: Boolean(user.idDocumentFrontUrl && user.idDocumentBackUrl && user.idDocumentType && user.idDocumentNumber && user.idDocumentExpiry),
+        complete: Boolean(
+          user.idDocumentFrontUrl &&
+            user.idDocumentBackUrl &&
+            user.idDocumentType &&
+            user.idDocumentNumber &&
+            user.idDocumentExpiry
+        ),
         fields: {
           idDocumentFrontUrl: !!user.idDocumentFrontUrl,
           idDocumentBackUrl: !!user.idDocumentBackUrl,
@@ -322,14 +357,22 @@ export const getProviderOnboardingStatus = async (
       },
     };
 
-    const overallProgress = [steps.step1.complete, steps.step2.complete, steps.step3.complete, steps.step4.complete].filter(Boolean).length;
+    const overallProgress = [
+      steps.step1.complete,
+      steps.step2.complete,
+      steps.step3.complete,
+      steps.step4.complete,
+    ].filter(Boolean).length;
 
     res.json({
       user,
       steps,
       overallProgress: `${overallProgress}/4`,
       isComplete: overallProgress === 4,
-      canSubmitForReview: overallProgress === 4 && user.onboardingStatus !== "under_review" && user.onboardingStatus !== "approved",
+      canSubmitForReview:
+        overallProgress === 4 &&
+        user.onboardingStatus !== "under_review" &&
+        user.onboardingStatus !== "approved",
     });
   } catch (error) {
     logger.error("Error getting onboarding status:", error);
@@ -338,24 +381,39 @@ export const getProviderOnboardingStatus = async (
 };
 
 // Helper function to check if onboarding is complete
-function checkOnboardingComplete(user: Record<string, unknown>, updateData: Record<string, unknown>): boolean {
+function checkOnboardingComplete(
+  user: Record<string, unknown>,
+  updateData: Record<string, unknown>
+): boolean {
   const merged = { ...user, ...updateData };
-  
+
   // Required fields for each step
   const step1Complete = Boolean(
-    merged.firstName && merged.lastName && merged.dateOfBirth && 
-    merged.fiscalCode && merged.phone && merged.address && 
-    merged.city && merged.postalCode
+    merged.firstName &&
+      merged.lastName &&
+      merged.dateOfBirth &&
+      merged.fiscalCode &&
+      merged.phone &&
+      merged.address &&
+      merged.city &&
+      merged.postalCode
   );
-  
+
   const step2Complete = Boolean(
-    merged.idDocumentFrontUrl && merged.idDocumentBackUrl && 
-    merged.idDocumentType && merged.idDocumentNumber && merged.idDocumentExpiry
+    merged.idDocumentFrontUrl &&
+      merged.idDocumentBackUrl &&
+      merged.idDocumentType &&
+      merged.idDocumentNumber &&
+      merged.idDocumentExpiry
   );
-  
+
   const step3Complete = Boolean(merged.iban && merged.bankAccountHolder);
-  
-  const step4Complete = Boolean(merged.workingZones && merged.yearsOfExperience !== null && merged.yearsOfExperience !== undefined);
-  
+
+  const step4Complete = Boolean(
+    merged.workingZones &&
+      merged.yearsOfExperience !== null &&
+      merged.yearsOfExperience !== undefined
+  );
+
   return step1Complete && step2Complete && step3Complete && step4Complete;
 }
