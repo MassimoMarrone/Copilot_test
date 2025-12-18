@@ -344,7 +344,7 @@ const initAdmin = async (): Promise<void> => {
         isAdmin: true,
         adminLevel: "super", // First admin is always super admin
         acceptedTerms: true,
-        emailVerified: true, // Admin doesn't need email verification
+        isVerified: true, // Admin doesn't need email verification
         createdAt: new Date(),
       },
     });
