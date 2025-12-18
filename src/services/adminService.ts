@@ -330,8 +330,15 @@ export const adminService = {
       throw new Error("User not found");
     }
 
-    if (user.onboardingStatus !== "under_review") {
-      throw new Error("Onboarding not under review");
+    // Allow approval for pending, documents_uploaded, or under_review status
+    const validStatuses = ["pending", "documents_uploaded", "under_review"];
+    if (
+      !user.onboardingStatus ||
+      !validStatuses.includes(user.onboardingStatus)
+    ) {
+      throw new Error(
+        `Cannot approve onboarding with status: ${user.onboardingStatus}`
+      );
     }
 
     await prisma.user.update({
@@ -346,11 +353,22 @@ export const adminService = {
 
     // Send approval email
     const userName = user.firstName || user.email.split("@")[0];
-    sendEmail(
-      user.email,
-      "🎉 Sei stato approvato come Fornitore Domy!",
-      emailTemplates.onboardingApproved(userName)
-    );
+    try {
+      await sendEmail(
+        user.email,
+        "🎉 Sei stato approvato come Fornitore Domy!",
+        emailTemplates.onboardingApproved(userName)
+      );
+      console.log(
+        `[AdminService] Email di approvazione inviata a ${user.email}`
+      );
+    } catch (emailError) {
+      console.error(
+        `[AdminService] Errore invio email approvazione:`,
+        emailError
+      );
+      // Non blocchiamo l'operazione se l'email fallisce
+    }
 
     return { success: true, message: "Onboarding approved" };
   },
@@ -362,8 +380,15 @@ export const adminService = {
       throw new Error("User not found");
     }
 
-    if (user.onboardingStatus !== "under_review") {
-      throw new Error("Onboarding not under review");
+    // Allow rejection for pending, documents_uploaded, or under_review status
+    const validStatuses = ["pending", "documents_uploaded", "under_review"];
+    if (
+      !user.onboardingStatus ||
+      !validStatuses.includes(user.onboardingStatus)
+    ) {
+      throw new Error(
+        `Cannot reject onboarding with status: ${user.onboardingStatus}`
+      );
     }
 
     await prisma.user.update({
@@ -375,13 +400,21 @@ export const adminService = {
       },
     });
 
-    // Send rejection email
+    // Send rejection email with the reason
     const userName = user.firstName || user.email.split("@")[0];
-    sendEmail(
-      user.email,
-      "Aggiornamento sulla tua richiesta Fornitore Domy",
-      emailTemplates.onboardingRejected(userName, reason)
-    );
+    try {
+      await sendEmail(
+        user.email,
+        "Aggiornamento sulla tua richiesta Fornitore Domy",
+        emailTemplates.onboardingRejected(userName, reason)
+      );
+      console.log(
+        `[AdminService] Email di rifiuto inviata a ${user.email} con motivo: ${reason}`
+      );
+    } catch (emailError) {
+      console.error(`[AdminService] Errore invio email rifiuto:`, emailError);
+      // Non blocchiamo l'operazione se l'email fallisce
+    }
 
     return { success: true, message: "Onboarding rejected" };
   },

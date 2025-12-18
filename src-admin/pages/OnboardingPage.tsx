@@ -368,8 +368,10 @@ const OnboardingPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Azioni */}
-              {selectedRequest.onboardingStatus === "under_review" && (
+              {/* Azioni - mostra per tutti gli stati in attesa */}
+              {["pending", "documents_uploaded", "under_review"].includes(
+                selectedRequest.onboardingStatus
+              ) && (
                 <div className="actions">
                   <button
                     className="btn btn-success"
