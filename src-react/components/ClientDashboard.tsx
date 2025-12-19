@@ -8,6 +8,47 @@ import { authService, User } from "../services/authService";
 import { bookingService, Booking } from "../services/bookingService";
 import "../styles/ClientDashboard.css";
 
+const getBookingPhotoUrls = (booking: Booking): string[] => {
+  const urls: string[] = [];
+
+  const addUrl = (value: unknown) => {
+    if (typeof value !== "string") return;
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    if (!urls.includes(trimmed)) urls.push(trimmed);
+  };
+
+  const parseJsonArrayString = (value: string) => {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        parsed.forEach(addUrl);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  if (booking.photoProofs) {
+    parseJsonArrayString(booking.photoProofs);
+  }
+
+  // Bug-tolerant: in alcuni casi photoProof potrebbe contenere un JSON array
+  if (
+    urls.length === 0 &&
+    typeof booking.photoProof === "string" &&
+    booking.photoProof.trim().startsWith("[")
+  ) {
+    parseJsonArrayString(booking.photoProof);
+  }
+
+  if (urls.length === 0) {
+    addUrl(booking.photoProof);
+  }
+
+  return urls;
+};
+
 interface ClientDashboardProps {
   // googleMapsApiKey removed
 }
@@ -793,17 +834,47 @@ const ClientDashboard: React.FC<ClientDashboardProps> = () => {
                     </div>
                   )}
 
-                  {booking.photoProof && (
-                    <div className="photo-proof">
-                      <p>
-                        <strong>Prova Fotografica:</strong>
-                      </p>
-                      <img
-                        src={booking.photoProof}
-                        alt="Prova del servizio completato"
-                      />
-                    </div>
-                  )}
+                  {(() => {
+                    const photoUrls = getBookingPhotoUrls(booking);
+                    if (booking.status !== "awaiting_confirmation") return null;
+                    if (photoUrls.length === 0) return null;
+
+                    return (
+                      <div className="photo-proof">
+                        <p>
+                          <strong>Foto del Servizio:</strong>
+                        </p>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: "8px",
+                          }}
+                        >
+                          {photoUrls.map((url, index) => (
+                            <a
+                              key={`${booking.id}-photo-${index}`}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <img
+                                src={url}
+                                alt={`Foto del servizio ${index + 1}`}
+                                style={{
+                                  width: "120px",
+                                  height: "120px",
+                                  objectFit: "cover",
+                                  borderRadius: "8px",
+                                }}
+                                loading="lazy"
+                              />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               ))
             )}

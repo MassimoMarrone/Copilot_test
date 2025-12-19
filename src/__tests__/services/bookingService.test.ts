@@ -193,9 +193,13 @@ describe("BookingService", () => {
       const result = await bookingService.getProviderBookings("provider-123");
 
       expect(result).toHaveLength(1);
-      expect(prismaMock.booking.findMany).toHaveBeenCalledWith({
-        where: { providerId: "provider-123" },
-      });
+      expect(prismaMock.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { providerId: "provider-123" },
+          orderBy: { date: "desc" },
+          select: expect.any(Object),
+        })
+      );
     });
   });
 

@@ -25,6 +25,7 @@ export interface Booking {
   status: BookingStatus;
   paymentStatus: PaymentStatus;
   photoProof?: string;
+  photoProofs?: string; // JSON array di URL (1-10)
   clientPhone?: string;
   preferredTime?: string;
   notes?: string;

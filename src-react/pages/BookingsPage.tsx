@@ -5,6 +5,46 @@ import ReviewModal from "../components/ReviewModal";
 import { bookingService, Booking } from "../services/bookingService";
 import "../styles/BookingsPage.css";
 
+const getBookingPhotoUrls = (booking: Booking): string[] => {
+  const urls: string[] = [];
+
+  const addUrl = (value: unknown) => {
+    if (typeof value !== "string") return;
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    if (!urls.includes(trimmed)) urls.push(trimmed);
+  };
+
+  const parseJsonArrayString = (value: string) => {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        parsed.forEach(addUrl);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  if ((booking as any).photoProofs) {
+    parseJsonArrayString((booking as any).photoProofs);
+  }
+
+  if (
+    urls.length === 0 &&
+    typeof (booking as any).photoProof === "string" &&
+    (booking as any).photoProof.trim().startsWith("[")
+  ) {
+    parseJsonArrayString((booking as any).photoProof);
+  }
+
+  if (urls.length === 0) {
+    addUrl((booking as any).photoProof);
+  }
+
+  return urls;
+};
+
 const BookingsPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -308,6 +348,48 @@ const BookingCardContent = ({
         )}
       </div>
     </div>
+
+    {(() => {
+      const photoUrls = getBookingPhotoUrls(booking);
+      if (booking.status !== "awaiting_confirmation") return null;
+      if (photoUrls.length === 0) return null;
+
+      return (
+        <div className="photo-proof" style={{ marginTop: "12px" }}>
+          <p style={{ margin: "0 0 8px 0" }}>
+            <strong>Foto del Servizio:</strong>
+          </p>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "8px",
+            }}
+          >
+            {photoUrls.map((url, index) => (
+              <a
+                key={`${booking.id}-photo-${index}`}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  src={url}
+                  alt={`Foto del servizio ${index + 1}`}
+                  style={{
+                    width: "120px",
+                    height: "120px",
+                    objectFit: "cover",
+                    borderRadius: "8px",
+                  }}
+                  loading="lazy"
+                />
+              </a>
+            ))}
+          </div>
+        </div>
+      );
+    })()}
   </>
 );
 

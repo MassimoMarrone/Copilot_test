@@ -314,13 +314,49 @@ export const bookingService = {
       return { ...bookingData, hasReview };
     });
 
-    return enrichedBookings;
+    // Non inviare URL foto se non sono necessari (riduce payload + esposizione URL)
+    // Le foto vengono mostrate al cliente solo durante `awaiting_confirmation`.
+    const sanitizedBookings = enrichedBookings.map((booking: any) => {
+      if (booking.status !== "awaiting_confirmation") {
+        const { photoProof, photoProofs, ...rest } = booking;
+        return rest;
+      }
+      return booking;
+    });
+
+    return sanitizedBookings;
   },
 
   async getProviderBookings(providerId: string) {
     const providerBookings = await prisma.booking.findMany({
-      where: { providerId: providerId },
+      where: { providerId },
+      orderBy: { date: "desc" },
+      select: {
+        id: true,
+        serviceId: true,
+        clientId: true,
+        providerId: true,
+        serviceTitle: true,
+        date: true,
+        amount: true,
+        providerEmail: true,
+        clientEmail: true,
+        status: true,
+        paymentStatus: true,
+        photoProof: true,
+        clientPhone: true,
+        preferredTime: true,
+        notes: true,
+        address: true,
+        createdAt: true,
+        squareMetersRange: true,
+        windowsCount: true,
+        estimatedDuration: true,
+        startTime: true,
+        endTime: true,
+      },
     });
+
     return providerBookings;
   },
 

@@ -167,6 +167,9 @@ model Booking {
 
   messages        ChatMessage[]
   review          Review?
+
+  @@index([providerId, date])
+  @@index([clientId, date])
 }
 
 model Review {
