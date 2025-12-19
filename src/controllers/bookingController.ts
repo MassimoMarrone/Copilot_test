@@ -159,6 +159,23 @@ export const bookingController = {
         error.message.includes("disputed")
       ) {
         res.status(400).json({ error: error.message });
+      } else if (
+        typeof error.message === "string" &&
+        (error.message.startsWith("PROVIDER_STRIPE_NOT_READY:") ||
+          error.message.startsWith("PROVIDER_STRIPE_CHECK_FAILED:"))
+      ) {
+        res.status(400).json({
+          error: error.message.split(":").slice(1).join(":").trim(),
+          code: error.message.split(":")[0],
+        });
+      } else if (
+        typeof error.message === "string" &&
+        error.message.startsWith("PLATFORM_BALANCE_INSUFFICIENT:")
+      ) {
+        res.status(409).json({
+          error: error.message.split(":").slice(1).join(":").trim(),
+          code: "PLATFORM_BALANCE_INSUFFICIENT",
+        });
       } else {
         res.status(500).json({ error: "Failed to confirm service completion" });
       }

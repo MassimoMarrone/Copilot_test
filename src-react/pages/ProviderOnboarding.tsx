@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "../styles/ProviderOnboarding.css";
 
@@ -131,18 +132,11 @@ interface OnboardingStatus {
     // Step 3
     iban: string | null;
     bankAccountHolder: string | null;
-    // Step 4
-    workingZones: string | null;
-    yearsOfExperience: number | null;
-    hasOwnEquipment: boolean;
-    insuranceNumber: string | null;
-    insuranceExpiry: string | null;
   };
   steps: {
     step1: { complete: boolean };
     step2: { complete: boolean };
     step3: { complete: boolean };
-    step4: { complete: boolean };
   };
   overallProgress: string;
   isComplete: boolean;
@@ -151,6 +145,7 @@ interface OnboardingStatus {
 
 const ProviderOnboarding: React.FC = () => {
   const { user: authUser } = useAuth();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -178,12 +173,6 @@ const ProviderOnboarding: React.FC = () => {
     // Step 3
     iban: "",
     bankAccountHolder: "",
-    // Step 4
-    workingZones: "",
-    yearsOfExperience: "",
-    hasOwnEquipment: false,
-    insuranceNumber: "",
-    insuranceExpiry: "",
   });
 
   // Document uploads
@@ -222,13 +211,6 @@ const ProviderOnboarding: React.FC = () => {
               : "",
             iban: data.user.iban || "",
             bankAccountHolder: data.user.bankAccountHolder || "",
-            workingZones: data.user.workingZones || "",
-            yearsOfExperience: data.user.yearsOfExperience?.toString() || "",
-            hasOwnEquipment: data.user.hasOwnEquipment || false,
-            insuranceNumber: data.user.insuranceNumber || "",
-            insuranceExpiry: data.user.insuranceExpiry
-              ? data.user.insuranceExpiry.split("T")[0]
-              : "",
           });
 
           // Set current step based on progress or status
@@ -236,7 +218,7 @@ const ProviderOnboarding: React.FC = () => {
             // Show rejection message first (step 0)
             setCurrentStep(0);
           } else if (data.user.onboardingStep) {
-            setCurrentStep(Math.min(data.user.onboardingStep + 1, 4));
+            setCurrentStep(Math.min(data.user.onboardingStep + 1, 3));
           }
         }
       }
@@ -377,12 +359,6 @@ const ProviderOnboarding: React.FC = () => {
       }
     }
 
-    if (step === 4) {
-      if (!formData.workingZones.trim()) {
-        errors.workingZones = "Le zone di lavoro sono obbligatorie";
-      }
-    }
-
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -431,7 +407,7 @@ const ProviderOnboarding: React.FC = () => {
         setSuccess("Dati salvati con successo!");
         setTimeout(() => setSuccess(null), 3000);
 
-        if (step < 4) {
+        if (step < 3) {
           setCurrentStep(step + 1);
         }
       } else {
@@ -466,6 +442,18 @@ const ProviderOnboarding: React.FC = () => {
             Il tuo profilo è stato verificato e approvato. Puoi iniziare a
             offrire i tuoi servizi!
           </p>
+          <p style={{ marginTop: "10px" }}>
+            Nota: le impostazioni del servizio (orari, durata slot, prodotti, ecc.)
+            si configurano quando crei un servizio.
+          </p>
+          <div style={{ marginTop: "16px" }}>
+            <button
+              className="btn-primary"
+              onClick={() => navigate("/provider-dashboard")}
+            >
+              Vai alla Dashboard Fornitore
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -534,7 +522,7 @@ const ProviderOnboarding: React.FC = () => {
 
       {/* Progress indicator */}
       <div className="progress-steps">
-        {[1, 2, 3, 4].map((step) => (
+        {[1, 2, 3].map((step) => (
           <div
             key={step}
             className={`step ${currentStep === step ? "active" : ""} ${
@@ -550,7 +538,6 @@ const ProviderOnboarding: React.FC = () => {
               {step === 1 && "Dati Personali"}
               {step === 2 && "Documenti"}
               {step === 3 && "Pagamento"}
-              {step === 4 && "Lavoro"}
             </span>
           </div>
         ))}
@@ -912,79 +899,6 @@ const ProviderOnboarding: React.FC = () => {
             <button
               className="btn-primary"
               onClick={() => saveStep(3)}
-              disabled={saving}
-            >
-              {saving ? "Salvataggio..." : "Salva e Continua"}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Step 4: Work Info */}
-      {currentStep === 4 && (
-        <div className="step-content">
-          <h2>Informazioni Lavorative</h2>
-          <div className="form-grid">
-            <div className="form-group full-width">
-              <label>Zone di Lavoro * (CAP o città, separati da virgola)</label>
-              <textarea
-                name="workingZones"
-                value={formData.workingZones}
-                onChange={handleInputChange}
-                placeholder="es. 00100, 00118, Roma Centro, Roma Nord"
-                rows={3}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Anni di Esperienza *</label>
-              <input
-                type="number"
-                name="yearsOfExperience"
-                value={formData.yearsOfExperience}
-                onChange={handleInputChange}
-                min={0}
-                max={50}
-                required
-              />
-            </div>
-            <div className="form-group checkbox-group">
-              <label>
-                <input
-                  type="checkbox"
-                  name="hasOwnEquipment"
-                  checked={formData.hasOwnEquipment}
-                  onChange={handleInputChange}
-                />
-                Dispongo di attrezzatura propria
-              </label>
-            </div>
-            <div className="form-group">
-              <label>Numero Polizza RC (opzionale)</label>
-              <input
-                type="text"
-                name="insuranceNumber"
-                value={formData.insuranceNumber}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="form-group">
-              <label>Scadenza Polizza</label>
-              <input
-                type="date"
-                name="insuranceExpiry"
-                value={formData.insuranceExpiry}
-                onChange={handleInputChange}
-              />
-            </div>
-          </div>
-          <div className="step-actions">
-            <button className="btn-secondary" onClick={() => setCurrentStep(3)}>
-              Indietro
-            </button>
-            <button
-              className="btn-primary"
-              onClick={() => saveStep(4)}
               disabled={saving}
             >
               {saving ? "Salvataggio..." : "Invia per Revisione"}

@@ -282,7 +282,11 @@ describe("BookingService", () => {
       prismaMock.booking.findUnique.mockResolvedValue(null);
 
       await expect(
-        bookingService.completeBooking("booking-123", "provider-123", mockPhotoUrls)
+        bookingService.completeBooking(
+          "booking-123",
+          "provider-123",
+          mockPhotoUrls
+        )
       ).rejects.toThrow("Booking not found");
     });
 
@@ -293,7 +297,11 @@ describe("BookingService", () => {
       });
 
       await expect(
-        bookingService.completeBooking("booking-123", "provider-123", mockPhotoUrls)
+        bookingService.completeBooking(
+          "booking-123",
+          "provider-123",
+          mockPhotoUrls
+        )
       ).rejects.toThrow("Only provider can complete booking");
     });
 
@@ -307,7 +315,11 @@ describe("BookingService", () => {
       });
 
       await expect(
-        bookingService.completeBooking("booking-123", "provider-123", mockPhotoUrls)
+        bookingService.completeBooking(
+          "booking-123",
+          "provider-123",
+          mockPhotoUrls
+        )
       ).rejects.toThrow(
         "Payment must be authorized or held in escrow before completing the service"
       );

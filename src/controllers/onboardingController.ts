@@ -166,8 +166,8 @@ export const providerOnboarding = async (
       }
     }
 
+    // Legacy optional Step 4 data (no longer required for onboarding completion)
     if (step === 4 || step === undefined) {
-      // Step 4: Work Info
       if (workingZones) {
         updateData.workingZones =
           typeof workingZones === "string"
@@ -182,13 +182,13 @@ export const providerOnboarding = async (
         updateData.insuranceNumber = insuranceNumber || null;
       if (insuranceExpiry)
         updateData.insuranceExpiry = new Date(insuranceExpiry);
+    }
 
-      // If all required fields are filled, set status to under_review
-      const isComplete = checkOnboardingComplete(user, updateData);
-      if (isComplete) {
-        updateData.onboardingStep = 4;
-        updateData.onboardingStatus = "under_review";
-      }
+    // If all required fields are filled (steps 1-3), set status to under_review
+    const isComplete = checkOnboardingComplete(user, updateData);
+    if (isComplete) {
+      updateData.onboardingStep = Math.max(user.onboardingStep || 0, 3);
+      updateData.onboardingStatus = "under_review";
     }
 
     const updatedUser = await prisma.user.update({
@@ -348,32 +348,21 @@ export const getProviderOnboardingStatus = async (
           bankAccountHolder: !!user.bankAccountHolder,
         },
       },
-      step4: {
-        complete: Boolean(user.workingZones && user.yearsOfExperience !== null),
-        fields: {
-          workingZones: !!user.workingZones,
-          yearsOfExperience: user.yearsOfExperience !== null,
-          hasOwnEquipment: user.hasOwnEquipment,
-          insuranceNumber: !!user.insuranceNumber,
-          insuranceExpiry: !!user.insuranceExpiry,
-        },
-      },
     };
 
     const overallProgress = [
       steps.step1.complete,
       steps.step2.complete,
       steps.step3.complete,
-      steps.step4.complete,
     ].filter(Boolean).length;
 
     res.json({
       user,
       steps,
-      overallProgress: `${overallProgress}/4`,
-      isComplete: overallProgress === 4,
+      overallProgress: `${overallProgress}/3`,
+      isComplete: overallProgress === 3,
       canSubmitForReview:
-        overallProgress === 4 &&
+        overallProgress === 3 &&
         user.onboardingStatus !== "under_review" &&
         user.onboardingStatus !== "approved",
     });
@@ -412,11 +401,5 @@ function checkOnboardingComplete(
 
   const step3Complete = Boolean(merged.iban && merged.bankAccountHolder);
 
-  const step4Complete = Boolean(
-    merged.workingZones &&
-      merged.yearsOfExperience !== null &&
-      merged.yearsOfExperience !== undefined
-  );
-
-  return step1Complete && step2Complete && step3Complete && step4Complete;
+  return step1Complete && step2Complete && step3Complete;
 }

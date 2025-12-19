@@ -47,6 +47,7 @@ interface OnboardingDetails {
 }
 
 const OnboardingPage: React.FC = () => {
+  const TOTAL_ONBOARDING_STEPS = 3;
   const [requests, setRequests] = useState<OnboardingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] =
@@ -216,7 +217,9 @@ const OnboardingPage: React.FC = () => {
                   <div className="request-status">
                     {getStatusBadge(request.onboardingStatus)}
                     <span className="step-indicator">
-                      Step {request.onboardingStep}/4
+                      Step{" "}
+                      {Math.min(request.onboardingStep, TOTAL_ONBOARDING_STEPS)}
+                      /{TOTAL_ONBOARDING_STEPS}
                     </span>
                   </div>
                 </li>

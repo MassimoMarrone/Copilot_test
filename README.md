@@ -52,6 +52,22 @@ Applicazione web moderna per la prenotazione di servizi di pulizia professionale
 - **Rilascio**: Pagamento sbloccato solo dopo conferma e prova fotografica.
 - **Rimborso Automatico**: Gestione automatica rimborsi in caso di cancellazione.
 
+#### Note importanti su escrow, saldo e rimborsi
+
+- **Dove finiscono i soldi quando il cliente paga**: l’incasso va sul **saldo Stripe della piattaforma** (non direttamente al provider). L’“escrow” è gestito a livello applicativo (stato `held_in_escrow` nel DB) e il payout al provider avviene con un **Transfer** solo quando il servizio è confermato.
+- **`pending` vs `available`**: vedere un pagamento in dashboard o un “saldo” non significa che i fondi siano subito trasferibili. Stripe rende i fondi trasferibili solo quando sono in **available balance**.
+- **Errore `balance_insufficient` al rilascio payout**: può succedere anche se “sembra” che i soldi siano arrivati. Tipicamente accade quando i fondi sono ancora **pending** oppure già **allocati** a un payout in uscita (“Bonifici previsto…”). In produzione non è garantito che i fondi diventino available immediatamente dopo il pagamento.
+- **Implicazione UX/operativa**: la conferma del cliente può fallire temporaneamente se i fondi non sono ancora available; in quel caso va previsto un **retry** (manuale o automatico) del transfer.
+
+#### Fee Stripe e rimborsi
+
+- **Fee Stripe (processing fee)**: viene applicata al momento del pagamento. In molti casi (soprattutto in live) **non viene restituita** quando fai un rimborso: quindi puoi rimborsare il **100% al cliente**, ma la piattaforma potrebbe comunque sostenere la fee.
+- **Rimborsi parziali**: è possibile rimborsare “totale meno fee”, ma è una scelta di policy/UX (il cliente riceve meno del totale) e va comunicata chiaramente.
+
+#### Test Mode (sviluppo)
+
+- In test mode Stripe può richiedere fondi “available” prima di permettere un transfer. Se incontri `balance_insufficient` durante la conferma, Stripe suggerisce di usare la carta test **`4000 0000 0000 0077`** per generare saldo available (vedi documentazione Stripe su _available balance_).
+
 ### 🎨 UI/UX Moderna
 
 - **Landing Page Professionale**: Design con gradiente scuro e immagine hero.

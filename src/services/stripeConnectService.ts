@@ -156,7 +156,8 @@ export const stripeConnectService = {
     }
 
     const account = await stripe.accounts.retrieve(user.stripeAccountId);
-    return account.charges_enabled === true;
+    // For escrow/transfer flow we need payouts enabled too, otherwise transfers can fail at confirmation time.
+    return account.charges_enabled === true && account.payouts_enabled === true;
   },
 
   /**

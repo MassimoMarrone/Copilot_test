@@ -58,6 +58,63 @@ export const escrowService = {
           ).toFixed(2)}`
         );
       } else {
+        // Safety: ensure connected account is actually able to receive transfers.
+        // We intentionally check at payout time because Stripe requirements can change after booking.
+        try {
+          const account = await stripe.accounts.retrieve(
+            booking.provider.stripeAccountId
+          );
+          if (!account.payouts_enabled || !account.charges_enabled) {
+            throw new Error(
+              "PROVIDER_STRIPE_NOT_READY: Il provider non può ricevere pagamenti. Completa l'onboarding Stripe (payouts/charges non abilitati)."
+            );
+          }
+        } catch (e: any) {
+          // If we couldn't retrieve the account, keep the error actionable.
+          if (
+            typeof e?.message === "string" &&
+            e.message.startsWith("PROVIDER_STRIPE_NOT_READY:")
+          ) {
+            throw e;
+          }
+          throw new Error(
+            `PROVIDER_STRIPE_CHECK_FAILED: Impossibile verificare lo stato Stripe del provider. ${
+              e?.message || ""
+            }`.trim()
+          );
+        }
+
+        // Ensure platform has enough AVAILABLE balance in the booking currency.
+        // It's common to see money in Stripe but still "pending" (not transferable yet).
+        try {
+          const balance = await stripe.balance.retrieve();
+          const availableEurCents = (balance.available || [])
+            .filter((b) => b.currency === "eur")
+            .reduce((sum, b) => sum + (b.amount || 0), 0);
+
+          if (availableEurCents < providerAmountCents) {
+            throw new Error(
+              `PLATFORM_BALANCE_INSUFFICIENT: Fondi disponibili insufficienti su Stripe (available €${(
+                availableEurCents / 100
+              ).toFixed(
+                2
+              )}). Attendi che i fondi diventino disponibili oppure usa la carta test 4000000000000077 in test mode.`
+            );
+          }
+        } catch (e: any) {
+          if (
+            typeof e?.message === "string" &&
+            e.message.startsWith("PLATFORM_BALANCE_INSUFFICIENT:")
+          ) {
+            throw e;
+          }
+          // If balance retrieval fails, we continue and let Stripe be the source of truth.
+          console.warn(
+            "Stripe balance check failed, continuing:",
+            e?.message || e
+          );
+        }
+
         // Create transfer to provider's connected account
         await stripe.transfers.create({
           amount: providerAmountCents,
@@ -119,7 +176,26 @@ export const escrowService = {
         `Failed to release payment for booking ${bookingId}:`,
         error
       );
-      throw new Error(`Payment release failed: ${error.message}`);
+
+      const stripeCode = error?.code || error?.raw?.code;
+      if (stripeCode === "balance_insufficient") {
+        throw new Error(
+          "PLATFORM_BALANCE_INSUFFICIENT: Fondi non ancora disponibili su Stripe. Riprova più tardi."
+        );
+      }
+
+      if (typeof error?.message === "string") {
+        if (error.message.startsWith("PROVIDER_STRIPE_NOT_READY:")) {
+          throw error;
+        }
+        if (error.message.startsWith("PROVIDER_STRIPE_CHECK_FAILED:")) {
+          throw error;
+        }
+      }
+
+      throw new Error(
+        `Payment release failed: ${error?.message || "Unknown error"}`
+      );
     }
   },
 
