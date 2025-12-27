@@ -58,11 +58,19 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const [showFilters, setShowFilters] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const filterRef = useRef<HTMLDivElement>(null);
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
   const locationWrapperRef = useRef<HTMLDivElement>(null);
 
   // Close filters and location results when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Don't close if clicking the filter button (let the onClick handler toggle)
+      if (
+        filterButtonRef.current &&
+        filterButtonRef.current.contains(event.target as Node)
+      ) {
+        return;
+      }
       if (
         filterRef.current &&
         !filterRef.current.contains(event.target as Node)
@@ -292,6 +300,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           <div className="search-actions-section">
             <button
               type="button"
+              ref={filterButtonRef}
               className={`filter-btn-premium ${showFilters ? "active" : ""}`}
               onClick={() => setShowFilters(!showFilters)}
               title="Filtri"
