@@ -307,6 +307,9 @@ export class ServicesService {
       imageUrl,
       extraServices,
       coverageRadiusKm,
+      workingHoursStart,
+      workingHoursEnd,
+      slotDurationMinutes,
     } = data;
 
     const updateData: any = {};
@@ -343,6 +346,15 @@ export class ServicesService {
         typeof availability === "string"
           ? availability
           : JSON.stringify(availability);
+    }
+    if (workingHoursStart) {
+      updateData.workingHoursStart = workingHoursStart;
+    }
+    if (workingHoursEnd) {
+      updateData.workingHoursEnd = workingHoursEnd;
+    }
+    if (slotDurationMinutes !== undefined) {
+      updateData.slotDurationMinutes = parseInt(slotDurationMinutes);
     }
 
     return prisma.service.update({
