@@ -103,8 +103,9 @@ export const paymentService = {
                 amount: parseFloat(metadata.amount),
                 date: new Date(metadata.date) as any,
                 status: "pending",
-                paymentStatus: "held_in_escrow", // Money is on platform, waiting for service completion
+                paymentStatus: "authorized", // Payment authorized but not captured yet (48h delay)
                 paymentIntentId: paymentIntentId,
+                paymentAuthorizedAt: new Date(), // Track when authorization happened for 48h capture
                 createdAt: new Date(),
                 clientPhone: metadata.clientPhone || null,
                 preferredTime: metadata.preferredTime || null,

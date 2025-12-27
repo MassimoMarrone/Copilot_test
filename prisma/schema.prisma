@@ -135,6 +135,7 @@ model Booking {
   status          String
   paymentStatus   String
   paymentIntentId String?
+  paymentAuthorizedAt DateTime? // When payment was authorized (for delayed capture)
   photoProof      String?   // Legacy single photo (deprecated)
   photoProofs     String?   // JSON array of photo URLs (1-10 photos)
   createdAt       DateTime  @default(now())

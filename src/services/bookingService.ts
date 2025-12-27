@@ -274,7 +274,9 @@ export const bookingService = {
         mode: "payment",
         // NO transfer_data - money stays on platform until service is confirmed
         // We store provider's stripeAccountId in metadata for later transfer
+        // capture_method: 'manual' authorizes without capturing - allows free cancellation
         payment_intent_data: {
+          capture_method: "manual", // Authorize now, capture after 48h
           metadata: {
             providerStripeAccountId: provider.stripeAccountId!,
             platformFeeAmount: platformFeeInCents.toString(),
@@ -382,44 +384,76 @@ export const bookingService = {
       throw new Error("Cannot cancel completed booking");
     }
 
-    // Handle refund if payment was made
+    // Handle refund/cancel if payment was made
     let newPaymentStatus = booking.paymentStatus;
+    let refundAmount: number | undefined = undefined; // For partial refunds
 
-    // Check if refund is needed - now includes "paid" status for Stripe Connect
+    // Check if we need to cancel authorization (free) or refund (captured payment)
+    const needsCancellation = booking.paymentStatus === "authorized";
     const needsRefund =
       booking.paymentStatus === "paid" ||
-      booking.paymentStatus === "authorized" ||
       booking.paymentStatus === "held_in_escrow";
 
-    if (needsRefund && booking.paymentIntentId) {
+    // Determine who is cancelling
+    const cancelledByClient = booking.clientId === userId;
+    const cancelledByCleaner = booking.providerId === userId;
+
+    if ((needsCancellation || needsRefund) && booking.paymentIntentId) {
       try {
         // Check if it's a mock payment (for testing)
         if (booking.paymentIntentId.startsWith("pi_mock_")) {
           console.log(
-            `Mock refund processed for booking ${booking.id}, paymentIntent: ${booking.paymentIntentId}`
+            `Mock ${needsCancellation ? "cancellation" : "refund"} processed for booking ${booking.id}, paymentIntent: ${booking.paymentIntentId}`
           );
-          newPaymentStatus = "refunded";
-        } else {
-          // Real Stripe refund
-          // With Stripe Connect, this refunds from the platform and reverses the transfer to the provider
-          await stripe.refunds.create({
-            payment_intent: booking.paymentIntentId,
-            // reverse_transfer: true automatically reverses the transfer to connected account
-            reverse_transfer: true,
-            // refund_application_fee: true returns the platform fee as well
-            refund_application_fee: true,
-          });
+          newPaymentStatus = needsCancellation ? "cancelled" : "refunded";
+        } else if (needsCancellation) {
+          // Payment was only authorized, not captured - cancel for free (within 48h)
+          await stripe.paymentIntents.cancel(booking.paymentIntentId);
           console.log(
-            `Stripe Connect refund processed for booking ${booking.id}, paymentIntent: ${booking.paymentIntentId}`
+            `Stripe authorization cancelled for booking ${booking.id}, paymentIntent: ${booking.paymentIntentId} (no fee)`
           );
+          newPaymentStatus = "cancelled";
+        } else {
+          // Payment was captured (after 48h) - apply cancellation fee policy
+          // Stripe fee: ~2.9% + €0.25 (we use 3% as approximation for simplicity)
+          const stripeFeePercent = 0.029;
+          const stripeFeeFixed = 0.25; // €0.25
+          const stripeFee = Math.round((booking.amount * stripeFeePercent + stripeFeeFixed) * 100) / 100;
+
+          if (cancelledByClient) {
+            // Client cancels: they pay the Stripe fee (partial refund)
+            refundAmount = Math.round((booking.amount - stripeFee) * 100); // In cents for Stripe
+            await stripe.refunds.create({
+              payment_intent: booking.paymentIntentId,
+              amount: refundAmount,
+              reverse_transfer: true,
+              refund_application_fee: true,
+            });
+            console.log(
+              `Partial refund for booking ${booking.id}: €${refundAmount / 100} (client pays €${stripeFee} fee)`
+            );
+          } else if (cancelledByCleaner) {
+            // Cleaner cancels: client gets full refund, cleaner pays the fee
+            // Full refund to client
+            await stripe.refunds.create({
+              payment_intent: booking.paymentIntentId,
+              reverse_transfer: true,
+              refund_application_fee: true,
+            });
+            console.log(
+              `Full refund for booking ${booking.id}: €${booking.amount} (cleaner pays €${stripeFee} fee)`
+            );
+            // Note: The cleaner "pays" the fee by losing the booking opportunity
+            // In the future, you could implement actual fee collection from cleaner's balance
+          }
           newPaymentStatus = "refunded";
         }
       } catch (refundError: any) {
-        console.error("Refund failed:", refundError);
+        console.error("Refund/Cancel failed:", refundError);
         // If refund fails, we still cancel the booking but log the error
         // The admin can manually process the refund later
         console.error(
-          `MANUAL REFUND NEEDED for booking ${booking.id}: ${refundError.message}`
+          `MANUAL ACTION NEEDED for booking ${booking.id}: ${refundError.message}`
         );
       }
     }
@@ -517,10 +551,35 @@ export const bookingService = {
       throw new Error("Puoi caricare massimo 10 foto");
     }
 
-    // Verify payment is in escrow
-    if (booking.paymentStatus !== "held_in_escrow") {
+    // Verify payment is captured (in escrow) or capture it now if still authorized
+    if (booking.paymentStatus === "authorized") {
+      // Payment was authorized but not yet captured - capture it now
+      if (booking.paymentIntentId && !booking.paymentIntentId.startsWith("pi_mock_")) {
+        try {
+          await stripe.paymentIntents.capture(booking.paymentIntentId);
+          await prisma.booking.update({
+            where: { id: bookingId },
+            data: { paymentStatus: "held_in_escrow" },
+          });
+          console.log(
+            `Payment captured early for booking ${bookingId} (service completed before 48h)`
+          );
+        } catch (captureError: any) {
+          console.error(`Failed to capture payment for booking ${bookingId}:`, captureError.message);
+          throw new Error(
+            "Impossibile procedere: errore nella cattura del pagamento"
+          );
+        }
+      } else {
+        // Mock payment - just update status
+        await prisma.booking.update({
+          where: { id: bookingId },
+          data: { paymentStatus: "held_in_escrow" },
+        });
+      }
+    } else if (booking.paymentStatus !== "held_in_escrow") {
       throw new Error(
-        "Il pagamento deve essere in escrow per completare il servizio"
+        "Il pagamento deve essere autorizzato o in escrow per completare il servizio"
       );
     }
 

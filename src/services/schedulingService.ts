@@ -16,6 +16,9 @@ const WINDOWS_TIME_ADJUSTMENT: Record<number, number> = {
   8: 120, // 6-10 finestre: +2 ore
 };
 
+// Travel buffer in minutes - time blocked after each booking for cleaner to travel
+const TRAVEL_BUFFER_MINUTES = 30;
+
 export interface TimeSlot {
   startTime: string;
   endTime: string;
@@ -180,9 +183,11 @@ export const schedulingService = {
 
         const bookingStart = timeToMinutes(booking.startTime);
         const bookingEnd = timeToMinutes(booking.endTime);
+        // Add travel buffer after the booking ends
+        const bookingEndWithBuffer = bookingEnd + TRAVEL_BUFFER_MINUTES;
 
-        // Check for overlap
-        return startMinutes < bookingEnd && endMinutes > bookingStart;
+        // Check for overlap (including travel buffer after existing bookings)
+        return startMinutes < bookingEndWithBuffer && endMinutes > bookingStart;
       });
 
       slots.push({
@@ -237,9 +242,11 @@ export const schedulingService = {
 
       const existingStart = timeToMinutes(booking.startTime);
       const existingEnd = timeToMinutes(booking.endTime);
+      // Add travel buffer after the booking ends
+      const existingEndWithBuffer = existingEnd + TRAVEL_BUFFER_MINUTES;
 
-      // Check for overlap: there's a conflict if the new slot overlaps with existing
-      const hasOverlap = newStart < existingEnd && newEnd > existingStart;
+      // Check for overlap (including travel buffer after existing bookings)
+      const hasOverlap = newStart < existingEndWithBuffer && newEnd > existingStart;
       if (hasOverlap) {
         return false;
       }

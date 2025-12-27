@@ -49,6 +49,7 @@ import cleanupRoutes from "./routes/cleanup";
 import onboardingRoutes from "./routes/onboarding";
 import stripeConnectRoutes from "./routes/stripeConnect";
 import { startEscrowCronJobs } from "./cron/escrowCron";
+import { startPaymentCaptureCronJob } from "./cron/paymentCaptureCron";
 import { prisma } from "./lib/prisma";
 
 // Load environment variables
@@ -380,6 +381,7 @@ if (process.env.NODE_ENV !== "test") {
 
   // Start cron jobs
   startEscrowCronJobs();
+  startPaymentCaptureCronJob();
 
   httpServer.listen(Number(PORT), "0.0.0.0", () => {
     systemLogger.startup(Number(PORT));

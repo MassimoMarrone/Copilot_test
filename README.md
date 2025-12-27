@@ -48,9 +48,43 @@ Applicazione web moderna per la prenotazione di servizi di pulizia professionale
 
 ### 💳 Sistema di Pagamento Escrow (Stripe)
 
-- **Sicurezza**: I fondi vengono trattenuti fino al completamento del servizio.
-- **Rilascio**: Pagamento sbloccato solo dopo conferma e prova fotografica.
-- **Rimborso Automatico**: Gestione automatica rimborsi in caso di cancellazione.
+- **Autorizzazione Ritardata**: Al momento della prenotazione, il pagamento viene **autorizzato** ma non catturato.
+- **Cancellazione Gratuita (48h)**: Entro 48h dalla prenotazione, sia il cliente che il cleaner possono cancellare **senza costi**.
+- **Cattura Automatica**: Dopo 48h, un cron job cattura automaticamente il pagamento.
+- **Cattura Anticipata**: Se il servizio viene completato prima delle 48h, il pagamento viene catturato immediatamente.
+- **Rilascio**: Pagamento trasferito al provider solo dopo conferma del cliente (o auto-conferma dopo 24h).
+
+#### Policy Cancellazione (dopo cattura)
+
+| Chi cancella | Cliente riceve | Fee Stripe (~3%) |
+|--------------|----------------|------------------|
+| **Cliente** | Importo - fee | Pagata dal cliente |
+| **Cleaner** | 100% rimborso | Pagata dal cleaner |
+
+#### Flusso Pagamento
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   PRENOTAZIONE  │────▶│  AUTORIZZATO    │────▶│  HELD_IN_ESCROW │
+│                 │     │  (48h finestra) │     │                 │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+                               │                        │
+                    Cancellazione?              Provider completa?
+                               │                        │
+                               ▼                        ▼
+                        ┌─────────────────┐     ┌─────────────────┐
+                        │  CANCELLED      │     │ AWAITING_CONFIRM│
+                        │  (nessuna fee)  │     │                 │
+                        └─────────────────┘     └─────────────────┘
+                                                        │
+                                                Cliente conferma?
+                                                        │
+                                                        ▼
+                                                ┌─────────────────┐
+                                                │   RELEASED TO   │
+                                                │    PROVIDER     │
+                                                └─────────────────┘
+```
 
 #### Note importanti su escrow, saldo e rimborsi
 
