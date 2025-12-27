@@ -36,7 +36,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
     longitude: 0,
     workingHoursStart: "08:00",
     workingHoursEnd: "18:00",
-    slotDurationMinutes: 60,
+    slotDurationMinutes: 30,
     coverageRadiusKm: 20,
     availability: {
       weekly: defaultWeeklySchedule,
@@ -94,7 +94,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
         longitude: initialData.longitude || 0,
         workingHoursStart: (initialData as any).workingHoursStart || "08:00",
         workingHoursEnd: (initialData as any).workingHoursEnd || "18:00",
-        slotDurationMinutes: (initialData as any).slotDurationMinutes || 60,
+        slotDurationMinutes: (initialData as any).slotDurationMinutes || 30,
         coverageRadiusKm: (initialData as any).coverageRadiusKm || 20,
         availability: availability,
         extraServices: extraServices,
@@ -113,7 +113,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
         longitude: 0,
         workingHoursStart: "08:00",
         workingHoursEnd: "18:00",
-        slotDurationMinutes: 60,
+        slotDurationMinutes: 30,
         coverageRadiusKm: 20,
         availability: {
           weekly: defaultWeeklySchedule,
