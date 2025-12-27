@@ -57,6 +57,7 @@
     "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^1.41.3",
+    "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
@@ -84,6 +85,7 @@
     "winston": "^3.18.3"
   },
   "devDependencies": {
+    "@types/compression": "^1.8.1",
     "@types/cookie": "^0.6.0",
     "@types/jest": "^29.5.12",
     "@types/node-cron": "^3.0.11",

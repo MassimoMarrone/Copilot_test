@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import path from "path";
 import fs from "fs";
 import helmet from "helmet";
+import compression from "compression";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
 import * as Sentry from "@sentry/node";
@@ -65,6 +66,10 @@ if (process.env.SENTRY_DSN) {
 
 // Security & Middleware
 app.set("trust proxy", 1);
+
+// Compression - reduce response size by 60-80%
+app.use(compression());
+
 app.use(
   helmet({
     contentSecurityPolicy: {
