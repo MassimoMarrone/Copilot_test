@@ -1,9 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { loadConnectAndInitialize } from "@stripe/connect-js";
-import {
-  ConnectComponentsProvider,
-  ConnectAccountOnboarding,
-} from "@stripe/react-connect-js";
+import React, { useState, useEffect } from "react";
 import { stripeConnectService } from "../../services/stripeConnectService";
 import "./StripeConnectStatus.css";
 
@@ -19,17 +14,6 @@ interface StripeConnectStatusProps {
   onStatusChange?: (connected: boolean) => void;
 }
 
-// Get publishable key from meta tag or env
-const getPublishableKey = (): string => {
-  // Try to get from meta tag first
-  const metaTag = document.querySelector('meta[name="stripe-publishable-key"]');
-  if (metaTag) {
-    return metaTag.getAttribute("content") || "";
-  }
-  // Fallback to window variable or empty string
-  return (window as any).STRIPE_PUBLISHABLE_KEY || "";
-};
-
 const StripeConnectStatus: React.FC<StripeConnectStatusProps> = ({
   onStatusChange,
 }) => {
@@ -37,21 +21,6 @@ const StripeConnectStatus: React.FC<StripeConnectStatusProps> = ({
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showEmbedded, setShowEmbedded] = useState(false);
-  const [stripeConnectInstance, setStripeConnectInstance] = useState<any>(null);
-
-  const loadStatus = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await stripeConnectService.getAccountStatus();
-      setStatus(data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
     loadStatus();
@@ -64,7 +33,7 @@ const StripeConnectStatus: React.FC<StripeConnectStatusProps> = ({
       // Clean URL
       window.history.replaceState({}, "", window.location.pathname);
     }
-  }, [loadStatus]);
+  }, []);
 
   // Notify parent of status changes
   useEffect(() => {
@@ -73,45 +42,30 @@ const StripeConnectStatus: React.FC<StripeConnectStatusProps> = ({
     }
   }, [status, onStatusChange]);
 
-  const handleStartEmbeddedOnboarding = async () => {
+  const loadStatus = async () => {
     try {
-      setActionLoading(true);
+      setLoading(true);
       setError(null);
-
-      const publishableKey = getPublishableKey();
-      if (!publishableKey) {
-        throw new Error("Stripe publishable key not configured");
-      }
-
-      // Initialize Stripe Connect
-      const instance = loadConnectAndInitialize({
-        publishableKey,
-        fetchClientSecret: async () => {
-          const result = await stripeConnectService.getAccountSession();
-          return result.clientSecret;
-        },
-        appearance: {
-          overlays: "dialog",
-          variables: {
-            colorPrimary: "#635bff",
-          },
-        },
-      });
-
-      setStripeConnectInstance(instance);
-      setShowEmbedded(true);
+      const data = await stripeConnectService.getAccountStatus();
+      setStatus(data);
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setActionLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleOnboardingExit = () => {
-    setShowEmbedded(false);
-    setStripeConnectInstance(null);
-    // Reload status after onboarding
-    loadStatus();
+  const handleStartOnboarding = async () => {
+    try {
+      setActionLoading(true);
+      setError(null);
+      const result = await stripeConnectService.startOnboarding();
+      // Redirect to Stripe onboarding
+      window.location.href = result.onboardingUrl;
+    } catch (err: any) {
+      setError(err.message);
+      setActionLoading(false);
+    }
   };
 
   const handleOpenDashboard = async () => {
@@ -127,27 +81,6 @@ const StripeConnectStatus: React.FC<StripeConnectStatusProps> = ({
       setActionLoading(false);
     }
   };
-
-  // Show embedded onboarding
-  if (showEmbedded && stripeConnectInstance) {
-    return (
-      <div className="stripe-connect-status embedded-onboarding">
-        <div className="embedded-header">
-          <h4>Configura il tuo Account Pagamenti</h4>
-          <button
-            className="btn-close"
-            onClick={handleOnboardingExit}
-            title="Chiudi"
-          >
-            ✕
-          </button>
-        </div>
-        <ConnectComponentsProvider connectInstance={stripeConnectInstance}>
-          <ConnectAccountOnboarding onExit={handleOnboardingExit} />
-        </ConnectComponentsProvider>
-      </div>
-    );
-  }
 
   if (loading) {
     return (
@@ -172,10 +105,10 @@ const StripeConnectStatus: React.FC<StripeConnectStatusProps> = ({
         {error && <div className="error-message">{error}</div>}
         <button
           className="btn-connect"
-          onClick={handleStartEmbeddedOnboarding}
+          onClick={handleStartOnboarding}
           disabled={actionLoading}
         >
-          {actionLoading ? "Caricamento..." : "Collega con Stripe"}
+          {actionLoading ? "Reindirizzamento..." : "Collega con Stripe"}
         </button>
       </div>
     );
@@ -195,10 +128,10 @@ const StripeConnectStatus: React.FC<StripeConnectStatusProps> = ({
         {error && <div className="error-message">{error}</div>}
         <button
           className="btn-connect"
-          onClick={handleStartEmbeddedOnboarding}
+          onClick={handleStartOnboarding}
           disabled={actionLoading}
         >
-          {actionLoading ? "Caricamento..." : "Completa Configurazione"}
+          {actionLoading ? "Reindirizzamento..." : "Completa Configurazione"}
         </button>
       </div>
     );
