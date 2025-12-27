@@ -205,6 +205,9 @@ model ChatMessage {
   message     String
   read        Boolean   @default(false)
   createdAt   DateTime  @default(now())
+
+  @@index([bookingId, createdAt])
+  @@index([senderId, read])
 }
 
 model Notification {
