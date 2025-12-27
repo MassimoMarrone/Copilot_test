@@ -259,7 +259,6 @@ npm run dev:full
 
 - [ ] **Stripe Live Keys** - Configurare chiavi Stripe di produzione
 - [ ] **Verifica Env Vars** - Checklist finale variabili ambiente su Render
-- [ ] **Privacy & Legal** - Privacy Policy, Terms of Service, Cookie Policy
 
 #### ✅ Completati
 
@@ -270,6 +269,7 @@ npm run dev:full
 - [x] Notifiche in-app real-time (Socket.IO)
 - [x] Cloud Storage (Cloudinary)
 - [x] Code splitting e lazy loading componenti.
+- [x] Privacy Policy, Terms of Service, Cookie Policy
 
 #### 🟡 Post-Lancio (Priorità Media)
 
