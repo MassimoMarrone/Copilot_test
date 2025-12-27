@@ -75,6 +75,7 @@ app.use(
           "'unsafe-inline'",
           "https://accounts.google.com",
           "https://*.google.com",
+          "https://*.stripe.com",
         ],
         scriptSrc: [
           "'self'",
@@ -85,6 +86,8 @@ app.use(
           "https://gsi.client-web.google.com",
           "https://*.google.com",
           "https://*.googleapis.com",
+          "https://js.stripe.com",
+          "https://connect-js.stripe.com",
         ],
         imgSrc: [
           "'self'",
@@ -96,6 +99,7 @@ app.use(
           "https://*.basemaps.cartocdn.com",
           "https://*.tile.openstreetmap.org",
           "https://unpkg.com",
+          "https://*.stripe.com",
         ],
         connectSrc: [
           "'self'",
@@ -108,12 +112,17 @@ app.use(
           "https://gsi.client-web.google.com",
           "https://*.google.com",
           "https://*.googleapis.com",
+          "https://*.stripe.com",
+          "https://api.stripe.com",
         ],
         frameSrc: [
           "https://maps.googleapis.com",
           "https://accounts.google.com",
           "https://gsi.client-web.google.com",
           "https://*.google.com",
+          "https://js.stripe.com",
+          "https://connect-js.stripe.com",
+          "https://*.stripe.com",
         ],
       },
     },
