@@ -394,29 +394,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
             )}
           </div>
 
-          <div className="form-group">
-            <label>Durata minima slot (minuti)</label>
-            <select
-              value={formData.slotDurationMinutes}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  slotDurationMinutes: parseInt(e.target.value),
-                })
-              }
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-              }}
-            >
-              <option value={30}>30 minuti</option>
-              <option value={60}>1 ora</option>
-              <option value={90}>1 ora e 30 minuti</option>
-              <option value={120}>2 ore</option>
-            </select>
-          </div>
+
 
           <div className="form-group">
             <label>Prodotti Utilizzati</label>

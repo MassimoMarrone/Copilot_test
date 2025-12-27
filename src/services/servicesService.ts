@@ -210,7 +210,6 @@ export class ServicesService {
       imageUrl,
       workingHoursStart,
       workingHoursEnd,
-      slotDurationMinutes,
       extraServices,
       coverageRadiusKm,
     } = data;
@@ -266,9 +265,7 @@ export class ServicesService {
         createdAt: new Date(),
         workingHoursStart: workingHoursStart || "08:00",
         workingHoursEnd: workingHoursEnd || "18:00",
-        slotDurationMinutes: slotDurationMinutes
-          ? parseInt(slotDurationMinutes)
-          : 60,
+        slotDurationMinutes: 30, // Fixed at 30 minutes
         coverageRadiusKm: coverageRadiusKm ? parseInt(coverageRadiusKm) : 20,
         availability: JSON.stringify({
           weekly: defaultWeeklySchedule,
@@ -309,7 +306,6 @@ export class ServicesService {
       coverageRadiusKm,
       workingHoursStart,
       workingHoursEnd,
-      slotDurationMinutes,
     } = data;
 
     const updateData: any = {};
@@ -353,9 +349,7 @@ export class ServicesService {
     if (workingHoursEnd) {
       updateData.workingHoursEnd = workingHoursEnd;
     }
-    if (slotDurationMinutes !== undefined) {
-      updateData.slotDurationMinutes = parseInt(slotDurationMinutes);
-    }
+    // slotDurationMinutes is fixed at 30, not editable
 
     return prisma.service.update({
       where: { id: serviceId },
