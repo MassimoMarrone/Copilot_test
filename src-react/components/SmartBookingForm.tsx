@@ -14,6 +14,19 @@ import "../styles/SmartBookingForm.css";
 // Registra la locale italiana
 registerLocale("it", it);
 
+// Lista prodotti pulizia che il cliente potrebbe avere
+const CLEANING_PRODUCTS = [
+  { id: "mop", label: "Mocio/Scopa" },
+  { id: "bucket", label: "Secchio" },
+  { id: "floor_cleaner", label: "Detersivo pavimenti" },
+  { id: "glass_cleaner", label: "Detergente vetri" },
+  { id: "degreaser", label: "Sgrassatore" },
+  { id: "bathroom_cleaner", label: "Detergente bagno" },
+  { id: "sponges", label: "Spugne" },
+  { id: "cloths", label: "Panni in microfibra" },
+  { id: "vacuum", label: "Aspirapolvere" },
+];
+
 interface ExtraService {
   name: string;
   price: number;
@@ -42,6 +55,7 @@ export interface SmartBookingData {
   calculatedPrice: number;
   estimatedDuration: number;
   selectedExtras?: ExtraService[];
+  clientProducts?: string[];
 }
 
 const SmartBookingForm: React.FC<SmartBookingFormProps> = ({
@@ -63,6 +77,7 @@ const SmartBookingForm: React.FC<SmartBookingFormProps> = ({
   const [notes, setNotes] = useState("");
   const [address, setAddress] = useState("");
   const [selectedExtras, setSelectedExtras] = useState<ExtraService[]>([]);
+  const [clientProducts, setClientProducts] = useState<string[]>([]);
 
   // Calculated values
   const [estimatedDuration, setEstimatedDuration] = useState<string>("");
@@ -178,6 +193,7 @@ const SmartBookingForm: React.FC<SmartBookingFormProps> = ({
       calculatedPrice: totalWithExtras,
       estimatedDuration: estimatedMinutes,
       selectedExtras: selectedExtras.length > 0 ? selectedExtras : undefined,
+      clientProducts: clientProducts.length > 0 ? clientProducts : undefined,
     });
   };
 
@@ -519,6 +535,44 @@ const SmartBookingForm: React.FC<SmartBookingFormProps> = ({
               </div>
             </div>
           )}
+
+          {/* Prodotti che il cliente ha a casa */}
+          <div className="form-group">
+            <label>🧹 Prodotti che hai già a casa</label>
+            <p
+              style={{
+                fontSize: "0.85em",
+                color: "#666",
+                marginBottom: "12px",
+              }}
+            >
+              Indica cosa hai già (il cleaner porterà il resto)
+            </p>
+            <div className="client-products-grid">
+              {CLEANING_PRODUCTS.map((product) => {
+                const isSelected = clientProducts.includes(product.id);
+                return (
+                  <label
+                    key={product.id}
+                    className={`product-checkbox ${isSelected ? "selected" : ""}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => {
+                        setClientProducts((prev) =>
+                          isSelected
+                            ? prev.filter((id) => id !== product.id)
+                            : [...prev, product.id]
+                        );
+                      }}
+                    />
+                    <span>{product.label}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
 
           <div className="form-group">
             <label>Telefono di contatto</label>

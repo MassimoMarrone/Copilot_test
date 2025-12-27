@@ -152,6 +152,7 @@ model Booking {
   startTime           String?   // Booking start time "HH:MM"
   endTime             String?   // Booking end time "HH:MM"
   selectedExtras      String?   // JSON string [{name: string, price: number}]
+  clientProducts      String?   // JSON array of product IDs client has at home
   
   // Client confirmation flow (escrow release)
   awaitingClientConfirmation  Boolean   @default(false)

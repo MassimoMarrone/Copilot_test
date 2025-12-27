@@ -25,6 +25,7 @@ export const bookingService = {
       startTime?: string;
       endTime?: string;
       selectedExtras?: { name: string; price: number }[];
+      clientProducts?: string[];
     }
   ) {
     const {
@@ -41,6 +42,7 @@ export const bookingService = {
       startTime,
       endTime,
       selectedExtras,
+      clientProducts,
     } = data;
 
     const service = await prisma.service.findUnique({
@@ -222,6 +224,10 @@ export const bookingService = {
       // Selected extras (JSON stringified, max 500 chars for Stripe)
       selectedExtras: selectedExtras
         ? JSON.stringify(selectedExtras).substring(0, 500)
+        : "",
+      // Client products they have at home
+      clientProducts: clientProducts
+        ? JSON.stringify(clientProducts).substring(0, 500)
         : "",
     };
 

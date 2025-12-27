@@ -123,6 +123,8 @@ export const paymentService = {
                 endTime: metadata.endTime || null,
                 // Selected extras
                 selectedExtras: metadata.selectedExtras || null,
+                // Client products they have at home
+                clientProducts: metadata.clientProducts || null,
               },
             });
           },

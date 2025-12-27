@@ -673,3 +673,49 @@
     right: 30px;
   }
 }
+
+/* Client Products Checkbox Grid */
+.client-products-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.product-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.product-checkbox:hover {
+  border-color: #4a90d9;
+  background: #f8fafc;
+}
+
+.product-checkbox.selected {
+  border-color: #28a745;
+  background: #e8f5e9;
+}
+
+.product-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #28a745;
+}
+
+.product-checkbox span {
+  flex: 1;
+}
+
+@media (max-width: 600px) {
+  .client-products-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
