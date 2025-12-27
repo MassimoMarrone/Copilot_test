@@ -245,9 +245,10 @@ const serveSpa = (_req: Request, res: Response) => {
   if (fs.existsSync(htmlPath)) {
     let html = fs.readFileSync(htmlPath, "utf8");
     const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY || "";
+    const stripePublishableKey = process.env.STRIPE_PUBLISHABLE_KEY || "";
     html = html.replace(
       "</head>",
-      `<meta name="google-maps-api-key" content="${googleMapsApiKey}"></head>`
+      `<meta name="google-maps-api-key" content="${googleMapsApiKey}"><meta name="stripe-publishable-key" content="${stripePublishableKey}"></head>`
     );
     res.send(html);
   } else {

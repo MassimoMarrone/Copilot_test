@@ -89,6 +89,45 @@ export const stripeConnectService = {
   },
 
   /**
+   * Create account session for embedded onboarding components
+   * Returns client_secret to initialize @stripe/react-connect-js
+   */
+  async createAccountSession(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (!user.isProvider) {
+      throw new Error("User is not a provider");
+    }
+
+    let accountId = user.stripeAccountId;
+
+    // Create account if doesn't exist
+    if (!accountId) {
+      const result = await this.createConnectAccount(userId);
+      accountId = result.accountId;
+    }
+
+    // Create account session for embedded components
+    const accountSession = await stripe.accountSessions.create({
+      account: accountId,
+      components: {
+        account_onboarding: { enabled: true },
+      },
+    });
+
+    return { 
+      clientSecret: accountSession.client_secret,
+      accountId,
+    };
+  },
+
+  /**
    * Create login link for provider to access Stripe dashboard
    */
   async createDashboardLink(userId: string) {

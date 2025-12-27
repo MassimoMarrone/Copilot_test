@@ -56,6 +56,30 @@ router.get("/status", authenticate, async (req: Request, res: Response) => {
 });
 
 /**
+ * Create account session for embedded onboarding components
+ * POST /api/stripe-connect/account-session
+ */
+router.post(
+  "/account-session",
+  authenticate,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const result = await stripeConnectService.createAccountSession(userId);
+      res.json({
+        clientSecret: result.clientSecret,
+        accountId: result.accountId,
+      });
+    } catch (error: any) {
+      console.error("Stripe account session error:", error);
+      res
+        .status(400)
+        .json({ error: error.message || "Failed to create account session" });
+    }
+  }
+);
+
+/**
  * Get link to Stripe Express dashboard
  * GET /api/stripe-connect/dashboard-link
  */

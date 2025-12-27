@@ -149,3 +149,45 @@
   font-size: 13px;
   margin-bottom: 10px;
 }
+
+/* Embedded Onboarding */
+.stripe-connect-status.embedded-onboarding {
+  border: none;
+  padding: 0;
+  background: #f8f9fa;
+  min-height: 500px;
+}
+
+.stripe-connect-status .embedded-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 12px 12px 0 0;
+}
+
+.stripe-connect-status .embedded-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.stripe-connect-status .btn-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.stripe-connect-status .btn-close:hover {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+

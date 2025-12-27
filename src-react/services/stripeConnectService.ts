@@ -75,4 +75,27 @@ export const stripeConnectService = {
 
     return response.json();
   },
+
+  /**
+   * Get account session for embedded onboarding components
+   */
+  async getAccountSession(): Promise<{ clientSecret: string; accountId: string }> {
+    const response = await fetch(
+      `${API_BASE}/api/stripe-connect/account-session`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to get account session");
+    }
+
+    return response.json();
+  },
 };
