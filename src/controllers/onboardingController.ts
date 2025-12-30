@@ -60,6 +60,47 @@ export const uploadOnboardingDocument = async (
   }
 };
 
+// POST /api/onboarding/upload-selfie - Upload onboarding selfie
+export const uploadOnboardingSelfie = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: "Non autenticato" });
+      return;
+    }
+
+    const file = req.file as Express.Multer.File & { path?: string };
+    if (!file) {
+      res.status(400).json({ error: "Nessun file caricato" });
+      return;
+    }
+
+    const selfieUrl = file.path;
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        onboardingSelfieUrl: selfieUrl,
+        onboardingStep: 3,
+        onboardingStatus: "under_review",
+      },
+    });
+
+    logger.info(`Onboarding selfie uploaded for user ${userId}`);
+
+    res.json({
+      message: "Selfie caricato con successo",
+      url: selfieUrl,
+    });
+  } catch (error) {
+    logger.error("Error uploading onboarding selfie:", error);
+    res.status(500).json({ error: "Errore durante il caricamento del selfie" });
+  }
+};
+
 // POST /api/onboarding - Submit provider onboarding data
 export const providerOnboarding = async (
   req: Request,
@@ -110,15 +151,8 @@ export const providerOnboarding = async (
       idDocumentType,
       idDocumentNumber,
       idDocumentExpiry,
-      // Step 3 - Payment Info
-      iban,
-      bankAccountHolder,
-      // Step 4 - Work Info
-      workingZones,
-      yearsOfExperience,
-      hasOwnEquipment,
-      insuranceNumber,
-      insuranceExpiry,
+      // Step 3 - Selfie
+      onboardingSelfieUrl,
     } = req.body;
 
     // Build update object based on step
@@ -157,38 +191,20 @@ export const providerOnboarding = async (
     }
 
     if (step === 3 || step === undefined) {
-      // Step 3: Payment Info
-      if (iban) updateData.iban = iban.replace(/\s/g, "").toUpperCase();
-      if (bankAccountHolder) updateData.bankAccountHolder = bankAccountHolder;
-
-      if (iban && bankAccountHolder) {
-        updateData.onboardingStep = Math.max(user.onboardingStep || 0, 3);
+      // Step 3: Selfie
+      if (onboardingSelfieUrl) {
+        updateData.onboardingSelfieUrl = onboardingSelfieUrl;
       }
-    }
-
-    // Legacy optional Step 4 data (no longer required for onboarding completion)
-    if (step === 4 || step === undefined) {
-      if (workingZones) {
-        updateData.workingZones =
-          typeof workingZones === "string"
-            ? workingZones
-            : JSON.stringify(workingZones);
-      }
-      if (yearsOfExperience !== undefined)
-        updateData.yearsOfExperience = parseInt(yearsOfExperience);
-      if (hasOwnEquipment !== undefined)
-        updateData.hasOwnEquipment = Boolean(hasOwnEquipment);
-      if (insuranceNumber !== undefined)
-        updateData.insuranceNumber = insuranceNumber || null;
-      if (insuranceExpiry)
-        updateData.insuranceExpiry = new Date(insuranceExpiry);
     }
 
     // If all required fields are filled (steps 1-3), set status to under_review
-    const isComplete = checkOnboardingComplete(user, updateData);
-    if (isComplete) {
-      updateData.onboardingStep = Math.max(user.onboardingStep || 0, 3);
-      updateData.onboardingStatus = "under_review";
+    // NOTE: non forziamo onboardingStep=3 se non completo, per evitare avanzamenti senza selfie.
+    if (step === 3 || step === undefined) {
+      const isComplete = checkOnboardingComplete(user, updateData);
+      if (isComplete) {
+        updateData.onboardingStep = Math.max(user.onboardingStep || 0, 3);
+        updateData.onboardingStatus = "under_review";
+      }
     }
 
     const updatedUser = await prisma.user.update({
@@ -216,14 +232,7 @@ export const providerOnboarding = async (
         idDocumentFrontUrl: true,
         idDocumentBackUrl: true,
         // Step 3
-        iban: true,
-        bankAccountHolder: true,
-        // Step 4
-        workingZones: true,
-        yearsOfExperience: true,
-        hasOwnEquipment: true,
-        insuranceNumber: true,
-        insuranceExpiry: true,
+        onboardingSelfieUrl: true,
       },
     });
 
@@ -284,14 +293,7 @@ export const getProviderOnboardingStatus = async (
         idDocumentFrontUrl: true,
         idDocumentBackUrl: true,
         // Step 3
-        iban: true,
-        bankAccountHolder: true,
-        // Step 4
-        workingZones: true,
-        yearsOfExperience: true,
-        hasOwnEquipment: true,
-        insuranceNumber: true,
-        insuranceExpiry: true,
+        onboardingSelfieUrl: true,
       },
     });
 
@@ -342,10 +344,9 @@ export const getProviderOnboardingStatus = async (
         },
       },
       step3: {
-        complete: Boolean(user.iban && user.bankAccountHolder),
+        complete: Boolean(user.onboardingSelfieUrl),
         fields: {
-          iban: !!user.iban,
-          bankAccountHolder: !!user.bankAccountHolder,
+          onboardingSelfieUrl: !!user.onboardingSelfieUrl,
         },
       },
     };
@@ -399,7 +400,7 @@ function checkOnboardingComplete(
       merged.idDocumentExpiry
   );
 
-  const step3Complete = Boolean(merged.iban && merged.bankAccountHolder);
+  const step3Complete = Boolean(merged.onboardingSelfieUrl);
 
   return step1Complete && step2Complete && step3Complete;
 }

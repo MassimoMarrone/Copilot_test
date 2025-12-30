@@ -64,12 +64,15 @@ model User {
   idDocumentType        String?   // "carta_identita", "patente", "passaporto"
   idDocumentNumber      String?   // Numero documento
   idDocumentExpiry      DateTime? // Scadenza documento
-  
-  // Payment Info (Step 3)
+
+  // Selfie (Step 3)
+  onboardingSelfieUrl   String?   // Selfie per verifica manuale (Cloudinary URL)
+
+  // Payment Info (legacy / future)
   iban                  String?
   bankAccountHolder     String?   // Intestatario conto
-  
-  // Work Info (Step 4)
+
+  // Work Info (legacy / future)
   workingZones          String?   // JSON array of zones/CAPs
   yearsOfExperience     Int?
   hasOwnEquipment       Boolean   @default(false)

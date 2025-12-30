@@ -3,9 +3,10 @@ import {
   providerOnboarding,
   getProviderOnboardingStatus,
   uploadOnboardingDocument,
+  uploadOnboardingSelfie,
 } from "../controllers/onboardingController";
 import { authenticate } from "../middleware/auth";
-import { uploadDocument } from "../config/cloudinary";
+import { uploadAvatar, uploadDocument } from "../config/cloudinary";
 
 const router = express.Router();
 
@@ -21,6 +22,14 @@ router.post(
   authenticate,
   uploadDocument.single("document"),
   uploadOnboardingDocument
+);
+
+// Endpoint per upload selfie onboarding
+router.post(
+  "/upload-selfie",
+  authenticate,
+  uploadAvatar.single("selfie"),
+  uploadOnboardingSelfie
 );
 
 export default router;

@@ -48,6 +48,17 @@ export const prismaMock = {
     updateMany: jest.fn(),
     deleteMany: jest.fn(),
   },
+  consentRecord: {
+    findUnique: jest.fn(),
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    updateMany: jest.fn(),
+    delete: jest.fn(),
+    deleteMany: jest.fn(),
+    count: jest.fn(),
+  },
   $disconnect: jest.fn(),
 };
 

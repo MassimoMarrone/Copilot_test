@@ -33,6 +33,13 @@ jest.mock("../../utils/notification", () => ({
   sendNotification: jest.fn().mockResolvedValue(undefined),
 }));
 
+jest.mock("../../services/stripeConnectService", () => ({
+  stripeConnectService: {
+    canReceivePayments: jest.fn().mockResolvedValue(true),
+    getPlatformFeePercent: jest.fn().mockReturnValue(10),
+  },
+}));
+
 jest.mock("../../emailService", () => ({
   sendEmail: jest.fn().mockResolvedValue(undefined),
   emailTemplates: {
@@ -42,6 +49,9 @@ jest.mock("../../emailService", () => ({
       .mockReturnValue("<html>Booking Confirmed</html>"),
     bookingCancelled: jest.fn().mockReturnValue("<html>Cancelled</html>"),
     bookingCompleted: jest.fn().mockReturnValue("<html>Completed</html>"),
+    awaitingConfirmation: jest
+      .fn()
+      .mockReturnValue("<html>Awaiting Confirmation</html>"),
   },
 }));
 
@@ -115,7 +125,11 @@ describe("BookingService", () => {
       });
       prismaMock.service.findUnique.mockResolvedValue({
         ...mockService,
-        provider: createMockUser(),
+        provider: createMockUser({
+          userType: "provider",
+          isProvider: true,
+          stripeAccountId: "acct_test_123",
+        }),
       });
 
       await expect(
@@ -131,7 +145,11 @@ describe("BookingService", () => {
       const mockService = createMockService();
       prismaMock.service.findUnique.mockResolvedValue({
         ...mockService,
-        provider: createMockUser(),
+        provider: createMockUser({
+          userType: "provider",
+          isProvider: true,
+          stripeAccountId: "acct_test_123",
+        }),
       });
       prismaMock.booking.findFirst.mockResolvedValue(null);
 
@@ -325,7 +343,7 @@ describe("BookingService", () => {
           mockPhotoUrls
         )
       ).rejects.toThrow(
-        "Payment must be authorized or held in escrow before completing the service"
+        "Il pagamento deve essere autorizzato o in escrow per completare il servizio"
       );
     });
 

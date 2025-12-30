@@ -41,20 +41,6 @@ const validators = {
     return null;
   },
 
-  // IBAN italiano: IT + 2 cifre di controllo + 1 lettera + 22 caratteri alfanumerici
-  iban: (value: string): string | null => {
-    if (!value) return "L'IBAN è obbligatorio";
-    const cleaned = value.toUpperCase().replace(/\s/g, "");
-    if (cleaned.length !== 27) {
-      return "L'IBAN italiano deve essere di 27 caratteri";
-    }
-    const ibanRegex = /^IT[0-9]{2}[A-Z][0-9]{10}[A-Z0-9]{12}$/;
-    if (!ibanRegex.test(cleaned)) {
-      return "Formato IBAN non valido (es: IT60X0542811101000000123456)";
-    }
-    return null;
-  },
-
   // CAP: 5 cifre
   postalCode: (value: string): string | null => {
     if (!value) return "Il CAP è obbligatorio";
@@ -130,8 +116,7 @@ interface OnboardingStatus {
     idDocumentFrontUrl: string | null;
     idDocumentBackUrl: string | null;
     // Step 3
-    iban: string | null;
-    bankAccountHolder: string | null;
+    onboardingSelfieUrl: string | null;
   };
   steps: {
     step1: { complete: boolean };
@@ -170,9 +155,6 @@ const ProviderOnboarding: React.FC = () => {
     idDocumentType: "carta_identita",
     idDocumentNumber: "",
     idDocumentExpiry: "",
-    // Step 3
-    iban: "",
-    bankAccountHolder: "",
   });
 
   // Document uploads
@@ -209,8 +191,6 @@ const ProviderOnboarding: React.FC = () => {
             idDocumentExpiry: data.user.idDocumentExpiry
               ? data.user.idDocumentExpiry.split("T")[0]
               : "",
-            iban: data.user.iban || "",
-            bankAccountHolder: data.user.bankAccountHolder || "",
           });
 
           // Set current step based on progress or status
@@ -259,8 +239,8 @@ const ProviderOnboarding: React.FC = () => {
 
       const response = await fetch("/api/onboarding/upload-document", {
         method: "POST",
-        credentials: "include",
         body: formDataUpload,
+        credentials: "include",
       });
 
       if (response.ok) {
@@ -350,15 +330,6 @@ const ProviderOnboarding: React.FC = () => {
       if (docExpError) errors.idDocumentExpiry = docExpError;
     }
 
-    if (step === 3) {
-      const ibanError = validators.iban(formData.iban);
-      if (ibanError) errors.iban = ibanError;
-
-      if (!formData.bankAccountHolder.trim()) {
-        errors.bankAccountHolder = "L'intestatario del conto è obbligatorio";
-      }
-    }
-
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -443,8 +414,8 @@ const ProviderOnboarding: React.FC = () => {
             offrire i tuoi servizi!
           </p>
           <p style={{ marginTop: "10px" }}>
-            Nota: le impostazioni del servizio (orari, durata slot, prodotti, ecc.)
-            si configurano quando crei un servizio.
+            Nota: le impostazioni del servizio (orari, durata slot, prodotti,
+            ecc.) si configurano quando crei un servizio.
           </p>
           <div style={{ marginTop: "16px" }}>
             <button
@@ -537,7 +508,7 @@ const ProviderOnboarding: React.FC = () => {
             <span className="step-label">
               {step === 1 && "Dati Personali"}
               {step === 2 && "Documenti"}
-              {step === 3 && "Pagamento"}
+              {step === 3 && "Selfie"}
             </span>
           </div>
         ))}
@@ -843,55 +814,63 @@ const ProviderOnboarding: React.FC = () => {
         </div>
       )}
 
-      {/* Step 3: Payment Info */}
+      {/* Step 3: Selfie */}
       {currentStep === 3 && (
         <div className="step-content">
-          <h2>Dati Bancari</h2>
+          <h2>Carica un Selfie</h2>
           <p className="step-description">
-            Questi dati verranno utilizzati per accreditare i pagamenti dei tuoi
-            servizi.
+            Carica un selfie recente: l'admin confronterà selfie e documento per
+            la verifica.
           </p>
-          <div className="form-grid">
-            <div
-              className={`form-group full-width ${
-                fieldErrors.iban ? "has-error" : ""
-              }`}
-            >
-              <label>IBAN *</label>
+          <div className="document-uploads">
+            <div className="upload-box">
+              <label>Selfie *</label>
               <input
-                type="text"
-                name="iban"
-                value={formData.iban}
-                onChange={handleInputChange}
-                onBlur={() => handleFieldBlur("iban")}
-                placeholder="IT60X0542811101000000123456"
-                required
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+
+                  setSaving(true);
+                  setError(null);
+                  try {
+                    const payload = new FormData();
+                    payload.append("selfie", file);
+
+                    const response = await fetch(
+                      "/api/onboarding/upload-selfie",
+                      {
+                        method: "POST",
+                        body: payload,
+                        credentials: "include",
+                      }
+                    );
+
+                    if (response.ok) {
+                      await fetchStatus();
+                      setSuccess("Selfie caricato con successo!");
+                      setTimeout(() => setSuccess(null), 3000);
+                    } else {
+                      const errorData = await response.json();
+                      setError(
+                        errorData.error || "Errore durante il caricamento"
+                      );
+                    }
+                  } catch {
+                    setError("Errore durante il caricamento del selfie");
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+                disabled={saving}
               />
-              {fieldErrors.iban && (
-                <span className="field-error">{fieldErrors.iban}</span>
-              )}
-            </div>
-            <div
-              className={`form-group full-width ${
-                fieldErrors.bankAccountHolder ? "has-error" : ""
-              }`}
-            >
-              <label>Intestatario Conto *</label>
-              <input
-                type="text"
-                name="bankAccountHolder"
-                value={formData.bankAccountHolder}
-                onChange={handleInputChange}
-                onBlur={() => handleFieldBlur("bankAccountHolder")}
-                required
-              />
-              {fieldErrors.bankAccountHolder && (
-                <span className="field-error">
-                  {fieldErrors.bankAccountHolder}
-                </span>
+              {status?.user.onboardingSelfieUrl && (
+                <div className="uploaded-preview">✅ Selfie caricato</div>
               )}
             </div>
           </div>
+
           <div className="step-actions">
             <button className="btn-secondary" onClick={() => setCurrentStep(2)}>
               Indietro
@@ -899,7 +878,7 @@ const ProviderOnboarding: React.FC = () => {
             <button
               className="btn-primary"
               onClick={() => saveStep(3)}
-              disabled={saving}
+              disabled={saving || !status?.user.onboardingSelfieUrl}
             >
               {saving ? "Salvataggio..." : "Invia per Revisione"}
             </button>

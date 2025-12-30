@@ -306,6 +306,7 @@ export const adminService = {
         idDocumentFrontUrl: true,
         idDocumentBackUrl: true,
         // Step 3
+        onboardingSelfieUrl: true,
         iban: true,
         bankAccountHolder: true,
         // Step 4
