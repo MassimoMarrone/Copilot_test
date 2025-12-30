@@ -57,7 +57,9 @@ function App() {
             <Route path="/cookie-policy" element={<CookiePolicy />} />
 
             <Route element={<Layout />}>
-              <Route path="/" element={<Home />} />
+              {/* Temporarily hide Landing (Home) and use Explore as homepage */}
+              <Route path="/" element={<ServicesPage />} />
+              <Route path="/landing" element={<Home />} />
               <Route path="/services" element={<ServicesPage />} />
               <Route path="/bookings" element={<BookingsPage />} />
               <Route path="/messages" element={<MessagesPage />} />
