@@ -37,6 +37,7 @@
     "@prisma/client": "^5.22.0",
     "@react-oauth/google": "^0.12.2",
     "@sentry/node": "^10.31.0",
+    "@sentry/react": "^10.32.1",
     "@stripe/connect-js": "^3.3.31",
     "@stripe/react-connect-js": "^3.3.31",
     "@types/axios": "^0.9.36",
