@@ -331,6 +331,8 @@ describe("BookingService", () => {
       prismaMock.booking.findUnique.mockResolvedValue({
         ...createMockBooking({
           providerId: "provider-123",
+          status: "confirmed",
+          acceptedAt: new Date(),
           paymentStatus: "pending",
         }),
         service: createMockService(),
@@ -351,6 +353,8 @@ describe("BookingService", () => {
       prismaMock.booking.findUnique.mockResolvedValue({
         ...createMockBooking({
           providerId: "provider-123",
+          status: "confirmed",
+          acceptedAt: new Date(),
           paymentStatus: "held_in_escrow",
         }),
         service: createMockService(),
@@ -365,6 +369,8 @@ describe("BookingService", () => {
       const mockBooking = {
         ...createMockBooking({
           providerId: "provider-123",
+          status: "confirmed",
+          acceptedAt: new Date(),
           paymentStatus: "held_in_escrow",
         }),
         service: createMockService(),

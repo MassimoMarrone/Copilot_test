@@ -1,8 +1,14 @@
 import React from "react";
 import { Booking } from "../../types";
+import {
+  CLEANING_PRODUCTS,
+  getCleaningProductLabel,
+} from "../../constants/cleaningProducts";
 
 interface BookingListProps {
   bookings: Booking[];
+  onAccept: (booking: Booking) => void;
+  onStart: (booking: Booking) => void;
   onComplete: (booking: Booking) => void;
   onCancel: (booking: Booking) => void;
   onChat: (booking: Booking) => void;
@@ -10,10 +16,79 @@ interface BookingListProps {
 
 const BookingList: React.FC<BookingListProps> = ({
   bookings,
+  onAccept,
+  onStart,
   onComplete,
   onCancel,
   onChat,
 }) => {
+  const [nowTs, setNowTs] = React.useState(() => Date.now());
+
+  React.useEffect(() => {
+    const timer = setInterval(() => setNowTs(Date.now()), 60 * 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getAcceptanceCountdownLabel = (deadline?: string) => {
+    if (!deadline) return null;
+    const deadlineTs = new Date(deadline).getTime();
+    if (Number.isNaN(deadlineTs)) return null;
+
+    const remainingMs = deadlineTs - nowTs;
+    if (remainingMs <= 0) return "Scaduta";
+
+    const remainingHours = Math.ceil(remainingMs / (60 * 60 * 1000));
+    if (remainingHours <= 1) return "Scade tra meno di 1 ora";
+    return `Scade tra ${remainingHours} ore`;
+  };
+
+  const parseJsonArray = (value?: string): string[] => {
+    if (!value) return [];
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((x) => typeof x === "string") as string[];
+      }
+    } catch {
+      // ignore
+    }
+    return [];
+  };
+
+  const parseSelectedExtras = (
+    value?: string
+  ): { name: string; price?: number }[] => {
+    if (!value) return [];
+    try {
+      const parsed = JSON.parse(value);
+      if (!Array.isArray(parsed)) return [];
+      return parsed
+        .filter((x) => x && typeof x === "object")
+        .map((x: any) => ({
+          name: typeof x.name === "string" ? x.name : String(x.name ?? ""),
+          price: typeof x.price === "number" ? x.price : undefined,
+        }))
+        .filter((x) => x.name.trim().length > 0);
+    } catch {
+      return [];
+    }
+  };
+
+  const formatDurationMinutes = (minutes?: number | null): string | null => {
+    if (
+      typeof minutes !== "number" ||
+      !Number.isFinite(minutes) ||
+      minutes <= 0
+    ) {
+      return null;
+    }
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours <= 0) return `${mins} min`;
+    if (mins === 0) return `${hours} h`;
+    return `${hours} h ${mins} min`;
+  };
+
   if (bookings.length === 0) {
     return (
       <div className="empty-state">
@@ -39,9 +114,37 @@ const BookingList: React.FC<BookingListProps> = ({
             <strong>Data:</strong>{" "}
             {new Date(booking.date).toLocaleDateString("it-IT")}
           </p>
+
+          {(booking.startTime || booking.endTime) && (
+            <p>
+              <strong>Orario:</strong> {booking.startTime || "?"}–
+              {booking.endTime || "?"}
+            </p>
+          )}
+
           {booking.preferredTime && (
             <p>
               <strong>Orario Preferito:</strong> {booking.preferredTime}
+            </p>
+          )}
+
+          {booking.squareMetersRange && (
+            <p>
+              <strong>Metri quadri (fascia):</strong>{" "}
+              {booking.squareMetersRange}
+            </p>
+          )}
+
+          {typeof booking.windowsCount === "number" && (
+            <p>
+              <strong>Finestre:</strong> {booking.windowsCount}
+            </p>
+          )}
+
+          {formatDurationMinutes(booking.estimatedDuration) && (
+            <p>
+              <strong>Durata stimata:</strong>{" "}
+              {formatDurationMinutes(booking.estimatedDuration)}
             </p>
           )}
           {booking.address && (
@@ -95,6 +198,64 @@ const BookingList: React.FC<BookingListProps> = ({
               <strong>Note del Cliente:</strong> {booking.notes}
             </p>
           )}
+
+          {(() => {
+            const extras = parseSelectedExtras((booking as any).selectedExtras);
+            if (extras.length === 0) return null;
+            return (
+              <div style={{ marginTop: "10px" }}>
+                <p style={{ marginBottom: "6px" }}>
+                  <strong>Extra richiesti dal cliente:</strong>
+                </p>
+                <ul style={{ margin: 0, paddingLeft: "18px" }}>
+                  {extras.map((e, idx) => (
+                    <li key={`${e.name}-${idx}`}>
+                      {e.name}
+                      {typeof e.price === "number"
+                        ? ` (+€${e.price.toFixed(2)})`
+                        : ""}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })()}
+
+          {(() => {
+            const products = parseJsonArray((booking as any).clientProducts);
+            if (products.length === 0) return null;
+
+            const allProductIds = CLEANING_PRODUCTS.map((p) => p.id);
+            const missing = allProductIds.filter(
+              (id) => !products.includes(id)
+            );
+
+            return (
+              <div style={{ marginTop: "10px" }}>
+                <p style={{ marginBottom: "6px" }}>
+                  <strong>Prodotti presenti in casa (cliente):</strong>
+                </p>
+                <ul style={{ margin: 0, paddingLeft: "18px" }}>
+                  {products.map((p, idx) => (
+                    <li key={`${p}-${idx}`}>{getCleaningProductLabel(p)}</li>
+                  ))}
+                </ul>
+
+                {missing.length > 0 && (
+                  <div style={{ marginTop: "8px" }}>
+                    <p style={{ marginBottom: "6px" }}>
+                      <strong>Prodotti mancanti (da portare):</strong>
+                    </p>
+                    <ul style={{ margin: 0, paddingLeft: "18px" }}>
+                      {missing.map((id) => (
+                        <li key={id}>{getCleaningProductLabel(id)}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
           <p>
             <strong>Importo:</strong>{" "}
             <span className="price">€{booking.amount.toFixed(2)}</span>
@@ -102,9 +263,30 @@ const BookingList: React.FC<BookingListProps> = ({
           <p>
             <strong>Stato:</strong>{" "}
             <span className={`status ${booking.status}`}>
-              {booking.status === "pending" ? "In attesa" : "Completato"}
+              {booking.status === "pending"
+                ? "Da accettare"
+                : booking.status === "confirmed"
+                ? "Confermato"
+                : booking.status === "in_progress"
+                ? "In corso"
+                : booking.status === "awaiting_confirmation"
+                ? "In attesa conferma cliente"
+                : booking.status === "disputed"
+                ? "In disputa"
+                : booking.status === "completed"
+                ? "Completato"
+                : booking.status === "cancelled"
+                ? "Cancellato"
+                : booking.status}
             </span>
           </p>
+
+          {booking.startedAt && (
+            <p>
+              <strong>Avviato:</strong>{" "}
+              {new Date(booking.startedAt).toLocaleString("it-IT")}
+            </p>
+          )}
           <p>
             <strong>Pagamento:</strong>{" "}
             <span className={`status ${booking.paymentStatus}`}>
@@ -120,13 +302,26 @@ const BookingList: React.FC<BookingListProps> = ({
             </span>
           </p>
 
-          {booking.status !== "cancelled" && booking.status !== "completed" && (
+          {booking.status === "pending" && !booking.acceptedAt && (
             <div className="booking-actions">
+              {booking.acceptanceDeadline && (
+                <p style={{ margin: "8px 0", fontSize: "14px" }}>
+                  <strong>Scadenza accettazione:</strong>{" "}
+                  {new Date(booking.acceptanceDeadline).toLocaleString("it-IT")}
+                </p>
+              )}
+              {booking.acceptanceDeadline && (
+                <p style={{ margin: "8px 0", fontSize: "14px" }}>
+                  <strong>
+                    {getAcceptanceCountdownLabel(booking.acceptanceDeadline)}
+                  </strong>
+                </p>
+              )}
               <button
-                onClick={() => onComplete(booking)}
-                className="btn btn-success"
+                onClick={() => onAccept(booking)}
+                className="btn btn-primary"
               >
-                Completa Servizio & Rilascia Payout
+                Accetta Prenotazione
               </button>
               <button
                 className="btn-cancel"
@@ -145,6 +340,43 @@ const BookingList: React.FC<BookingListProps> = ({
               </button>
             </div>
           )}
+
+          {booking.status !== "cancelled" &&
+            booking.status !== "completed" &&
+            booking.status !== "pending" && (
+              <div className="booking-actions">
+                {booking.status === "confirmed" && !booking.startedAt && (
+                  <button
+                    onClick={() => onStart(booking)}
+                    className="btn btn-primary"
+                    style={{ marginRight: "10px" }}
+                  >
+                    Avvia Servizio
+                  </button>
+                )}
+                <button
+                  onClick={() => onComplete(booking)}
+                  className="btn btn-success"
+                >
+                  Completa Servizio & Rilascia Payout
+                </button>
+                <button
+                  className="btn-cancel"
+                  style={{
+                    backgroundColor: "#dc3545",
+                    color: "white",
+                    marginLeft: "10px",
+                    padding: "8px 16px",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => onCancel(booking)}
+                >
+                  Cancella
+                </button>
+              </div>
+            )}
 
           {booking.status === "completed" && (
             <div className="completed-badge">✅ Completato</div>

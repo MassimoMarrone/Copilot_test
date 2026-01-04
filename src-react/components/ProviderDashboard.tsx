@@ -271,6 +271,28 @@ const ProviderDashboard: React.FC = () => {
     }
   };
 
+  const handleAcceptBooking = async (booking: Booking) => {
+    try {
+      await bookingService.acceptBooking(booking.id);
+      alert("Prenotazione accettata!");
+      loadBookings();
+    } catch (error: any) {
+      alert(
+        error.message || "Errore durante l'accettazione della prenotazione"
+      );
+    }
+  };
+
+  const handleStartBooking = async (booking: Booking) => {
+    try {
+      await bookingService.startBooking(booking.id);
+      alert("Servizio avviato!");
+      loadBookings();
+    } catch (error: any) {
+      alert(error.message || "Errore durante l'avvio del servizio");
+    }
+  };
+
   const handleDeleteService = async (service: Service) => {
     if (
       !window.confirm(
@@ -544,6 +566,8 @@ const ProviderDashboard: React.FC = () => {
           </div>
           <BookingList
             bookings={bookings}
+            onAccept={handleAcceptBooking}
+            onStart={handleStartBooking}
             onComplete={(booking) => {
               setSelectedBooking(booking);
               setShowCompleteModal(true);

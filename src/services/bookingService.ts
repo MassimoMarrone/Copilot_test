@@ -357,15 +357,233 @@ export const bookingService = {
         notes: true,
         address: true,
         createdAt: true,
+        acceptedAt: true,
+        acceptanceDeadline: true,
+        startedAt: true,
         squareMetersRange: true,
         windowsCount: true,
         estimatedDuration: true,
         startTime: true,
         endTime: true,
+        selectedExtras: true,
+        clientProducts: true,
       },
     });
 
     return providerBookings;
+  },
+
+  async startBooking(bookingId: string, providerId: string) {
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { service: true },
+    });
+
+    if (!booking) {
+      throw new Error("Booking not found");
+    }
+
+    if (booking.providerId !== providerId) {
+      throw new Error("Only provider can start booking");
+    }
+
+    if (booking.status === "cancelled") {
+      throw new Error("Booking already cancelled");
+    }
+
+    if (!booking.acceptedAt || booking.status === "pending") {
+      throw new Error(
+        "Devi accettare la prenotazione prima di avviare il servizio"
+      );
+    }
+
+    if (
+      booking.status === "completed" ||
+      booking.status === "awaiting_confirmation"
+    ) {
+      throw new Error("Il servizio risulta già completato");
+    }
+
+    if (booking.startedAt) {
+      return booking;
+    }
+
+    const now = new Date();
+    const updated = await prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        status: "in_progress",
+        startedAt: now,
+      },
+    });
+
+    await sendNotification(
+      booking.clientId,
+      "Servizio Avviato 🚀",
+      `Il provider ha avviato il servizio "${
+        booking.service.title
+      }" del ${new Date(booking.date).toLocaleDateString("it-IT")}.`
+    );
+
+    return updated;
+  },
+
+  async acceptBooking(bookingId: string, providerId: string) {
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { service: true },
+    });
+
+    if (!booking) {
+      throw new Error("Booking not found");
+    }
+
+    if (booking.providerId !== providerId) {
+      throw new Error("Only provider can accept booking");
+    }
+
+    if (booking.status === "cancelled") {
+      throw new Error("Booking already cancelled");
+    }
+
+    if (
+      booking.status === "completed" ||
+      booking.status === "awaiting_confirmation"
+    ) {
+      throw new Error("Cannot accept a booking already in progress");
+    }
+
+    if (booking.acceptedAt) {
+      throw new Error("Booking already accepted");
+    }
+
+    const now = new Date();
+    const deadline = booking.acceptanceDeadline;
+    if (deadline && deadline.getTime() < now.getTime()) {
+      throw new Error("ACCEPTANCE_EXPIRED: Acceptance deadline passed");
+    }
+
+    const updated = await prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        status: "confirmed",
+        acceptedAt: now,
+      },
+    });
+
+    // Notify client
+    await sendNotification(
+      booking.clientId,
+      "Prenotazione Accettata ✅",
+      `Il provider ha accettato la prenotazione per "${
+        booking.service.title
+      }" del ${new Date(booking.date).toLocaleDateString("it-IT")}.`
+    );
+
+    return updated;
+  },
+
+  /**
+   * System cancellation when provider doesn't accept within 24h.
+   * Policy: always refund client (no fees).
+   * - If payment is only authorized: cancel payment intent (no capture)
+   * - If payment is already captured/held: full refund
+   */
+  async cancelBookingForAcceptanceTimeout(bookingId: string) {
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { service: true },
+    });
+
+    if (!booking) {
+      throw new Error("Booking not found");
+    }
+
+    // Only cancel if still pending/unaccepted
+    if (booking.status !== "pending" || booking.acceptedAt) {
+      return booking;
+    }
+
+    let newPaymentStatus = booking.paymentStatus;
+
+    if (booking.paymentIntentId) {
+      try {
+        if (booking.paymentIntentId.startsWith("pi_mock_")) {
+          newPaymentStatus =
+            booking.paymentStatus === "authorized" ? "cancelled" : "refunded";
+        } else if (booking.paymentStatus === "authorized") {
+          await stripe.paymentIntents.cancel(booking.paymentIntentId);
+          newPaymentStatus = "cancelled";
+        } else {
+          // held_in_escrow or paid/released edge-cases => full refund
+          await stripe.refunds.create({
+            payment_intent: booking.paymentIntentId,
+            reverse_transfer: true,
+            refund_application_fee: true,
+          });
+          newPaymentStatus = "refunded";
+        }
+      } catch (refundError: any) {
+        console.error(
+          `Auto-cancel refund failed for booking ${booking.id}:`,
+          refundError
+        );
+        // Keep going: booking will be cancelled and admin can intervene.
+      }
+    }
+
+    const updatedBooking = await prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        status: "cancelled",
+        paymentStatus: newPaymentStatus,
+      },
+    });
+
+    bookingLogger.cancelled(bookingId, "system", "ACCEPTANCE_TIMEOUT");
+
+    // Notify both parties
+    const dateLabel = new Date(booking.date).toLocaleDateString("it-IT");
+    await sendNotification(
+      booking.clientId,
+      "Prenotazione Cancellata (non accettata) ⏳",
+      `La prenotazione per "${booking.service.title}" del ${dateLabel} non è stata accettata entro 24 ore. Il pagamento verrà rimborsato automaticamente.`
+    );
+    await sendNotification(
+      booking.providerId,
+      "Prenotazione Cancellata (timeout accettazione) ⏳",
+      `La prenotazione per "${booking.service.title}" del ${dateLabel} è stata cancellata perché non è stata accettata entro 24 ore.`
+    );
+
+    // Emails (best-effort)
+    const refundMessage =
+      newPaymentStatus === "refunded"
+        ? " Il pagamento è stato rimborsato automaticamente."
+        : newPaymentStatus === "cancelled"
+        ? " L'autorizzazione del pagamento è stata annullata automaticamente."
+        : "";
+
+    sendEmail(
+      booking.clientEmail,
+      "Prenotazione Cancellata",
+      emailTemplates.bookingCancelled(
+        booking.clientEmail.split("@")[0],
+        booking.serviceTitle,
+        `Non accettata entro 24 ore.${refundMessage}`
+      )
+    );
+
+    sendEmail(
+      booking.providerEmail,
+      "Prenotazione Cancellata",
+      emailTemplates.bookingCancelled(
+        booking.providerEmail.split("@")[0],
+        booking.serviceTitle,
+        `Non accettata entro 24 ore.`
+      )
+    );
+
+    return updatedBooking;
   },
 
   async cancelBooking(bookingId: string, userId: string) {
@@ -409,7 +627,11 @@ export const bookingService = {
         // Check if it's a mock payment (for testing)
         if (booking.paymentIntentId.startsWith("pi_mock_")) {
           console.log(
-            `Mock ${needsCancellation ? "cancellation" : "refund"} processed for booking ${booking.id}, paymentIntent: ${booking.paymentIntentId}`
+            `Mock ${
+              needsCancellation ? "cancellation" : "refund"
+            } processed for booking ${booking.id}, paymentIntent: ${
+              booking.paymentIntentId
+            }`
           );
           newPaymentStatus = needsCancellation ? "cancelled" : "refunded";
         } else if (needsCancellation) {
@@ -424,7 +646,10 @@ export const bookingService = {
           // Stripe fee: ~2.9% + €0.25 (we use 3% as approximation for simplicity)
           const stripeFeePercent = 0.029;
           const stripeFeeFixed = 0.25; // €0.25
-          const stripeFee = Math.round((booking.amount * stripeFeePercent + stripeFeeFixed) * 100) / 100;
+          const stripeFee =
+            Math.round(
+              (booking.amount * stripeFeePercent + stripeFeeFixed) * 100
+            ) / 100;
 
           if (cancelledByClient) {
             // Client cancels: they pay the Stripe fee (partial refund)
@@ -436,7 +661,9 @@ export const bookingService = {
               refund_application_fee: true,
             });
             console.log(
-              `Partial refund for booking ${booking.id}: €${refundAmount / 100} (client pays €${stripeFee} fee)`
+              `Partial refund for booking ${booking.id}: €${
+                refundAmount / 100
+              } (client pays €${stripeFee} fee)`
             );
           } else if (cancelledByCleaner) {
             // Cleaner cancels: client gets full refund, cleaner pays the fee
@@ -547,6 +774,12 @@ export const bookingService = {
       throw new Error("Only provider can complete booking");
     }
 
+    if (booking.status === "pending" && !booking.acceptedAt) {
+      throw new Error(
+        "Devi accettare la prenotazione prima di completare il servizio"
+      );
+    }
+
     // Validate photo count (1-10 photos required)
     if (!photoProofUrls || photoProofUrls.length === 0) {
       throw new Error(
@@ -560,7 +793,10 @@ export const bookingService = {
     // Verify payment is captured (in escrow) or capture it now if still authorized
     if (booking.paymentStatus === "authorized") {
       // Payment was authorized but not yet captured - capture it now
-      if (booking.paymentIntentId && !booking.paymentIntentId.startsWith("pi_mock_")) {
+      if (
+        booking.paymentIntentId &&
+        !booking.paymentIntentId.startsWith("pi_mock_")
+      ) {
         try {
           await stripe.paymentIntents.capture(booking.paymentIntentId);
           await prisma.booking.update({
@@ -571,7 +807,10 @@ export const bookingService = {
             `Payment captured early for booking ${bookingId} (service completed before 48h)`
           );
         } catch (captureError: any) {
-          console.error(`Failed to capture payment for booking ${bookingId}:`, captureError.message);
+          console.error(
+            `Failed to capture payment for booking ${bookingId}:`,
+            captureError.message
+          );
           throw new Error(
             "Impossibile procedere: errore nella cattura del pagamento"
           );

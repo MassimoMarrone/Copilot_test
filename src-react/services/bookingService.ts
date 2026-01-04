@@ -13,6 +13,7 @@ export interface Booking {
   status:
     | "pending"
     | "confirmed"
+    | "in_progress"
     | "completed"
     | "cancelled"
     | "awaiting_confirmation"
@@ -43,6 +44,11 @@ export interface Booking {
   // Dispute fields
   disputeStatus?: "pending" | "resolved_refund" | "resolved_payment";
   disputeReason?: string;
+  acceptedAt?: string;
+  acceptanceDeadline?: string;
+  startedAt?: string;
+  selectedExtras?: string;
+  clientProducts?: string;
 }
 
 export interface CreateBookingData {
@@ -83,6 +89,16 @@ export const bookingService = {
   // Cancel a booking
   cancelBooking: async (id: string): Promise<Booking> => {
     return post<Booking>(`/api/bookings/${id}/cancel`, {});
+  },
+
+  // Accept a booking (Provider)
+  acceptBooking: async (id: string): Promise<Booking> => {
+    return post<Booking>(`/api/bookings/${id}/accept`, {});
+  },
+
+  // Start a booking/service (Provider)
+  startBooking: async (id: string): Promise<Booking> => {
+    return post<Booking>(`/api/bookings/${id}/start`, {});
   },
 
   // Complete a booking (Provider) - Upload 1-10 photos

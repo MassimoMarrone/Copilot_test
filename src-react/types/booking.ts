@@ -3,7 +3,14 @@
  * Usare questa definizione in tutto il frontend invece di duplicarla
  */
 
-export type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled";
+export type BookingStatus =
+  | "pending"
+  | "confirmed"
+  | "in_progress"
+  | "completed"
+  | "cancelled"
+  | "awaiting_confirmation"
+  | "disputed";
 
 export type PaymentStatus =
   | "unpaid"
@@ -32,12 +39,17 @@ export interface Booking {
   address?: string;
   hasReview?: boolean;
   createdAt?: string;
+  acceptedAt?: string;
+  acceptanceDeadline?: string;
+  startedAt?: string;
   // Smart booking fields
   squareMetersRange?: string;
   windowsCount?: number;
   estimatedDuration?: number;
   startTime?: string;
   endTime?: string;
+  selectedExtras?: string;
+  clientProducts?: string;
 }
 
 export interface CreateBookingData {

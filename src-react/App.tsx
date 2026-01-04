@@ -9,35 +9,47 @@ import "./styles/App.css";
 const ServicesPage = React.lazy(() => import("./pages/ServicesPage"));
 const BookingsPage = React.lazy(() => import("./pages/BookingsPage"));
 const MessagesPage = React.lazy(() => import("./pages/MessagesPage"));
-const ClientDashboard = React.lazy(() => import("./components/ClientDashboard"));
-const ProviderDashboard = React.lazy(() => import("./components/ProviderDashboard"));
+const ClientDashboard = React.lazy(
+  () => import("./components/ClientDashboard")
+);
+const ProviderDashboard = React.lazy(
+  () => import("./components/ProviderDashboard")
+);
 const AdminDashboard = React.lazy(() => import("./components/AdminDashboard"));
 const UserProfile = React.lazy(() => import("./components/UserProfile"));
-const ProviderProfilePage = React.lazy(() => import("./pages/ProviderProfilePage"));
+const ProviderProfilePage = React.lazy(
+  () => import("./pages/ProviderProfilePage")
+);
 const VerifyEmailPage = React.lazy(() => import("./pages/VerifyEmailPage"));
-const ProviderOnboarding = React.lazy(() => import("./pages/ProviderOnboarding"));
+const ProviderOnboarding = React.lazy(
+  () => import("./pages/ProviderOnboarding")
+);
 const PrivacyPolicy = React.lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = React.lazy(() => import("./pages/TermsOfService"));
 const CookiePolicy = React.lazy(() => import("./pages/CookiePolicy"));
 
 // Loading spinner component
 const PageLoader = () => (
-  <div style={{
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    minHeight: "50vh",
-    flexDirection: "column",
-    gap: "16px"
-  }}>
-    <div style={{
-      width: "40px",
-      height: "40px",
-      border: "3px solid #e0e0e0",
-      borderTopColor: "#1a1a1a",
-      borderRadius: "50%",
-      animation: "spin 0.8s linear infinite"
-    }} />
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      minHeight: "50vh",
+      flexDirection: "column",
+      gap: "16px",
+    }}
+  >
+    <div
+      style={{
+        width: "40px",
+        height: "40px",
+        border: "3px solid #e0e0e0",
+        borderTopColor: "#1a1a1a",
+        borderRadius: "50%",
+        animation: "spin 0.8s linear infinite",
+      }}
+    />
     <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
   </div>
 );
@@ -75,7 +87,10 @@ function App() {
               />
 
               {/* Legacy Dashboards - eventually refactor these too */}
-              <Route path="/provider-dashboard" element={<ProviderDashboard />} />
+              <Route
+                path="/provider-dashboard"
+                element={<ProviderDashboard />}
+              />
               <Route path="/admin-dashboard" element={<AdminDashboard />} />
             </Route>
           </Routes>

@@ -53,7 +53,14 @@ export interface Booking {
   serviceTitle: string;
   amount: number;
   date: string;
-  status: "pending" | "completed" | "cancelled";
+  status:
+    | "pending"
+    | "confirmed"
+    | "in_progress"
+    | "completed"
+    | "cancelled"
+    | "awaiting_confirmation"
+    | "disputed";
   paymentStatus:
     | "unpaid"
     | "authorized"
@@ -65,11 +72,17 @@ export interface Booking {
   photoProof: string | null;
   createdAt: string;
   completedAt?: string;
+  acceptedAt?: string;
+  acceptanceDeadline?: string;
+  startedAt?: string;
   // Additional booking details
   clientPhone?: string;
   preferredTime?: string;
   notes?: string;
   address?: string;
+  // Smart booking fields persisted as JSON strings
+  selectedExtras?: string;
+  clientProducts?: string;
 }
 
 export interface Review {

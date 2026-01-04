@@ -83,6 +83,73 @@ export const bookingController = {
     }
   },
 
+  async acceptBooking(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      const user = await prisma.user.findUnique({
+        where: { id: req.user!.id },
+      });
+
+      if (!user || !user.isProvider) {
+        res.status(403).json({ error: "Only providers can accept bookings" });
+        return;
+      }
+
+      const booking = await bookingService.acceptBooking(id, req.user!.id);
+      res.json(booking);
+    } catch (error: any) {
+      console.error("Error accepting booking:", error);
+
+      if (error.message === "Booking not found") {
+        res.status(404).json({ error: error.message });
+      } else if (error.message === "Only provider can accept booking") {
+        res.status(403).json({ error: error.message });
+      } else if (
+        typeof error.message === "string" &&
+        error.message.startsWith("ACCEPTANCE_EXPIRED:")
+      ) {
+        res.status(400).json({
+          error: "Tempo scaduto: la prenotazione non può più essere accettata",
+          code: "ACCEPTANCE_EXPIRED",
+        });
+      } else {
+        res
+          .status(400)
+          .json({ error: error.message || "Failed to accept booking" });
+      }
+    }
+  },
+
+  async startBooking(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      const user = await prisma.user.findUnique({
+        where: { id: req.user!.id },
+      });
+
+      if (!user || !user.isProvider) {
+        res.status(403).json({ error: "Only providers can start bookings" });
+        return;
+      }
+
+      const booking = await bookingService.startBooking(id, req.user!.id);
+      res.json(booking);
+    } catch (error: any) {
+      console.error("Error starting booking:", error);
+      if (error.message === "Booking not found") {
+        res.status(404).json({ error: error.message });
+      } else if (error.message === "Only provider can start booking") {
+        res.status(403).json({ error: error.message });
+      } else {
+        res
+          .status(400)
+          .json({ error: error.message || "Failed to start booking" });
+      }
+    }
+  },
+
   async cancelBooking(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;

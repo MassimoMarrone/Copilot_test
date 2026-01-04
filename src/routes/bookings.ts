@@ -67,6 +67,20 @@ router.get(
   bookingController.getProviderBookings
 );
 
+// Accept booking (Provider only)
+router.post(
+  "/bookings/:id/accept",
+  authenticate,
+  bookingController.acceptBooking
+);
+
+// Start booking/service (Provider only)
+router.post(
+  "/bookings/:id/start",
+  authenticate,
+  bookingController.startBooking
+);
+
 // Cancel booking
 router.post(
   "/bookings/:id/cancel",

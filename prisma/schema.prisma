@@ -145,6 +145,11 @@ model Booking {
   paymentStatus   String
   paymentIntentId String?
   paymentAuthorizedAt DateTime? // When payment was authorized (for delayed capture)
+  // Provider acceptance flow
+  acceptedAt       DateTime?
+  acceptanceDeadline DateTime? // 24h after booking is created/paid
+  // Provider start service flow
+  startedAt        DateTime?
   photoProof      String?   // Legacy single photo (deprecated)
   photoProofs     String?   // JSON array of photo URLs (1-10 photos)
   createdAt       DateTime  @default(now())

@@ -106,6 +106,7 @@ export const paymentService = {
                 paymentStatus: "authorized", // Payment authorized but not captured yet (48h delay)
                 paymentIntentId: paymentIntentId,
                 paymentAuthorizedAt: new Date(), // Track when authorization happened for 48h capture
+                acceptanceDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000),
                 createdAt: new Date(),
                 clientPhone: metadata.clientPhone || null,
                 preferredTime: metadata.preferredTime || null,

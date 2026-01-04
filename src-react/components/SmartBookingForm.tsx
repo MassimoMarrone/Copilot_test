@@ -10,22 +10,10 @@ import {
 } from "../services/schedulingService";
 import AddressAutocomplete from "./AddressAutocomplete";
 import "../styles/SmartBookingForm.css";
+import { CLEANING_PRODUCTS } from "../constants/cleaningProducts";
 
 // Registra la locale italiana
 registerLocale("it", it);
-
-// Lista prodotti pulizia che il cliente potrebbe avere
-const CLEANING_PRODUCTS = [
-  { id: "mop", label: "Mocio/Scopa" },
-  { id: "bucket", label: "Secchio" },
-  { id: "floor_cleaner", label: "Detersivo pavimenti" },
-  { id: "glass_cleaner", label: "Detergente vetri" },
-  { id: "degreaser", label: "Sgrassatore" },
-  { id: "bathroom_cleaner", label: "Detergente bagno" },
-  { id: "sponges", label: "Spugne" },
-  { id: "cloths", label: "Panni in microfibra" },
-  { id: "vacuum", label: "Aspirapolvere" },
-];
 
 interface ExtraService {
   name: string;
@@ -554,7 +542,9 @@ const SmartBookingForm: React.FC<SmartBookingFormProps> = ({
                 return (
                   <label
                     key={product.id}
-                    className={`product-checkbox ${isSelected ? "selected" : ""}`}
+                    className={`product-checkbox ${
+                      isSelected ? "selected" : ""
+                    }`}
                   >
                     <input
                       type="checkbox"
